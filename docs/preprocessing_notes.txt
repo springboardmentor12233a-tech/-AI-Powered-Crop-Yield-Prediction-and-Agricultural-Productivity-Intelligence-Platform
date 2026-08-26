@@ -1,0 +1,63 @@
+YieldSense AI
+Data Preprocessing Notes
+
+Dataset:
+Smart_Farming_Crop_Yield_2024.csv
+
+Objective:
+Prepare a clean and consistent dataset for crop yield prediction.
+
+1. Initial Dataset
+------------------
+Rows: 500
+Columns: 22
+Duplicate rows: 0
+
+2. Missing Values Found
+-----------------------
+irrigation_type: 150
+crop_disease_status: 130
+
+3. Missing Value Treatment
+---------------------------
+Missing irrigation_type values were replaced with "Unknown".
+
+Missing crop_disease_status values were replaced with "Unknown".
+
+The "Unknown" category was used because the original dataset does not provide enough information to determine the actual missing category.
+
+4. Date Validation
+------------------
+sowing_date and harvest_date were converted to datetime format.
+
+No records had harvest dates before sowing dates.
+
+The calculated growing period matched total_days for all 500 records.
+
+5. Numerical Validation
+-----------------------
+No missing numerical values were found.
+
+The observed numerical ranges were inspected for consistency.
+
+6. Duplicate Validation
+-----------------------
+No duplicate records were found.
+
+7. Output
+---------
+A new cleaned dataset was created:
+
+Smart_Farming_Crop_Yield_2024_cleaned.csv
+
+The original raw dataset was not modified.
+
+8. Final Validation
+-------------------
+Rows: 500
+Columns: 22
+Missing values: 0
+Duplicate rows: 0
+
+Status:
+Dataset preprocessing completed successfully.
