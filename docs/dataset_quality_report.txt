@@ -1,0 +1,79 @@
+YieldSense AI
+Dataset Quality Analysis Report
+
+Dataset:
+Smart_Farming_Crop_Yield_2024.csv
+
+1. Dataset Overview
+-------------------
+Number of rows: 500
+Number of columns: 22
+
+2. Duplicate Analysis
+---------------------
+Duplicate rows: 0
+
+Result:
+No duplicate rows were found.
+
+3. Missing Value Analysis
+-------------------------
+irrigation_type: 150 missing values
+crop_disease_status: 130 missing values
+
+All other columns contain 0 missing values.
+
+4. Target Variable
+------------------
+Target variable:
+yield_kg_per_hectare
+
+The target variable represents crop yield in kilograms per hectare.
+
+5. Dataset Features
+-------------------
+The dataset contains information related to:
+
+- Farm
+- Region
+- Crop type
+- Soil moisture
+- Soil pH
+- Temperature
+- Rainfall
+- Humidity
+- Sunlight
+- Irrigation
+- Fertilizer
+- Pesticide usage
+- Sowing date
+- Harvest date
+- Total growing days
+- Sensor
+- Timestamp
+- Latitude
+- Longitude
+- NDVI
+- Crop disease status
+
+6. Initial Data Quality Findings
+--------------------------------
+The dataset contains 500 records and 22 features.
+
+No duplicate records were identified.
+
+Missing values were identified in:
+- irrigation_type
+- crop_disease_status
+
+These missing values must be handled during the preprocessing stage.
+
+7. Next Preprocessing Tasks
+---------------------------
+- Analyze the missing-value patterns.
+- Check categorical values.
+- Validate numerical ranges.
+- Convert date and timestamp columns to appropriate formats.
+- Handle missing categorical values.
+- Check for invalid or inconsistent records.
+- Create a cleaned dataset without modifying the original raw dataset.
