@@ -1,0 +1,53 @@
+crop_recommendation:
+  name: "Crop Recommendation"
+  purpose: "Soil pH and environmental parameters matching to crop recommendations"
+  raw_path: "data/raw/Crop_Recommendation_Dataset.xlsx"
+  processed_path: "data/processed/crop_recommendation_cleaned.csv"
+  target_column: "Label"
+  numerical_features:
+    - "Temperature"
+    - "Humidity"
+    - "pH"
+    - "Rainfall"
+  categorical_features: []
+  required_columns:
+    - "Temperature"
+    - "Humidity"
+    - "pH"
+    - "Rainfall"
+    - "Label"
+
+smart_crop_yield:
+  name: "Smart Crop Yield Prediction"
+  purpose: "Regression forecasting of crop yields based on agricultural management and environment"
+  raw_path: "data/raw/crop_yield_dataset.csv"
+  processed_path: "data/processed/smart_crop_yield_cleaned.csv"
+  target_column: "Yield_ton_per_ha"
+  numerical_features:
+    - "Soil_pH"
+    - "Rainfall_mm"
+    - "Temperature_C"
+    - "Humidity_pct"
+    - "Fertilizer_Used_kg"
+    - "Pesticides_Used_kg"
+    - "Planting_Density"
+  categorical_features:
+    - "Crop"
+    - "Region"
+    - "Soil_Type"
+    - "Irrigation"
+    - "Previous_Crop"
+  required_columns:
+    - "Crop"
+    - "Region"
+    - "Soil_Type"
+    - "Soil_pH"
+    - "Rainfall_mm"
+    - "Temperature_C"
+    - "Humidity_pct"
+    - "Fertilizer_Used_kg"
+    - "Irrigation"
+    - "Pesticides_Used_kg"
+    - "Planting_Density"
+    - "Previous_Crop"
+    - "Yield_ton_per_ha"
