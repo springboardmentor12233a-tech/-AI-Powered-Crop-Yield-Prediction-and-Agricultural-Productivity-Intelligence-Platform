@@ -20,7 +20,7 @@ import os
 # ---------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------
-DATA_PATH = "datasets/crop_yield_train.csv"   # adjust path to match repo structure
+DATA_PATH = "datasets/cleaned-crop-yield-production-dataset/crop_yield_train_cleaned.csv"
 OUTPUT_DIR = "eda/plots"
 TARGET = "yield_tpha"
 
