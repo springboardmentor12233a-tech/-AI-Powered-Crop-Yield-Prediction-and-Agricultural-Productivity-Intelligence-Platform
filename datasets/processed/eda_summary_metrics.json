@@ -1,0 +1,115 @@
+{
+  "total_records": 500,
+  "overall_stats": {
+    "yield_kg_per_hectare": {
+      "mean": 4032.93,
+      "std": 1174.43,
+      "min": 2023.56,
+      "25%": 2994.82,
+      "median": 4071.69,
+      "75%": 5062.11,
+      "max": 5998.29
+    },
+    "rainfall_mm": {
+      "mean": 181.69,
+      "std": 72.29,
+      "min": 50.17,
+      "25%": 119.22,
+      "median": 191.55,
+      "75%": 239.03,
+      "max": 298.96
+    },
+    "soil_pH": {
+      "mean": 6.52,
+      "std": 0.59,
+      "min": 5.51,
+      "25%": 6.03,
+      "median": 6.53,
+      "75%": 7.04,
+      "max": 7.5
+    },
+    "temperature_C": {
+      "mean": 24.68,
+      "std": 5.35,
+      "min": 15.0,
+      "25%": 20.3,
+      "median": 24.66,
+      "75%": 29.09,
+      "max": 34.84
+    },
+    "soil_moisture_%": {
+      "mean": 26.75,
+      "std": 10.15,
+      "min": 10.16,
+      "25%": 17.89,
+      "median": 25.86,
+      "75%": 36.02,
+      "max": 44.98
+    },
+    "NDVI_index": {
+      "mean": 0.6,
+      "std": 0.18,
+      "min": 0.3,
+      "25%": 0.45,
+      "median": 0.61,
+      "75%": 0.75,
+      "max": 0.9
+    },
+    "sunlight_hours": {
+      "mean": 7.03,
+      "std": 1.69,
+      "min": 4.01,
+      "25%": 5.67,
+      "median": 7.0,
+      "75%": 8.47,
+      "max": 10.0
+    },
+    "total_days": {
+      "mean": 119.5,
+      "std": 16.8,
+      "min": 90.0,
+      "25%": 105.75,
+      "median": 119.0,
+      "75%": 134.0,
+      "max": 150.0
+    }
+  },
+  "crop_breakdown": {
+    "Cotton": {
+      "count": 107,
+      "avg_yield": 3925.6,
+      "std_yield": 1201.32,
+      "min_yield": 2046.41,
+      "max_yield": 5980.83
+    },
+    "Maize": {
+      "count": 111,
+      "avg_yield": 3982.55,
+      "std_yield": 1212.37,
+      "min_yield": 2023.56,
+      "max_yield": 5953.33
+    },
+    "Rice": {
+      "count": 82,
+      "avg_yield": 3896.18,
+      "std_yield": 1150.33,
+      "min_yield": 2066.9,
+      "max_yield": 5952.62
+    },
+    "Soybean": {
+      "count": 108,
+      "avg_yield": 4256.81,
+      "std_yield": 1156.36,
+      "min_yield": 2029.16,
+      "max_yield": 5998.29
+    },
+    "Wheat": {
+      "count": 92,
+      "avg_yield": 4077.58,
+      "std_yield": 1122.7,
+      "min_yield": 2043.13,
+      "max_yield": 5893.78
+    }
+  },
+  "top_crop_by_yield": "Soybean"
+}
