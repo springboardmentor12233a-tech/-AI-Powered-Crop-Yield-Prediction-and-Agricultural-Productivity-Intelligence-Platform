@@ -2,10 +2,10 @@ import os
 import json
 import pandas as pd
 import numpy as np
-import matplotlib
+import matplotlib  # type: ignore
 matplotlib.use("Agg")  # Non-interactive background renderer
-import matplotlib.pyplot as plt
-import seaborn as sns
+import matplotlib.pyplot as plt  # type: ignore
+import seaborn as sns  # type: ignore
 
 def run_eda():
     print("=" * 60)

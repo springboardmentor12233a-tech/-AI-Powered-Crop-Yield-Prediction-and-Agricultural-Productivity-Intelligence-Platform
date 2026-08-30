@@ -1,0 +1,10 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "extraPaths": [
+    ".venv/Lib/site-packages",
+    "C:/Users/durga/AppData/Local/Programs/Python/Python312/Lib/site-packages"
+  ],
+  "reportMissingImports": false,
+  "pythonVersion": "3.12"
+}
