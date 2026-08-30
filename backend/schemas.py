@@ -13,3 +13,9 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CropPredictionInput(BaseModel):
+    rainfall: float
+    temperature: float
+    pesticide: float
+    area: float
