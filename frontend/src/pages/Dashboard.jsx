@@ -94,28 +94,19 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ML prediction banner card */}
-          <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md shadow-brand-700/10">
+          {/* ML prediction status card */}
+          <div className="bg-white p-8 rounded-3xl border border-[#e3ecd9] flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-md text-white">
+              <div className="p-4 bg-brand-50 text-brand-600 rounded-2xl">
                 <BrainCircuit size={32} />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Machine Learning Yield Predictions</h3>
-                <p className="text-brand-100 text-sm mt-0.5">Automated crop productivity predictions using weather and soil intelligence.</p>
+                <h3 className="font-bold text-lg text-slate-800">Predictive Yield Forecasts</h3>
+                <p className="text-slate-500 text-sm mt-0.5">Automated crop productivity models powered by regional weather and soil analytics.</p>
               </div>
             </div>
-            <div className="px-5 py-2.5 bg-white/20 hover:bg-white/25 transition-all text-xs font-semibold rounded-2xl border border-white/20 select-none">
-              Milestone 2 - Coming Soon
-            </div>
-          </div>
-
-          {/* Guidelines info card */}
-          <div className="bg-[#f2f6ee] p-6 rounded-3xl border border-[#e0ebd5] flex gap-4 text-slate-700">
-            <Info className="text-brand-600 flex-shrink-0 mt-0.5" size={20} />
-            <div className="text-sm leading-relaxed">
-              <h4 className="font-semibold text-slate-800 mb-1">Week 1 Foundation Scope</h4>
-              <p>The system is currently running on the Week 1 layout. You can create and manage database records for your <strong>Farms</strong> and linked <strong>Crops</strong>. Preprocessing pipelines have been written using Pandas to format crop, weather, and soil feature profiles. ML model integrations (XGBoost / Neural Networks) and recommendations are planned for Milestone 2.</p>
+            <div className="px-5 py-2.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-2xl select-none">
+              Awaiting Model Ingestion
             </div>
           </div>
         </>
