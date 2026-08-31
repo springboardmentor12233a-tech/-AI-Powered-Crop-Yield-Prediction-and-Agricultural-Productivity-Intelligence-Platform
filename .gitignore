@@ -1,0 +1,41 @@
+# Python environment
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node / Frontend build
+node_modules/
+dist/
+build/
+.eslintcache
+.parcel-cache
+.cache/
+
+# Local Database (Portable PostgreSQL)
+postgres/
+postgres.zip
+temp_extract/
+
+# Environment configurations and keys
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# OS metadata
+.DS_Store
+Thumbs.db
