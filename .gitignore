@@ -29,3 +29,23 @@ htmlcov/
 # OS-specific temporary files
 .DS_Store
 Thumbs.db
+
+# Local environment files
+.env
+.env.*
+
+# Project data and generated artifacts
+data/processed/
+*.csv
+*.xlsx
+*.parquet
+*.pkl
+*.joblib
+*.h5
+*.pickle
+
+# Logs and temporary files
+logs/
+log/
+tmp/
+temp/
