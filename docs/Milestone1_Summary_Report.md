@@ -276,5 +276,5 @@ All source code, scripts, documentation, and visual charts have been committed a
 - **Candidate Name**: **DURGA PRASAD A**  
 - **GitHub Branch**: `DURGA-PRASAD-A`  
 - **Repository**: `springboardmentor12233a-tech/-AI-Powered-Crop-Yield-Prediction-and-Agricultural-Productivity-Intelligence-Platform`  
-- **Milestone**: Milestone 1 (Week 1 & 2)  
+- **Milestone**: Milestone 1
 - **Status**: 100% Completed & Verified  
