@@ -1,51 +1,59 @@
-# Python virtual environments
+# ==============================
+# YieldSense AI - Git Ignore
+# ==============================
+
+# ---------- Python ----------
 .venv/
 venv/
 env/
+ENV/
 
-# Python cache and bytecode
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 
-# Jupyter notebook checkpoints
-.ipynb_checkpoints/
-
-# VS Code settings
-.vscode/
-
-# Python build and package artifacts
-build/
-dist/
-*.egg-info/
-.eggs/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-coverage/
-htmlcov/
-*.cover
-.pytest_cache/
-
-# OS-specific temporary files
-.DS_Store
-Thumbs.db
-
-# Local environment files
+# ---------- Environment / Secrets ----------
 .env
 .env.*
+!.env.example
 
-# Project data and generated artifacts
-data/processed/
-*.csv
-*.xlsx
-*.parquet
-*.pkl
-*.joblib
-*.h5
-*.pickle
+# ---------- FastAPI / Python ----------
+*.log
 
-# Logs and temporary files
-logs/
-log/
-tmp/
-temp/
+# ---------- Node / React / Vite ----------
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ---------- Jupyter ----------
+.ipynb_checkpoints/
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+
+# ---------- Operating System ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Temporary Files ----------
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# ---------- Python Testing / Coverage ----------
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---------- Build / Cache ----------
+.cache/
+*.egg-info/
+
+# ---------- Local Database Files ----------
+*.db
+*.sqlite
+*.sqlite3
