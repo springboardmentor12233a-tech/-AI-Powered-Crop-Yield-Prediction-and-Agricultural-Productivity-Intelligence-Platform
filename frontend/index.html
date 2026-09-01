@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YieldSense AI </title>
+</head>
+
+<body>
+
+    <h1>YieldSense AI: Crop Yield Prediction & Agricultural Productivity Forecasting System</h1>
+
+    <h2>Crop Yield Prediction System</h2>
+
+    <p>
+        An AI-based crop yield prediction system for analyzing agricultural data and predicting crop yield that helps farmers and agricultural organizations estimate future crop production using historical farming data, weather conditions and soil characteristics. 
+    </p>
+
+    <hr>
+
+    <h3>Crop Information</h3>
+
+    <label for="crop">Select Crop:</label>
+
+    <select id="crop">
+        <option value="Arecanut">Arecanut</option>
+        <option value="Rice">Rice</option>
+        <option value="Wheat">Wheat</option>
+        <option value="Cotton">Cotton</option>
+        <option value="Maize">Maize</option>
+    </select>
+
+    <br><br>
+
+    <label for="area">Area:</label>
+    <input type="number" id="area" placeholder="Enter area">
+
+    <br><br>
+
+    <button onclick="showMessage()">Predict Yield</button>
+
+    <p id="result"></p>
+
+    <script>
+    async function showMessage() {
+        const result = document.getElementById("result");
+
+        try {
+            const response = await fetch("http://127.0.0.1:5000/api/status");
+            const data = await response.json();
+
+            result.innerText =
+                data.project + " - " + data.status;
+        } catch (error) {
+            result.innerText =
+                "Unable to connect to the backend.";
+        }
+    }
+</script>
+
+</body>
+</html>
