@@ -10,24 +10,24 @@
 
 ```mermaid
 graph TD
-    subgraph Client Layer [Frontend Presentation Layer]
+    subgraph Client_Layer [Frontend Presentation Layer]
         UI[Next.js Farmer Web Dashboard]
         AuthUI[JWT Login & Registration Portal]
         DataViewer[Soil & Weather Telemetry Form]
     end
 
-    subgraph API Layer [Backend Service Layer]
+    subgraph API_Layer [Backend Service Layer]
         FastAPI[FastAPI Backend Application]
         AuthMiddleware[OAuth2 & JWT Security Middleware]
         PredictAPI[Crop Recommendation Router]
     end
 
-    subgraph Machine Learning Layer [Inference Engine]
+    subgraph ML_Layer [Inference Engine]
         ModelArtifact[Scikit-Learn Random Forest Classifier]
         JoblibLoader[Joblib Model Serializer]
     end
 
-    subgraph Persistence Layer [Database & Storage]
+    subgraph Persistence_Layer [Database & Storage]
         Postgres[(PostgreSQL / Neon DB)]
         ORM[SQLAlchemy ORM]
         Dataset[(Crop_recommendation.csv)]
@@ -41,10 +41,6 @@ graph TD
     AuthMiddleware --> ORM
     ORM --> Postgres
     Dataset -->|Training Pipeline| ModelArtifact
-
-```
-
----
 
 ## Core Components
 
