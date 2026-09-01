@@ -242,29 +242,9 @@ important field-level variable for further analysis.
 8.  Average yield differs slightly across seasons.
 9.  Soil pH shows a broad distribution from approximately 4.5 to 8.5.
 
-# 12. Important Data Limitation
 
-The FAOSTAT data contains aggregate crop statistics such as area
-harvested, production, and yield.
 
-After matching FAOSTAT with the field-level dataset by crop and year,
-the same FAOSTAT yield can be assigned to multiple field-level records.
-
-The current merged target therefore behaves approximately as:
-
-``` text
-Rice     -> 4203.3
-Soybean  -> 1069.2
-Wheat    -> 3520.8
-Barley   -> 2795.7
-Corn     -> 3303.3
-```
-
-Consequently, plots such as rainfall vs yield, temperature vs yield, and
-fertilizer vs yield should not currently be interpreted as genuine
-field-level predictive relationships.
-
-# 13. Conclusion
+# Conclusion
 
 EDA identified the distributions and patterns in the cleaned dataset
 and, importantly, revealed a limitation in the current target variable.
