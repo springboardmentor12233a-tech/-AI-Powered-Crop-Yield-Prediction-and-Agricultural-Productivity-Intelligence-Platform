@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Trees, Landmark, LogOut, User, Menu, X, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Trees, Landmark, LogOut, User, Menu, X, ShieldCheck, Database } from 'lucide-react';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import FarmManagement from './pages/FarmManagement';
 import CropManagement from './pages/CropManagement';
+import DatasetPage from './pages/Dataset';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -30,6 +31,7 @@ const Layout = ({ children }) => {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Farms', path: '/farms', icon: Landmark },
     { name: 'Crops', path: '/crops', icon: Trees },
+    { name: 'Dataset', path: '/dataset', icon: Database },
   ];
 
   const handleLogout = () => {
@@ -181,6 +183,11 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/dataset" element={
+          <Layout>
+            <DatasetPage />
+          </Layout>
+        } />
         
         {/* Protected routes wrapped in Layout */}
         <Route path="/" element={
@@ -204,7 +211,6 @@ export default function App() {
             </Layout>
           </ProtectedRoute>
         } />
-
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

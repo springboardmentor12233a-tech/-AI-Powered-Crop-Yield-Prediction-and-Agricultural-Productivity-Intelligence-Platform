@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YieldSense AI Dataset</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f7faf4;
+        color: #1f2937;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 32px auto;
+        padding: 0 20px;
+      }
+      .header {
+        background: white;
+        border: 1px solid #e3ecd9;
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        margin-bottom: 24px;
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      p {
+        margin: 0;
+        color: #64748b;
+      }
+      .badge {
+        display: inline-block;
+        margin-top: 12px;
+        background: #eef6ff;
+        color: #1d4ed8;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        background: white;
+        border: 1px solid #e3ecd9;
+        border-radius: 24px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+      }
+      th, td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #edf2ec;
+        text-align: left;
+      }
+      th {
+        background: #f8fafc;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+      }
+      td {
+        font-size: 14px;
+      }
+      .error {
+        background: #fff1f2;
+        border-left: 4px solid #ef4444;
+        color: #b91c1c;
+        padding: 14px 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Dataset Collection</h2>
+        <p>Cleaned crop yield dataset for analysis and forecasting.</p>
+        <div class="badge" id="record-count">Loading...</div>
+      </div>
+
+      <div id="error" class="error" style="display:none"></div>
+      <div id="loading" class="loading">Loading dataset...</div>
+
+      <div class="table-wrap" id="table-wrap" style="display:none;">
+        <table>
+          <thead id="table-head"></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      async function loadDataset() {
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/dataset');
+          if (!res.ok) throw new Error('Dataset request failed');
+          const data = await res.json();
+
+          const columns = data.columns || [];
+          const rows = data.rows || [];
+
+          document.getElementById('record-count').textContent = `${data.total_rows || rows.length} rows loaded`;
+
+          const thead = document.getElementById('table-head');
+          const tbody = document.getElementById('table-body');
+          thead.innerHTML = '<tr>' + columns.map(c => '<th>' + c + '</th>').join('') + '</tr>';
+
+          tbody.innerHTML = rows.map((row) => {
+            return '<tr>' + columns.map((col) => '<td>' + (row[col] ?? 'N/A') + '</td>').join('') + '</tr>';
+          }).join('');
+
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('table-wrap').style.display = 'block';
+        } catch (error) {
+          document.getElementById('loading').style.display = 'none';
+          const errorBox = document.getElementById('error');
+          errorBox.textContent = 'Unable to load the crop yield dataset. Please make sure the backend is running on http://127.0.0.1:8000';
+          errorBox.style.display = 'block';
+        }
+      }
+
+      loadDataset();
+    </script>
+  </body>
+</html>

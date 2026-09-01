@@ -2,6 +2,8 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import pandas as pd
+from pathlib import Path
 
 from backend.app.db.config import Base, engine, get_db
 from backend.app.db.models import User, Farm, Crop, WeatherData, SoilData
@@ -48,6 +50,19 @@ def health_check(db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database connection error: {str(e)}"
         )
+
+@app.get("/api/dataset", tags=["Dataset"])
+def get_dataset():
+    dataset_path = Path(__file__).resolve().parents[2] / "dataset" / "processed" / "crop_yield_cleaned.csv"
+    if not dataset_path.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found.")
+
+    df = pd.read_csv(dataset_path)
+    return {
+        "columns": df.columns.tolist(),
+        "rows": df.head(100).to_dict(orient="records"),
+        "total_rows": len(df)
+    }
 
 # --- Authentication routes ---
 @app.post("/api/auth/register", response_model=UserOut, tags=["Authentication"])
