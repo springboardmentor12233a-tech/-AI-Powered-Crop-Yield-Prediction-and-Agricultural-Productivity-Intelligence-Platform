@@ -7,7 +7,7 @@
 ## 🌟 Overview & Objectives
 **YieldSense AI** is an AI-powered agricultural intelligence platform designed to help farmers, agronomists, and agricultural organizations forecast crop yields, analyze weather and soil conditions, and optimize resource usage.
 
-### Milestone 1 Achievements (Week 1 & 2)
+### Milestone 1 AchievementS
 1. **System Architecture & Database Design**: Authored system component specifications (`docs/system_architecture.md`), ER database schema (`docs/database_schema.md`), and UI wireframe designs (`docs/ui_layout.md`).
 2. **Dataset Collection & Management**: Ingested and structured `Smart_Farming_Crop_Yield_2024.csv` and `YieldSense_AI_Dataset_Collection.xlsx` into `datasets/raw/`.
 3. **Automated Data Preprocessing Pipeline**: Built `scripts/preprocess_data.py` to clean missing values, normalize date attributes, calculate crop growing duration (`total_days`), and export `datasets/processed/cleaned_crop_yield.csv` alongside `docs/dataset_quality_report.md`.
