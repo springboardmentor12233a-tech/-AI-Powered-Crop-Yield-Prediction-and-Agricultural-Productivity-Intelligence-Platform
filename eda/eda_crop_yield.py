@@ -1,14 +1,9 @@
 """
 Exploratory Data Analysis - Crop Yield Prediction Module
 ==========================================================
-Milestone: EDA on crop_yield_train.csv
-Author: Shivani
-Module: Yield Prediction Module (#3)
+Milestone 1: EDA on crop_yield_train.csv
+By: Shivani
 
-This script performs exploratory data analysis on the crop yield dataset,
-covering: structure/summary stats, missing values, distributions,
-categorical breakdowns, correlations, and outlier checks -- to inform
-feature engineering for the yield prediction pipeline.
 """
 
 import pandas as pd
