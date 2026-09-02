@@ -1,0 +1,152 @@
+YIELDSENSE AI
+SYSTEM WORKFLOW
+
+1. USER ACCESS
+
+The user opens the YieldSense AI web application.
+
+        ↓
+
+2. AUTHENTICATION
+
+The user enters their registered email and password.
+
+The backend verifies the credentials.
+
+If the credentials are valid, the user is redirected to the dashboard.
+
+        ↓
+
+3. DASHBOARD
+
+The dashboard displays:
+- Farm information
+- Crop information
+- Previous predictions
+- Yield summaries
+- Agricultural charts and insights
+
+        ↓
+
+4. FARM AND CROP INPUT
+
+The user enters agricultural information such as:
+- Region
+- Crop type
+- Soil moisture
+- Soil pH
+- Temperature
+- Rainfall
+- Humidity
+- Sunlight hours
+- Irrigation type
+- Fertilizer type
+- Pesticide usage
+- Growing period
+- NDVI index
+- Crop disease status
+
+        ↓
+
+5. INPUT VALIDATION
+
+The backend checks whether the submitted values are valid and within the expected ranges.
+
+Invalid inputs are rejected and the user is asked to correct them.
+
+        ↓
+
+6. DATA PREPROCESSING
+
+The input data is prepared for the machine learning model.
+
+Processing includes:
+- Handling categorical variables
+- Encoding categorical features
+- Converting required values into numerical format
+- Applying the same preprocessing used during model training
+
+        ↓
+
+7. MACHINE LEARNING MODEL
+
+The processed input is passed to the trained crop yield prediction model.
+
+The model analyzes agricultural and environmental features.
+
+        ↓
+
+8. CROP YIELD PREDICTION
+
+The model generates the predicted crop yield.
+
+Output:
+Predicted yield in kg/hectare.
+
+        ↓
+
+9. AGRICULTURAL INSIGHTS
+
+The system provides useful insights based on:
+- Crop type
+- Region
+- Irrigation
+- Fertilizer
+- Environmental conditions
+- Predicted yield
+
+        ↓
+
+10. DATABASE STORAGE
+
+The prediction information is stored in the MySQL database.
+
+Stored information includes:
+- Crop information
+- Input features
+- Predicted yield
+- Model used
+- Prediction date
+
+        ↓
+
+11. RESULT DISPLAY
+
+The prediction result and agricultural insights are displayed on the frontend dashboard.
+
+        ↓
+
+12. USER ACTION
+
+The user can:
+- View the prediction
+- View agricultural insights
+- View previous predictions
+- Submit another prediction
+
+
+COMPLETE SYSTEM FLOW
+
+User
+  ↓
+Login
+  ↓
+Dashboard
+  ↓
+Farm/Crop Input
+  ↓
+Input Validation
+  ↓
+Data Preprocessing
+  ↓
+Machine Learning Model
+  ↓
+Yield Prediction
+  ↓
+Agricultural Insights
+  ↓
+Database Storage
+  ↓
+Result Display
+  ↓
+New Prediction / View History

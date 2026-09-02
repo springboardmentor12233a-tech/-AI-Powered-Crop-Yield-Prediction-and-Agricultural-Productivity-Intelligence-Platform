@@ -1,0 +1,102 @@
+YIELDSENSE AI
+AI-Powered Crop Yield Prediction and Agricultural Productivity Intelligence Platform
+
+SYSTEM ARCHITECTURE
+
+1. USER
+The user interacts with the YieldSense AI platform through the web dashboard.
+
+2. FRONTEND
+Technology:
+HTML
+CSS
+JavaScript
+
+Responsibilities:
+- User interface
+- Display agricultural data
+- Accept crop and farm input
+- Display predicted crop yield
+- Display agricultural insights
+- Display charts and reports
+
+3. BACKEND
+Technology:
+Python Flask
+Flask REST API
+
+Responsibilities:
+- Receive requests from the frontend
+- Validate user inputs
+- Communicate with the ML model
+- Communicate with the database
+- Return prediction results
+- Provide agricultural insights
+
+4. DATA PROCESSING
+Technology:
+Python
+Pandas
+NumPy
+
+Responsibilities:
+- Load agricultural datasets
+- Clean and preprocess data
+- Handle missing values
+- Encode categorical variables
+- Prepare features for machine learning
+
+5. MACHINE LEARNING
+Technology:
+Python
+Scikit-learn
+
+Responsibilities:
+- Train crop yield prediction models
+- Compare different models
+- Evaluate model performance
+- Select the best-performing model
+- Predict crop yield for new inputs
+
+6. DATABASE
+Technology:
+MySQL
+
+Responsibilities:
+- Store user information
+- Store farm information
+- Store crop information
+- Store prediction results
+- Store agricultural records
+
+7. VISUALIZATION
+Technology:
+Matplotlib
+
+Responsibilities:
+- Generate EDA charts
+- Visualize crop yield patterns
+- Visualize regional yield
+- Visualize irrigation and fertilizer effects
+
+SYSTEM FLOW
+
+User
+  ↓
+Frontend Dashboard
+  ↓
+Flask REST API
+  ↓
+Input Validation
+  ↓
+Data Preprocessing
+  ↓
+Machine Learning Model
+  ↓
+Crop Yield Prediction
+  ↓
+Agricultural Insights
+  ↓
+Database
+  ↓
+Prediction Results displayed on Frontend

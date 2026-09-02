@@ -1,0 +1,95 @@
+YIELDSENSE AI
+DATABASE SCHEMA
+
+Database Technology: MySQL
+
+1. USERS TABLE
+
+Purpose:
+Stores user account and authentication information.
+
+Columns:
+- user_id       : INT, Primary Key, Auto Increment
+- name          : VARCHAR(100)
+- email         : VARCHAR(150), Unique
+- password      : VARCHAR(255)
+- role          : VARCHAR(50)
+- created_at    : DATETIME
+
+2. FARMS TABLE
+
+Purpose:
+Stores farm-related information.
+
+Columns:
+- farm_id       : VARCHAR(50), Primary Key
+- user_id       : INT, Foreign Key → users.user_id
+- region        : VARCHAR(100)
+- latitude      : DECIMAL(10,6)
+- longitude     : DECIMAL(10,6)
+
+3. CROPS TABLE
+
+Purpose:
+Stores crop and agricultural information.
+
+Columns:
+- crop_id              : INT, Primary Key, Auto Increment
+- farm_id              : VARCHAR(50), Foreign Key → farms.farm_id
+- crop_type            : VARCHAR(50)
+- soil_moisture         : FLOAT
+- soil_pH               : FLOAT
+- temperature           : FLOAT
+- rainfall              : FLOAT
+- humidity              : FLOAT
+- sunlight_hours        : FLOAT
+- irrigation_type       : VARCHAR(50)
+- fertilizer_type       : VARCHAR(50)
+- pesticide_usage_ml    : FLOAT
+- sowing_date           : DATE
+- harvest_date          : DATE
+- total_days            : INT
+- NDVI_index            : FLOAT
+- crop_disease_status   : VARCHAR(50)
+
+4. PREDICTIONS TABLE
+
+Purpose:
+Stores machine-learning crop yield predictions.
+
+Columns:
+- prediction_id         : INT, Primary Key, Auto Increment
+- crop_id               : INT, Foreign Key → crops.crop_id
+- predicted_yield       : FLOAT
+- model_name             : VARCHAR(100)
+- prediction_date       : DATETIME
+
+RELATIONSHIPS
+
+users
+  ↓
+farms
+  ↓
+crops
+  ↓
+predictions
+
+Relationship details:
+
+- One user can have multiple farms.
+- One farm can contain multiple crop records.
+- One crop record can have multiple predictions.
+- Each prediction is associated with one crop record.
+
+PRIMARY KEYS
+
+users.user_id
+farms.farm_id
+crops.crop_id
+predictions.prediction_id
+
+FOREIGN KEYS
+
+farms.user_id → users.user_id
+crops.farm_id → farms.farm_id
+predictions.crop_id → crops.crop_id
