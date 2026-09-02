@@ -42,6 +42,8 @@ graph TD
     ORM --> Postgres
     Dataset -->|Training Pipeline| ModelArtifact
 
+```
+
 ## Core Components
 
 ### 1. Machine Learning & Inference Pipeline
@@ -57,8 +59,6 @@ graph TD
 * `POST /register`: New user onboarding and credential encryption.
 * `POST /login`: Secure token generation for session authorization.
 * `POST /predict`: Secure inference endpoint that ingests soil/weather metrics and outputs optimal crop recommendations.
-
-
 * **Middleware**: Configured with CORS policy support for seamless cross-origin communication with the frontend client.
 
 ### 3. Frontend Web Dashboard (Next.js)
@@ -69,9 +69,9 @@ graph TD
 * Interactive telemetry input form allowing farmers to fine-tune soil and weather conditions.
 * Glassmorphic result panel rendering real-time AI recommendations.
 
-
-
 ### 4. Database & Persistence Layer
 
 * **Database Management**: Relational PostgreSQL database (Neon DB).
 * **ORM Integration**: SQLAlchemy models handling user registration profiles, roles (`farmer`), and secure credential verification.
+
+```
