@@ -1,8 +1,8 @@
 
-**Title**
+# Title
 YieldSense AI: AI-Powered Crop Yield Prediction & Agricultural Intelligence Platform
 
-**Project Objective**
+# Project Objective
 To empower farmers, agricultural cooperatives, and agribusinesses with real-time, data-driven crop recommendations and harvest outlooks. The platform translates complex soil telemetry and live weather data into actionable, accessible insights to maximize agricultural productivity.
 
 # YieldSense AI — Comprehensive Milestone 1 & Milestone 2 Completion Report
