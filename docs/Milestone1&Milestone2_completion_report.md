@@ -1,6 +1,5 @@
 
-# Title
-YieldSense AI: AI-Powered Crop Yield Prediction & Agricultural Intelligence Platform
+# Title: YieldSense AI: AI-Powered Crop Yield Prediction & Agricultural Intelligence Platform
 
 # Project Objective
 To empower farmers, agricultural cooperatives, and agribusinesses with real-time, data-driven crop recommendations and harvest outlooks. The platform translates complex soil telemetry and live weather data into actionable, accessible insights to maximize agricultural productivity.
@@ -20,7 +19,7 @@ To empower farmers, agricultural cooperatives, and agribusinesses with real-time
 4. **Frontend Development:** Engineered a high-fidelity, interactive, state-driven user interface using Next.js, React, and Tailwind CSS.
 5. **Version Control:** Managed repository structures, environment security, and documentation via Git and GitHub.
 
-## Executive Summary
+**Executive Summary**
 
 This report documents the successful completion of **Milestone 1 (Data Engineering, Dataset Preprocessing & EDA)** and **Milestone 2 (Machine Learning Model Development, Backend API Integration & Frontend Dashboard)** for the **YieldSense AI** platform. The system successfully integrates automated machine learning inference with a secure full-stack web application.
 
