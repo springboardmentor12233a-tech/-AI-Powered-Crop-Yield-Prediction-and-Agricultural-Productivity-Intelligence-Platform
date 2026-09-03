@@ -86,8 +86,8 @@ def train_and_evaluate():
     print(f"[3/7] Train/Test Split: {len(X_train)} train rows, {len(X_test)} test rows (random_state=42).")
 
     # Fit Preprocessor STRICTLY on X_train
-    X_train_trans = preprocessor.fit_transform(X_train)
-    X_test_trans = preprocessor.transform(X_test)
+    X_train_trans: np.ndarray = np.asarray(preprocessor.fit_transform(X_train))
+    X_test_trans: np.ndarray = np.asarray(preprocessor.transform(X_test))
 
     # Save Preprocessor Artifact
     preprocessor_path = os.path.join(models_dir, "preprocessor.pkl")
@@ -198,10 +198,12 @@ def train_and_evaluate():
 
     sample_raw_row = X_test.iloc[0:1]
     assert best_model_obj is not None
-    eval_pred = float(best_model_obj.predict(np.asarray(X_test_trans)[0:1])[0])
+    pred_array: np.ndarray = np.asarray(best_model_obj.predict(X_test_trans[0:1]))
+    eval_pred = float(pred_array[0])
 
     loaded_trans = loaded_preprocessor.transform(sample_raw_row)
-    loaded_pred = loaded_model.predict(loaded_trans)[0]
+    loaded_pred_array: np.ndarray = np.asarray(loaded_model.predict(loaded_trans))
+    loaded_pred = float(loaded_pred_array[0])
 
     diff = abs(eval_pred - loaded_pred)
     assert diff < 1e-6, f"Artifact prediction mismatch! Eval: {eval_pred}, Loaded: {loaded_pred}"
