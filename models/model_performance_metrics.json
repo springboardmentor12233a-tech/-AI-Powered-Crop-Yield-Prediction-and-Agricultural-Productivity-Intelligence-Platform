@@ -1,41 +1,41 @@
 {
   "Dummy Regressor (Mean)": {
-    "mae": 1051.41,
-    "rmse": 1175.44,
-    "r2": -0.0004,
+    "mae": 448.18,
+    "rmse": 547.09,
+    "r2": -0.0102,
     "inference_latency_ms": 0.007
   },
   "Linear Regression": {
-    "mae": 1096.3,
-    "rmse": 1228.65,
-    "r2": -0.0931,
-    "inference_latency_ms": 0.071
+    "mae": 142.87,
+    "rmse": 182.52,
+    "r2": 0.8876,
+    "inference_latency_ms": 0.067
   },
   "Ridge Regression": {
-    "mae": 1091.78,
-    "rmse": 1223.15,
-    "r2": -0.0833,
-    "inference_latency_ms": 0.066
+    "mae": 144.82,
+    "rmse": 184.3,
+    "r2": 0.8854,
+    "inference_latency_ms": 0.063
   },
   "Random Forest": {
-    "mae": 1070.74,
-    "rmse": 1210.82,
-    "r2": -0.0616,
-    "inference_latency_ms": 5.616
+    "mae": 171.62,
+    "rmse": 219.04,
+    "r2": 0.8381,
+    "inference_latency_ms": 4.925
   },
   "XGBoost": {
-    "mae": 1069.26,
-    "rmse": 1214.76,
-    "r2": -0.0685,
-    "inference_latency_ms": 0.553
+    "mae": 191.07,
+    "rmse": 242.9,
+    "r2": 0.8008,
+    "inference_latency_ms": 0.517
   },
   "LightGBM": {
-    "mae": 1054.97,
-    "rmse": 1192.2,
-    "r2": -0.0292,
-    "inference_latency_ms": 0.856
+    "mae": 192.84,
+    "rmse": 247.33,
+    "r2": 0.7935,
+    "inference_latency_ms": 0.848
   },
-  "best_model": "Dummy Regressor (Mean)",
+  "best_model": "Linear Regression",
   "metadata": {
     "dataset_size": 500,
     "train_size": 400,
@@ -58,6 +58,6 @@
       "NDVI_index"
     ],
     "target": "yield_kg_per_hectare",
-    "timestamp": "2026-09-03 19:13:33"
+    "timestamp": "2026-09-03 19:24:26"
   }
 }
