@@ -6,6 +6,9 @@ import { DataExplorer } from './components/DataExplorer';
 import { EdaDashboard } from './components/EdaDashboard';
 import { ArchitectureView } from './components/ArchitectureView';
 import { AuthModal } from './components/AuthModal';
+import { YieldPredictor } from './components/YieldPredictor';
+import { WeatherAnalyticsView } from './components/WeatherAnalyticsView';
+import { SoilAnalysisView } from './components/SoilAnalysisView';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -156,6 +159,18 @@ export function App() {
               cropsList={summary.crops_supported}
             />
           </div>
+        )}
+
+        {activeTab === 'predict' && (
+          <YieldPredictor />
+        )}
+
+        {activeTab === 'weather' && (
+          <WeatherAnalyticsView />
+        )}
+
+        {activeTab === 'soil' && (
+          <SoilAnalysisView />
         )}
 
         {activeTab === 'dataset' && (

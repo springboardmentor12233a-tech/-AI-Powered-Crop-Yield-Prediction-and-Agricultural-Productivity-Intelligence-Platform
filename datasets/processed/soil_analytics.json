@@ -1,0 +1,74 @@
+{
+  "status_claim": "Dataset-based Crop-Aware Soil Analytics",
+  "data_source": "datasets/processed/cleaned_crop_yield.csv",
+  "total_records_analyzed": 500,
+  "global_soil_averages": {
+    "soil_pH": 6.52,
+    "soil_moisture_percent": 26.75,
+    "NDVI_index": 0.602,
+    "overall_soil_health_index": 0.6825
+  },
+  "crop_specific_soil_breakdown": {
+    "Wheat": {
+      "record_count": 92,
+      "average_soil_pH": 6.55,
+      "optimal_pH_range": "6.0 - 7.5",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.55 is within the optimal range (6.0-7.5) for Wheat.",
+      "average_soil_moisture_percent": 24.73,
+      "moisture_sufficiency_percent": 44.96,
+      "average_NDVI_index": 0.589,
+      "soil_health_index": 0.6621,
+      "fertility_assessment": "Moderate Fertility"
+    },
+    "Soybean": {
+      "record_count": 108,
+      "average_soil_pH": 6.52,
+      "optimal_pH_range": "6.0 - 7.0",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.52 is within the optimal range (6.0-7.0) for Soybean.",
+      "average_soil_moisture_percent": 28.34,
+      "moisture_sufficiency_percent": 51.52,
+      "average_NDVI_index": 0.616,
+      "soil_health_index": 0.6973,
+      "fertility_assessment": "Moderate Fertility"
+    },
+    "Maize": {
+      "record_count": 111,
+      "average_soil_pH": 6.52,
+      "optimal_pH_range": "5.8 - 7.2",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.52 is within the optimal range (5.8-7.2) for Maize.",
+      "average_soil_moisture_percent": 26.58,
+      "moisture_sufficiency_percent": 48.33,
+      "average_NDVI_index": 0.607,
+      "soil_health_index": 0.6843,
+      "fertility_assessment": "Moderate Fertility"
+    },
+    "Cotton": {
+      "record_count": 107,
+      "average_soil_pH": 6.54,
+      "optimal_pH_range": "5.8 - 7.5",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.54 is within the optimal range (5.8-7.5) for Cotton.",
+      "average_soil_moisture_percent": 26.53,
+      "moisture_sufficiency_percent": 48.24,
+      "average_NDVI_index": 0.585,
+      "soil_health_index": 0.6726,
+      "fertility_assessment": "Moderate Fertility"
+    },
+    "Rice": {
+      "record_count": 82,
+      "average_soil_pH": 6.49,
+      "optimal_pH_range": "5.5 - 6.8",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.49 is within the optimal range (5.5-6.8) for Rice.",
+      "average_soil_moisture_percent": 27.44,
+      "moisture_sufficiency_percent": 49.89,
+      "average_NDVI_index": 0.615,
+      "soil_health_index": 0.6929,
+      "fertility_assessment": "Moderate Fertility"
+    }
+  },
+  "general_reference_note": "Crop-aware pH ranges are applied specifically per crop type (Rice 5.5-6.8, Wheat 6.0-7.5, Maize 5.8-7.2, Soybean 6.0-7.0, Cotton 5.8-7.5)."
+}

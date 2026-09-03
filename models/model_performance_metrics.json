@@ -1,0 +1,51 @@
+{
+  "Random Forest": {
+    "mae": 1056.51,
+    "rmse": 1203.56,
+    "r2": -0.0489,
+    "inference_latency_ms": 5.941
+  },
+  "XGBoost": {
+    "mae": 1086.32,
+    "rmse": 1280.68,
+    "r2": -0.1876,
+    "inference_latency_ms": 0.77
+  },
+  "LightGBM": {
+    "mae": 1059.64,
+    "rmse": 1239.66,
+    "r2": -0.1127,
+    "inference_latency_ms": 1.278
+  },
+  "Linear Regression": {
+    "mae": 1096.3,
+    "rmse": 1228.65,
+    "r2": -0.0931,
+    "inference_latency_ms": 0.089
+  },
+  "best_model": "Random Forest",
+  "metadata": {
+    "dataset_size": 500,
+    "train_size": 400,
+    "test_size": 100,
+    "random_state": 42,
+    "features": [
+      "crop_type",
+      "region",
+      "irrigation_type",
+      "fertilizer_type",
+      "crop_disease_status",
+      "soil_pH",
+      "soil_moisture_%",
+      "temperature_C",
+      "rainfall_mm",
+      "humidity_%",
+      "sunlight_hours",
+      "pesticide_usage_ml",
+      "total_days",
+      "NDVI_index"
+    ],
+    "target": "yield_kg_per_hectare",
+    "timestamp": "2026-09-03 19:07:04"
+  }
+}

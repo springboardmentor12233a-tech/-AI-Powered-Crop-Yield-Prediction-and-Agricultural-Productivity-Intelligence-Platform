@@ -1,0 +1,80 @@
+{
+  "status_claim": "Dataset-based Weather Analytics",
+  "data_source": "datasets/processed/cleaned_crop_yield.csv",
+  "total_records_analyzed": 500,
+  "available_regions": [
+    "North India",
+    "South USA",
+    "Central USA",
+    "East Africa",
+    "South India"
+  ],
+  "global_averages": {
+    "rainfall_mm": 181.69,
+    "temperature_C": 24.68,
+    "humidity_percent": 65.19,
+    "sunlight_hours": 7.03
+  },
+  "regional_breakdown": {
+    "North India": {
+      "record_count": 99,
+      "average_rainfall_mm": 188.25,
+      "average_temperature_C": 24.76,
+      "average_humidity_percent": 64.18,
+      "average_sunlight_hours": 6.97,
+      "rainfall_adequacy_score": 95.0,
+      "temperature_stress_risk": 15.0,
+      "humidity_balance_score": 90.0,
+      "sunlight_exposure_score": 92.0,
+      "overall_weather_score": 90.55
+    },
+    "South USA": {
+      "record_count": 94,
+      "average_rainfall_mm": 171.46,
+      "average_temperature_C": 24.31,
+      "average_humidity_percent": 65.95,
+      "average_sunlight_hours": 6.96,
+      "rainfall_adequacy_score": 95.0,
+      "temperature_stress_risk": 15.0,
+      "humidity_balance_score": 90.0,
+      "sunlight_exposure_score": 92.0,
+      "overall_weather_score": 90.55
+    },
+    "Central USA": {
+      "record_count": 109,
+      "average_rainfall_mm": 177.81,
+      "average_temperature_C": 25.34,
+      "average_humidity_percent": 64.66,
+      "average_sunlight_hours": 7.13,
+      "rainfall_adequacy_score": 95.0,
+      "temperature_stress_risk": 15.0,
+      "humidity_balance_score": 90.0,
+      "sunlight_exposure_score": 92.0,
+      "overall_weather_score": 90.55
+    },
+    "East Africa": {
+      "record_count": 107,
+      "average_rainfall_mm": 184.43,
+      "average_temperature_C": 24.62,
+      "average_humidity_percent": 65.76,
+      "average_sunlight_hours": 6.93,
+      "rainfall_adequacy_score": 95.0,
+      "temperature_stress_risk": 15.0,
+      "humidity_balance_score": 90.0,
+      "sunlight_exposure_score": 92.0,
+      "overall_weather_score": 90.55
+    },
+    "South India": {
+      "record_count": 91,
+      "average_rainfall_mm": 186.52,
+      "average_temperature_C": 24.24,
+      "average_humidity_percent": 65.49,
+      "average_sunlight_hours": 7.17,
+      "rainfall_adequacy_score": 95.0,
+      "temperature_stress_risk": 15.0,
+      "humidity_balance_score": 90.0,
+      "sunlight_exposure_score": 92.0,
+      "overall_weather_score": 90.55
+    }
+  }
+}
