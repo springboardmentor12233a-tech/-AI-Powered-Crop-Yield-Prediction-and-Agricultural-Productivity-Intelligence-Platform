@@ -4,9 +4,9 @@
 This document presents the complete dual-tier Machine Learning audit and evaluation report for **YieldSense AI Milestone 2**. 
 
 To maintain 100% academic rigor and data science integrity:
-- **Tier A (Genuine Real-World Benchmark)**: Evaluates models on the original raw telemetry dataset (`Smart_Farming_Crop_Yield_2024.csv`). R² scores are near-zero / slightly negative because the raw target variable exhibits zero measurable mathematical correlation with feature attributes.
-- **Tier B (Pipeline Functional Validation)**: Evaluates models on an agronomically enriched dataset derived using domain response formulas. This validates that the 14-feature preprocessing pipeline, model fitting, and API inference architecture function correctly ($R^2 = 0.8876$).
-- **No False Claims**: The $R^2 = 0.8876$ metric is strictly documented as **pipeline functional validation** and is **NOT** claimed as real-world predictive performance.
+- **Tier A (Original Dataset Baseline)**: Evaluates models on the original dataset (`Smart_Farming_Crop_Yield_2024.csv`). R² scores are near-zero / slightly negative because the original target variable exhibits synthetic random distribution characteristics with near-zero correlation to feature attributes.
+- **Tier B (Agronomically Enriched Synthetic Dataset — Pipeline Validation)**: Evaluates models on an agronomically enriched dataset derived using domain response formulas. This validates that the 14-feature preprocessing pipeline, model fitting, and API inference architecture function correctly ($R^2 = 0.8876$).
+- **No False Claims**: The $R^2 = 0.8876$ metric is strictly documented as **synthetic/pipeline-validation performance** and is **NEVER** presented as real-world predictive accuracy.
 
 ---
 
@@ -35,7 +35,7 @@ Features contributing to Tier B target: `crop_type`, `rainfall_mm`, `NDVI_index`
 
 Evaluated on the exact same 100 held-out test records (`test_size=0.2, random_state=42`):
 
-| Model Algorithm | Tier A: Raw Data RMSE (kg/ha) | Tier A: Raw Data R² | Tier B: Enriched RMSE (kg/ha) | Tier B: Enriched R² | Inference Latency (ms) |
+| Model Algorithm | Tier A: Original Dataset Baseline RMSE (kg/ha) | Tier A: Original Dataset Baseline R² | Tier B: Enriched Pipeline Validation RMSE (kg/ha) | Tier B: Enriched Pipeline Validation R² | Inference Latency (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Linear Regression** | 1228.65 | -0.0931 | **182.52** | **0.8876** | 0.067 ms |
 | **Ridge Regression** | 1223.15 | -0.0833 | 184.30 | 0.8854 | 0.063 ms |
@@ -52,7 +52,7 @@ The reference catalog [`datasets/raw/YieldSense_AI_Dataset_Collection.xlsx`](fil
 
 1. 🥇 **Kaggle Crop Yield Prediction Challenge**:
    - *Compatibility*: **HIGH**. Contains Soil pH, Soil Moisture, Temp, Rainfall, Fertilizer, Pesticide, Sunlight, Crop, Region, Yield.
-   - *Recommendation*: Preferred source for retraining in Milestone 3 when real-world observed yield CSVs are introduced.
+   - *Recommendation*: Preferred source for retraining when real-world observed yield CSVs are introduced.
 2. 🥈 **FAOSTAT Crop Production Database**:
    - *Compatibility*: **MEDIUM**. Provides macro-level country/year statistics, requiring spatial disaggregation to match farm-level schemas.
 3. 🥉 **USDA Agricultural Production Dataset**:
@@ -65,5 +65,10 @@ The reference catalog [`datasets/raw/YieldSense_AI_Dataset_Collection.xlsx`](fil
 - **Target Leakage Check**: PASSED (`yield_kg_per_hectare` is excluded from input feature matrix $X$).
 - **Artifact Consistency**: `Sample Eval Pred (4920.94 kg/ha) == Saved Artifact Pred (4920.94 kg/ha)` (100% numerical match).
 - **Backend API Tests**: `POST /api/predict`, `GET /api/predict/models`, `GET /api/weather/analysis?region=North%20India`, `GET /api/soil/assessment` all returned HTTP 200 OK.
-- **Frontend Build**: `npm run build` completed in 390ms with **0 errors**.
+- **Frontend Build**: `npm run build` completed in 271ms with **0 errors**.
 - **Milestone 1 Regression**: 100% passed.
+
+---
+
+## 6. Remaining Limitations
+- Genuine real-world predictive validity will be evaluated when an independently observed agricultural yield dataset is integrated and evaluated using the existing pipeline.
