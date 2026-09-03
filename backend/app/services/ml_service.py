@@ -33,8 +33,11 @@ class MLService:
         if not self.is_ready():
             # Try reloading once in case artifacts were freshly generated
             self._load_artifacts()
-            if not self.is_ready() or self.preprocessor is None or self.model is None:
+            if not self.is_ready():
                 raise RuntimeError("ML model artifacts missing. Please train the models first.")
+
+        assert self.preprocessor is not None
+        assert self.model is not None
 
         # Ensure exact 14-feature ordering matching training
         feature_order = [

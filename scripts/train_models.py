@@ -137,7 +137,7 @@ def train_and_evaluate():
         for _ in range(100):
             model.predict(sample_single_input)
         end_time = time.perf_counter()
-        latency_ms = float(((end_time - start_time) / 100.0) * 1000.0)
+        latency_ms = ((end_time - start_time) / 100.0) * 1000.0
 
         metrics_summary[name] = {
             "mae": round(mae, 2),

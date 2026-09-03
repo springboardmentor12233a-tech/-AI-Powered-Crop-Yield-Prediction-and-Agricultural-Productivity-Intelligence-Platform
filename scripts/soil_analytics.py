@@ -77,7 +77,7 @@ def run_soil_analytics():
             fertility_rating = "Low Fertility"
 
         crop_soil_analytics[crop] = {
-            "record_count": int(len(crop_df)),
+            "record_count": len(crop_df),
             "average_soil_pH": round(avg_ph, 2),
             "optimal_pH_range": f"{ph_range['min']} - {ph_range['max']}",
             "pH_suitability_status": ph_status,
@@ -92,7 +92,7 @@ def run_soil_analytics():
     soil_summary = {
         "status_claim": "Dataset-based Crop-Aware Soil Analytics",
         "data_source": "datasets/processed/cleaned_crop_yield.csv",
-        "total_records_analyzed": int(len(df)),
+        "total_records_analyzed": len(df),
         "global_soil_averages": {
             "soil_pH": round(overall_avg_pH, 2),
             "soil_moisture_percent": round(overall_avg_moisture, 2),

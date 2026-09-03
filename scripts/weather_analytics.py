@@ -87,7 +87,7 @@ def run_weather_analytics():
         )
 
         regional_analytics[region] = {
-            "record_count": int(len(reg_df)),
+            "record_count": len(reg_df),
             "average_rainfall_mm": round(r_rainfall, 2),
             "average_temperature_C": round(r_temp, 2),
             "average_humidity_percent": round(r_humidity, 2),
@@ -102,7 +102,7 @@ def run_weather_analytics():
     overall_weather = {
         "status_claim": "Dataset-based Weather Analytics",
         "data_source": "datasets/processed/cleaned_crop_yield.csv",
-        "total_records_analyzed": int(len(df)),
+        "total_records_analyzed": len(df),
         "available_regions": unique_regions,
         "global_averages": {
             "rainfall_mm": round(avg_rainfall, 2),
