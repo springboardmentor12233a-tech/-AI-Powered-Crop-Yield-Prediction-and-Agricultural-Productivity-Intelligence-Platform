@@ -1,0 +1,27 @@
+{
+  "model_name": "YieldSense Crop Recommendation Classifier",
+  "algorithm": "Random Forest Classifier",
+  "version": "2.0.0",
+  "created_at": "2026-09-03T19:38:45.844019",
+  "dataset": "Crop Recommendation Dataset",
+  "dataset_rows": 7000,
+  "classes_count": 70,
+  "train_samples": 5600,
+  "test_samples": 1400,
+  "features": [
+    "Temperature",
+    "Humidity",
+    "pH",
+    "Rainfall"
+  ],
+  "target": "Label",
+  "metrics": {
+    "cv_5fold_accuracy": 0.9623,
+    "cv_5fold_f1_weighted": 0.9618,
+    "test_accuracy": 0.9586,
+    "test_f1_weighted": 0.9573,
+    "test_f1_macro": 0.9573,
+    "test_precision_weighted": 0.9593,
+    "test_recall_weighted": 0.9586
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "model_name": "YieldSense Crop Yield Regressor",
+  "algorithm": "Ridge Regression",
+  "version": "2.0.0",
+  "created_at": "2026-09-03T19:32:49.000330",
+  "dataset": "Smart Crop Yield Prediction Dataset",
+  "dataset_rows": 10000,
+  "train_samples": 8000,
+  "test_samples": 2000,
+  "categorical_features": [
+    "Crop",
+    "Region",
+    "Soil_Type",
+    "Irrigation",
+    "Previous_Crop"
+  ],
+  "numerical_features": [
+    "Soil_pH",
+    "Rainfall_mm",
+    "Temperature_C",
+    "Humidity_pct",
+    "Fertilizer_Used_kg",
+    "Pesticides_Used_kg",
+    "Planting_Density"
+  ],
+  "target": "Yield_ton_per_ha",
+  "metrics": {
+    "cv_5fold_r2": 0.9825,
+    "cv_5fold_rmse": 5.0204,
+    "cv_5fold_mae": 3.984,
+    "test_r2": 0.9821,
+    "test_rmse": 5.0806,
+    "test_mae": 4.0765,
+    "test_mse": 25.8126
+  }
+}
