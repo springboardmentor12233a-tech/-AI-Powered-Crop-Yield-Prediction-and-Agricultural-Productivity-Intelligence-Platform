@@ -1,10 +1,11 @@
 import os
 import json
+from typing import Optional
 
 SOIL_JSON_PATH = os.path.join("datasets", "processed", "soil_analytics.json")
 
 class SoilService:
-    def get_soil_assessment(self, crop_type: str = None) -> dict:
+    def get_soil_assessment(self, crop_type: Optional[str] = None) -> dict:
         if not os.path.exists(SOIL_JSON_PATH):
             raise FileNotFoundError("Soil analytics data not found. Please run scripts/soil_analytics.py first.")
 

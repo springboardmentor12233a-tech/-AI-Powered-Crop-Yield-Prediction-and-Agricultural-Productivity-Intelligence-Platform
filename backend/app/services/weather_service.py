@@ -1,10 +1,11 @@
 import os
 import json
+from typing import Optional
 
 WEATHER_JSON_PATH = os.path.join("datasets", "processed", "weather_analytics.json")
 
 class WeatherService:
-    def get_weather_analytics(self, region: str = None) -> dict:
+    def get_weather_analytics(self, region: Optional[str] = None) -> dict:
         if not os.path.exists(WEATHER_JSON_PATH):
             raise FileNotFoundError("Weather analytics data not found. Please run scripts/weather_analytics.py first.")
 
@@ -15,7 +16,6 @@ class WeatherService:
             return data
 
         regional_breakdown = data.get("regional_breakdown", {})
-        # Case-insensitive region lookup
         matched_region = None
         for reg_key in regional_breakdown.keys():
             if reg_key.lower() == region.strip().lower():

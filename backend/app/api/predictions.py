@@ -9,20 +9,20 @@ from backend.app.services.ml_service import ml_service
 router = APIRouter(prefix="/api/predict", tags=["Yield Predictions"])
 
 class YieldPredictionRequest(BaseModel):
-    crop_type: str = Field(..., example="Wheat")
-    region: str = Field(..., example="North India")
-    irrigation_type: str = Field(..., example="Drip")
-    fertilizer_type: str = Field(..., example="NPK 14-35-14")
-    crop_disease_status: str = Field(..., example="None")
-    soil_pH: float = Field(..., ge=3.0, le=10.0, example=6.5)
-    soil_moisture_percent: float = Field(..., alias="soil_moisture_%", ge=0.0, le=100.0, example=45.0)
-    temperature_C: float = Field(..., ge=-10.0, le=60.0, example=24.5)
-    rainfall_mm: float = Field(..., ge=0.0, le=2000.0, example=185.0)
-    humidity_percent: float = Field(..., alias="humidity_%", ge=0.0, le=100.0, example=62.0)
-    sunlight_hours: float = Field(..., ge=0.0, le=24.0, example=7.5)
-    pesticide_usage_ml: float = Field(..., ge=0.0, example=450.0)
-    total_days: int = Field(..., ge=1, le=365, example=120)
-    NDVI_index: float = Field(..., ge=0.0, le=1.0, example=0.68)
+    crop_type: str = Field(..., json_schema_extra={"example": "Wheat"})
+    region: str = Field(..., json_schema_extra={"example": "North India"})
+    irrigation_type: str = Field(..., json_schema_extra={"example": "Drip"})
+    fertilizer_type: str = Field(..., json_schema_extra={"example": "NPK 14-35-14"})
+    crop_disease_status: str = Field(..., json_schema_extra={"example": "None"})
+    soil_pH: float = Field(..., ge=3.0, le=10.0, json_schema_extra={"example": 6.5})
+    soil_moisture_percent: float = Field(..., alias="soil_moisture_%", ge=0.0, le=100.0, json_schema_extra={"example": 45.0})
+    temperature_C: float = Field(..., ge=-10.0, le=60.0, json_schema_extra={"example": 24.5})
+    rainfall_mm: float = Field(..., ge=0.0, le=2000.0, json_schema_extra={"example": 185.0})
+    humidity_percent: float = Field(..., alias="humidity_%", ge=0.0, le=100.0, json_schema_extra={"example": 62.0})
+    sunlight_hours: float = Field(..., ge=0.0, le=24.0, json_schema_extra={"example": 7.5})
+    pesticide_usage_ml: float = Field(..., ge=0.0, json_schema_extra={"example": 450.0})
+    total_days: int = Field(..., ge=1, le=365, json_schema_extra={"example": 120})
+    NDVI_index: float = Field(..., ge=0.0, le=1.0, json_schema_extra={"example": 0.68})
 
     class Config:
         populate_by_name = True
@@ -67,7 +67,7 @@ def get_model_performance_metrics():
     metrics_path = os.path.join("models", "model_performance_metrics.json")
     if not os.path.exists(metrics_path):
         raise HTTPException(
-            status_code=status.HTTP_444_NOT_FOUND if hasattr(status, 'HTTP_444_NOT_FOUND') else 404,
+            status_code=404,
             detail="Model performance metrics JSON not found. Please train models first."
         )
 
