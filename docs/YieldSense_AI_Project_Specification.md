@@ -26,7 +26,7 @@ This solution can be used by:
 
 ### Key Outcomes
 - Developed and deployed an AI-powered crop yield prediction and agricultural productivity forecasting platform.
-- Implemented authentication and role-based access control (RBAC) systems.
+- Implemented authentication and role-based access control systems.
 - Built crop yield forecasting and production estimation workflows.
 - Developed weather analysis and soil assessment modules.
 - Implemented productivity prediction and agricultural recommendation systems.
@@ -36,7 +36,12 @@ This solution can be used by:
 
 ---
 
-## 3. Architecture Overview & Modules to be Implemented
+## 3. Architecture Diagram
+The platform follows a centralized high-level architecture connecting presentation dashboards, API backend services, machine learning inference engines, and open-source agricultural datasets.
+
+---
+
+## 4. Modules to be Implemented
 
 ### Module 1: User Management Module
 - Farmer registration and login
@@ -52,17 +57,21 @@ This solution can be used by:
 
 #### Recommended Open-Source Agricultural Datasets
 1. **FAOSTAT Crop Production Dataset** (Source: Food and Agriculture Organization)
-   - *Includes*: Crop production statistics, harvested area, yield measurements, country and regional data.
+   - *Data Includes*: Crop production statistics, harvested area, yield measurements, country and regional agricultural data.
    - *Use Cases*: Crop yield prediction, production trend analysis, seasonal forecasting.
 2. **USDA Crop Yield and Agricultural Data** (Source: United States Department of Agriculture)
-   - *Includes*: Historical crop yield records, crop acreage information, productivity metrics.
-   - *Use Cases*: Yield forecasting model training, productivity analysis.
+   - *Data Includes*: Historical crop yield records, crop acreage information, agricultural productivity metrics, regional farming statistics.
+   - *Use Cases*: Yield forecasting model training, productivity analysis, comparative agricultural studies.
 3. **Kaggle Crop Yield Prediction Dataset** (Source: Kaggle Open Datasets)
-   - *Includes*: Crop info, rainfall records, temperature data, soil characteristics, historical yield measurements.
-   - *Use Cases*: ML model development, weather impact analysis, recommendation systems.
+   - *Data Includes*: Crop information, rainfall records, temperature data, soil characteristics, historical yield measurements.
+   - *Use Cases*: Machine learning model development, weather impact analysis, agricultural recommendation systems.
 
 #### Dataset Usage in YieldSense AI
-The platform combines historical crop yield, weather, and soil datasets to train machine learning models for:
+The platform combines:
+- Historical crop yield datasets
+- Weather datasets
+- Soil datasets
+to train machine learning models for:
 - Crop yield forecasting
 - Harvest estimation
 - Productivity prediction
@@ -101,7 +110,7 @@ The platform combines historical crop yield, weather, and soil datasets to train
 
 ---
 
-## 4. Week-Wise Implementation Roadmap & Milestones
+## 5. Week-wise Module Implementation and High-Level Requirements
 
 ### Milestone 1: Week 1 & 2 — Project Initialization, Design Process & Core Setup
 - Define project objectives and agricultural forecasting workflows.
@@ -111,38 +120,140 @@ The platform combines historical crop yield, weather, and soil datasets to train
 - Implement authentication and role-based access system.
 - Collect agricultural datasets.
 - Build data collection and preprocessing workflows.
-- **Outcomes**: Understand precision agriculture AI applications, database design, working authentication and data management.
+- **Outcomes**: Understand AI applications in precision agriculture, learn system architecture and database design concepts, build frontend/backend project initialization, working authentication and data management system.
 
 ### Milestone 2: Week 3 & 4 — Yield Prediction & Agricultural Analysis
-- Train machine learning forecasting models (Scikit-learn, XGBoost, LightGBM, Random Forest).
-- Evaluate prediction accuracy and model performance (RMSE, MAE, R² score).
+- Train machine learning forecasting models.
+- Evaluate prediction accuracy and model performance.
 - Generate crop yield prediction reports.
 - Build weather analytics module.
 - Develop soil analysis workflows.
-- **Outcomes**: Working AI prediction engine and real-time yield forecasting insights.
+- Generate agricultural insights and forecasting reports.
+- **Outcomes**: Implement crop yield forecasting and analysis systems, build AI-powered prediction workflows, understand predictive analytics and agricultural forecasting concepts, generate real-time yield prediction insights.
 
 ### Milestone 3: Week 5 & 6 — Dashboard, Reporting & Recommendations
 - Develop analytics dashboards.
 - Generate productivity and seasonal reports.
 - Build visualization components.
-- Implement recommendation workflows (crop planning, fertilizer advice).
-- Generate farming suggestions and risk assessment features.
-- **Outcomes**: Complete decision support analytics & recommendation workflows.
+- Implement recommendation workflows.
+- Generate farming suggestions and optimization advice.
+- Develop risk assessment features.
+- **Outcomes**: Build analytics and recommendation systems, implement reporting and visualization workflows, understand data-driven farming decision support concepts, complete end-to-end agricultural intelligence workflows.
 
 ### Milestone 4: Week 7 & 8 — Testing, Deployment & Documentation
 - Validate prediction models and forecasting accuracy.
 - Optimize system performance and dashboard responsiveness.
-- Deploy platform using Docker and cloud environments (AWS / Azure).
+- Deploy platform using Docker and cloud environments.
 - Prepare final project documentation and presentation.
-- **Outcomes**: Fully deployed live system & demonstration.
+- Demonstrate the complete YieldSense AI platform.
+- **Outcomes**: Gain deployment and testing experience, improve prediction accuracy and platform usability, complete live deployment and final demonstration, prepare professional project documentation and presentation.
 
 ---
 
-## 5. Tools & Tech Stack
+## 6. Evaluation Criteria
+
+### Milestone 1 (Week 2)
+- Project initialization and architecture setup completed.
+- Authentication and data collection workflows implemented.
+- Dataset preprocessing and management system functional.
+- System design and UI planning completed.
+
+### Milestone 2 (Week 4)
+- Yield prediction and forecasting workflows implemented.
+- Weather and soil analysis modules functional.
+- Prediction reports generated successfully.
+- Agricultural insights dashboard integrated.
+
+### Milestone 3 (Week 6)
+- Analytics dashboard and reporting system implemented.
+- Recommendation engine functional.
+- Productivity reports and visualizations generated.
+- Risk assessment workflows integrated.
+
+### Milestone 4 (Week 8)
+- Fully deployed frontend and backend.
+- Model testing and validation completed.
+- Documentation and presentation prepared.
+- Successful end-to-end platform demonstration completed.
+
+---
+
+## 7. Tools & Tech Stack
+
+### Programming Language
 - **Backend**: Python (FastAPI / Flask)
-- **Frontend**: React.js / Next.js, Tailwind CSS / Vanilla Glassmorphism CSS
-- **Database**: PostgreSQL / MongoDB
-- **AI & ML**: Scikit-learn, TensorFlow, XGBoost, Pandas, NumPy
-- **Auth**: JWT Authentication
-- **Data Sources**: Weather APIs, FAOSTAT, USDA, Kaggle Crop Datasets
-- **Cloud & DevOps**: Docker, AWS / Azure, Git + GitHub, VS Code
+- **Frontend**: React.js / Next.js
+
+### Database
+- PostgreSQL
+- MongoDB
+
+### AI & Machine Learning
+- Scikit-learn
+- TensorFlow
+- XGBoost
+- Pandas
+- NumPy
+
+### Data Sources
+- Weather APIs
+- FAOSTAT Crop Production Dataset
+- USDA Agricultural Data
+- Kaggle Crop Yield Prediction Dataset
+- Soil Analysis Data
+
+### Cloud & DevOps
+- Docker
+- AWS / Azure
+
+### Libraries & Frameworks
+- FastAPI / Flask
+- React.js / Next.js
+- Tailwind CSS / Glassmorphism CSS
+- JWT Authentication
+- TensorFlow / XGBoost
+- Chart.js / Recharts
+
+### Dev & Deployment Tools
+- **IDE**: VS Code
+- **Version Control**: Git + GitHub
+- **Containerization**: Docker & Docker Compose
+- **Deployment**: AWS / Azure
+- **API Testing**: Postman
+- **Monitoring**: Optional Logging & Monitoring Tools
+
+---
+
+## 8. Performance Metrics
+
+### AI Model Performance
+- Prediction accuracy
+- Mean Absolute Error (MAE)
+- Root Mean Square Error (RMSE)
+- Model inference time
+
+### Agricultural Performance
+- Yield estimation accuracy
+- Weather impact prediction accuracy
+- Recommendation effectiveness
+
+### System Performance
+- Dashboard response time
+- Data processing speed
+- API latency
+
+---
+
+## 9. Example Quantitative Goals
+
+### Crop Yield Prediction
+- Achieve accurate crop yield forecasting and harvest estimation.
+
+### Weather & Soil Analysis
+- Generate reliable weather impact and soil suitability assessments.
+
+### Agricultural Recommendations
+- Provide data-driven farming recommendations and risk mitigation strategies.
+
+### Platform Performance
+- Support large-scale agricultural forecasting and analytics with stable system performance.
