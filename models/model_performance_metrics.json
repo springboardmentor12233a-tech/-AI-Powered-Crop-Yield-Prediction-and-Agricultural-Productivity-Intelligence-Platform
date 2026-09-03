@@ -3,37 +3,37 @@
     "mae": 448.18,
     "rmse": 547.09,
     "r2": -0.0102,
-    "inference_latency_ms": 0.007
+    "inference_latency_ms": 0.008
   },
   "Linear Regression": {
     "mae": 142.87,
     "rmse": 182.52,
     "r2": 0.8876,
-    "inference_latency_ms": 0.067
+    "inference_latency_ms": 0.062
   },
   "Ridge Regression": {
     "mae": 144.82,
     "rmse": 184.3,
     "r2": 0.8854,
-    "inference_latency_ms": 0.063
+    "inference_latency_ms": 0.068
   },
   "Random Forest": {
     "mae": 171.62,
     "rmse": 219.04,
     "r2": 0.8381,
-    "inference_latency_ms": 4.925
+    "inference_latency_ms": 4.818
   },
   "XGBoost": {
     "mae": 191.07,
     "rmse": 242.9,
     "r2": 0.8008,
-    "inference_latency_ms": 0.517
+    "inference_latency_ms": 0.47
   },
   "LightGBM": {
     "mae": 192.84,
     "rmse": 247.33,
     "r2": 0.7935,
-    "inference_latency_ms": 0.848
+    "inference_latency_ms": 0.84
   },
   "best_model": "Linear Regression",
   "metadata": {
@@ -58,6 +58,6 @@
       "NDVI_index"
     ],
     "target": "yield_kg_per_hectare",
-    "timestamp": "2026-09-03 19:24:26"
+    "timestamp": "2026-09-03 19:27:14"
   }
 }
