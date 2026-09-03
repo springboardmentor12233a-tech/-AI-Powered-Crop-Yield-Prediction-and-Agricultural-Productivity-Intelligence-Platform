@@ -197,6 +197,7 @@ def train_and_evaluate():
     loaded_model = joblib.load(best_model_path)
 
     sample_raw_row = X_test.iloc[0:1]
+    assert best_model_obj is not None
     eval_pred = best_model_obj.predict(X_test_trans[0:1])[0]
 
     loaded_trans = loaded_preprocessor.transform(sample_raw_row)
