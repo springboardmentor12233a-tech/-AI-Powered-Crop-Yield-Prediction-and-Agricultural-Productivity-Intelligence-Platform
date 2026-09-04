@@ -45,7 +45,9 @@ Evaluated on the exact same 100 held-out test records (`test_size=0.2, random_st
 | **Dummy Regressor (Mean Baseline)** | **1175.44** | **-0.0004** | 547.09 | -0.0102 | **0.007 ms** |
 
 ### 3.1 Model Performance Rationale (Linear vs. Tree Ensembles)
-* **Why Linear Regression leads**: Linear & Ridge Regression outperform tree-based ensembles (XGBoost, Random Forest, LightGBM) on this dataset because standard feature scaling (`StandardScaler`) combined with continuous additive domain response functions creates a smooth, non-segmented target surface without step-discontinuities. On a 500-record dataset (400 train, 100 test), tree models introduce minor variance over-fitting across leaf splits, whereas Linear Regression achieves the optimal bias-variance trade-off.
+* **Additive Functional Form**: The agronomic response target function consists of continuous, additive linear sub-terms (base yield + linear rainfall slope - linear temperature penalty - linear soil pH penalty), perfectly matching the linear hypothesis space of OLS Linear and Ridge Regression.
+* **Sample Size & Partitioning Variance**: Tree ensembles (Random Forest, XGBoost, LightGBM) partition continuous feature space into step-wise orthogonal hypercubes. On a 400-sample training dataset, step-wise partitioning introduces boundary approximation variance, whereas OLS Linear Regression fits the continuous global hyperplane without partition boundary error. (Note: Tree models are scale-invariant to monotonic transformations such as `StandardScaler()`; `StandardScaler()` strictly benefits the optimization convergence of Linear/Ridge regression).
+* **Tree Hyperparameter Bounds**: Conservative `GridSearchCV` depth bounds (`max_depth=3`, `n_estimators=100` for XGBoost; `min_samples_leaf=2`, `n_estimators=50` for Random Forest) limit the piecewise step resolution of tree models relative to the continuous linear plane.
 
 ---
 
