@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers } from 'lucide-react';
+import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers, Brain } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -55,6 +55,13 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Cpu size={15} />
           Yield Predictor
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'recommendations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('recommendations')}
+        >
+          <Brain size={15} />
+          AI Directives
         </button>
         <button
           className={`tab-btn ${activeTab === 'weather' ? 'active' : ''}`}

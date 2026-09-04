@@ -8,6 +8,7 @@ import { AuthModal } from './components/AuthModal';
 import { YieldPredictor } from './components/YieldPredictor';
 import { WeatherAnalyticsView } from './components/WeatherAnalyticsView';
 import { SoilAnalysisView } from './components/SoilAnalysisView';
+import { RecommendationsView } from './components/RecommendationsView';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -162,6 +163,10 @@ export function App() {
 
         {activeTab === 'predict' && (
           <YieldPredictor />
+        )}
+
+        {activeTab === 'recommendations' && (
+          <RecommendationsView />
         )}
 
         {activeTab === 'weather' && (
