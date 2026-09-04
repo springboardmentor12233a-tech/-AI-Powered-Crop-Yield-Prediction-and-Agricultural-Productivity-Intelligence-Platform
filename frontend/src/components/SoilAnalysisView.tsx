@@ -36,15 +36,15 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
   const metrics = data?.soil_metrics;
 
   return (
-    <div className="section-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="section-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
       
       {/* Header Banner */}
-      <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(192,132,252,0.08) 100%)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="glass-card" style={{ padding: '1.5rem 1.75rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(192,132,252,0.08) 100%)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.4rem' }}>
               <Layers className="gradient-text-green" size={28} />
-              <h2 style={{ fontSize: '1.4rem', color: '#ffffff', margin: 0, fontWeight: 700 }}>
+              <h2 style={{ fontSize: '1.4rem', color: '#ffffff', margin: 0, fontWeight: 800 }}>
                 Crop-Aware Soil Health & Fertility Assessment
               </h2>
             </div>
@@ -53,30 +53,42 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 0.9rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <Info size={16} color="#34d399" />
-            <span style={{ fontSize: '0.78rem', color: '#a7f3d0', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.8rem', color: '#a7f3d0', fontWeight: 600 }}>
               {data?.status_claim || 'Dataset-based Crop-Aware Soil Analytics'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Crop Type Selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Select Crop Species:</label>
+      {/* Crop Type Selector Bar */}
+      <div className="glass-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <label style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700 }}>Select Crop Species:</label>
         <select
           value={selectedCrop}
           onChange={(e) => setSelectedCrop(e.target.value)}
-          className="search-input"
-          style={{ width: '220px' }}
+          style={{
+            background: '#0c1610',
+            color: '#ffffff',
+            border: '1px solid var(--border-color)',
+            padding: '0.65rem 1.25rem',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            minWidth: '240px',
+            outline: 'none'
+          }}
         >
-          <option value="Wheat">Wheat</option>
-          <option value="Rice">Rice</option>
-          <option value="Maize">Maize</option>
-          <option value="Soybean">Soybean</option>
-          <option value="Cotton">Cotton</option>
+          <option value="Wheat" style={{ background: '#0c1610', color: '#ffffff' }}>Wheat</option>
+          <option value="Rice" style={{ background: '#0c1610', color: '#ffffff' }}>Rice</option>
+          <option value="Maize" style={{ background: '#0c1610', color: '#ffffff' }}>Maize</option>
+          <option value="Soybean" style={{ background: '#0c1610', color: '#ffffff' }}>Soybean</option>
+          <option value="Cotton" style={{ background: '#0c1610', color: '#ffffff' }}>Cotton</option>
         </select>
+        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          Showing soil telemetry metrics for <strong style={{ color: '#34d399' }}>{selectedCrop}</strong>
+        </span>
       </div>
 
       {error && (
@@ -86,81 +98,89 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
       )}
 
       {loading && (
-        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-          Loading soil assessment...
+        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem' }}>
+          Loading crop-aware soil health assessment...
         </div>
       )}
 
       {metrics && !loading && (
         <>
-          {/* Main Metric Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Main Metric Cards Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
             
-            <div className="glass-card" style={{ padding: '1.2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Soil Health Index</span>
-                <Sparkles size={20} />
+            <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: '4px solid #10b981' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#34d399' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Soil Health Index</span>
+                <Sparkles size={22} />
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0' }}>
-                {metrics.soil_health_index} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/ 1.0</span>
-              </div>
-              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#34d399' }}>
-                {metrics.fertility_assessment}
-              </div>
-            </div>
-
-            <div className="glass-card" style={{ padding: '1.2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#60a5fa' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Soil pH Suitability</span>
-                <TestTube size={20} />
-              </div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0' }}>
-                {metrics.average_soil_pH} <span style={{ fontSize: '0.85rem', color: '#93c5fd' }}>pH</span>
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Target Range for {data.crop_type}: {metrics.optimal_pH_range}
+              <div>
+                <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0', letterSpacing: '-0.02em' }}>
+                  {metrics.soil_health_index} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>/ 1.0</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#34d399' }}>
+                  {metrics.fertility_assessment}
+                </div>
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: '1.2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#38bdf8' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Moisture Sufficiency</span>
-                <Droplets size={20} />
+            <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: '4px solid #3b82f6' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#60a5fa' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Soil pH Suitability</span>
+                <TestTube size={22} />
               </div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0' }}>
-                {metrics.moisture_sufficiency_percent} %
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Avg Moisture: {metrics.average_soil_moisture_percent} %
+              <div>
+                <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0', letterSpacing: '-0.02em' }}>
+                  {metrics.average_soil_pH} <span style={{ fontSize: '1rem', color: '#93c5fd', fontWeight: 500 }}>pH</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Optimal Range for {data.crop_type}: <strong style={{ color: '#ffffff' }}>{metrics.optimal_pH_range}</strong>
+                </div>
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: '1.2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#c084fc' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Vegetation (NDVI)</span>
-                <Layers size={20} />
+            <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: '4px solid #38bdf8' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#38bdf8' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Moisture Sufficiency</span>
+                <Droplets size={22} />
               </div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0' }}>
-                {metrics.average_NDVI_index}
+              <div>
+                <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0', letterSpacing: '-0.02em' }}>
+                  {metrics.moisture_sufficiency_percent} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>%</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Avg Soil Moisture: <strong style={{ color: '#7dd3fc' }}>{metrics.average_soil_moisture_percent} %</strong>
+                </div>
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Canopy Density Rating
+            </div>
+
+            <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeft: '4px solid #c084fc' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#c084fc' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vegetation Vigor (NDVI)</span>
+                <Layers size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: '2.1rem', fontWeight: 800, color: '#ffffff', margin: '0.4rem 0', letterSpacing: '-0.02em' }}>
+                  {metrics.average_NDVI_index}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Canopy Density Rating Index
+                </div>
               </div>
             </div>
 
           </div>
 
-          {/* Actionable Advice & Note */}
-          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <h3 style={{ fontSize: '1.05rem', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* Actionable pH & Soil Recommendation Banner */}
+          <div className="glass-card" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(59,130,246,0.06) 100%)' }}>
+            <h3 style={{ fontSize: '1.1rem', color: '#ffffff', margin: '0 0 0.75rem 0', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <CheckCircle size={18} color="#34d399" />
-              Actionable Soil Management Recommendation
+              Agronomic Soil Management Guidance for {selectedCrop}
             </h3>
-            <p style={{ color: '#d1d5db', fontSize: '0.9rem', margin: 0, lineHeight: 1.5, background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ fontSize: '0.9rem', color: '#e2e8f0', margin: '0 0 0.5rem 0', lineHeight: 1.6 }}>
               {metrics.pH_recommendation}
             </p>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.2rem' }}>
-              * {data.general_reference_note}
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+              * Evaluated against crop-specific agronomic pH boundaries from dataset records ({metrics.record_count} total samples analyzed).
             </div>
           </div>
         </>

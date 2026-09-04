@@ -3,9 +3,9 @@
 :root {
   /* Stitch Design System - Precision Agritech Tokens */
   --bg-dark: #070d09;
-  --bg-card: rgba(14, 25, 18, 0.85);
-  --bg-card-hover: rgba(22, 38, 28, 0.95);
-  --border-color: rgba(27, 94, 63, 0.32);
+  --bg-card: rgba(14, 25, 18, 0.88);
+  --bg-card-hover: rgba(22, 38, 28, 0.96);
+  --border-color: rgba(27, 94, 63, 0.35);
   --border-glow: rgba(16, 185, 129, 0.45);
   
   --primary-crop-green: #1b5e3f;
@@ -53,6 +53,36 @@ body {
 .num-tabular, td, .metric-value {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+}
+
+/* Universal Select & Option Dropdown Styling (Dark Theme Alignment) */
+select {
+  background-color: rgba(14, 25, 18, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1rem;
+  font-family: 'Manrope', sans-serif;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+select:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+option {
+  background-color: #0c1610 !important;
+  color: #f3f8f5 !important;
+  padding: 0.75rem 1rem;
+  font-family: 'Manrope', sans-serif;
+}
+
+option:hover, option:focus, option:active, option:checked {
+  background-color: #1b5e3f !important;
+  color: #a7f3d0 !important;
 }
 
 /* Glassmorphism Card Utility */
