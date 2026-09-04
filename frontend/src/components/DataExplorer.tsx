@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Download, ChevronLeft, ChevronRight, Database } from 'lucide-react';
 
 interface CropRecord {
   farm_id: string;
@@ -64,18 +64,21 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
   };
 
   return (
-    <div className="glass-card" style={{ padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="glass-card" style={{ padding: '1.75rem' }}>
+      
+      {/* Header Controls Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1.25rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Database size={20} color="#10b981" />
             Crop Telemetry & Dataset Explorer
           </h2>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
             Showing {records.length} of {totalRecords} agricultural sensor records
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
@@ -84,7 +87,7 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="input-control"
-              style={{ paddingLeft: '2.2rem', width: '210px' }}
+              style={{ paddingLeft: '2.4rem', width: '230px' }}
             />
           </div>
 
@@ -92,7 +95,7 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
             value={selectedCrop}
             onChange={e => setSelectedCrop(e.target.value)}
             className="input-control"
-            style={{ background: '#121a29' }}
+            style={{ background: '#0e1912', minWidth: '150px' }}
           >
             <option value="">All Crop Types</option>
             {cropsList.map(c => (
@@ -107,11 +110,12 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
         </div>
       </div>
 
+      {/* Spacious Data Table */}
       <div className="table-container">
         <table className="custom-table">
           <thead>
             <tr>
-              <th>Farm ID</th>
+              <th style={{ paddingLeft: '1.5rem' }}>Farm ID</th>
               <th>Region</th>
               <th>Crop</th>
               <th>Soil pH</th>
@@ -122,27 +126,29 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
               <th>Duration</th>
               <th>Yield (kg/ha)</th>
               <th>NDVI</th>
-              <th>Disease</th>
+              <th style={{ paddingRight: '1.5rem' }}>Disease</th>
             </tr>
           </thead>
           <tbody>
             {records.map((r, idx) => (
               <tr key={idx}>
-                <td style={{ fontWeight: 700, color: '#60a5fa' }}>{r.farm_id}</td>
-                <td>{r.region}</td>
+                <td style={{ paddingLeft: '1.5rem', fontWeight: 800, color: '#60a5fa' }}>{r.farm_id}</td>
+                <td style={{ color: 'var(--text-main)' }}>{r.region}</td>
                 <td>
                   <span className="badge badge-green">{r.crop_type}</span>
                 </td>
-                <td>{r.soil_pH}</td>
-                <td>{r.temperature_C}°C</td>
-                <td>{r.rainfall_mm} mm</td>
-                <td>{r.irrigation_type}</td>
-                <td>{r.fertilizer_type}</td>
-                <td>{r.total_days} days</td>
-                <td style={{ fontWeight: 800, color: '#34d399' }}>{r.yield_kg_per_hectare?.toLocaleString()}</td>
-                <td>{r.NDVI_index}</td>
-                <td>
-                  <span className={`badge ${r.crop_disease_status === 'None' ? 'badge-green' : r.crop_disease_status === 'Mild' ? 'badge-blue' : 'badge-amber'}`}>
+                <td style={{ color: 'var(--text-main)', fontWeight: 600 }}>{r.soil_pH}</td>
+                <td style={{ color: 'var(--text-main)' }}>{r.temperature_C}°C</td>
+                <td style={{ color: 'var(--text-main)' }}>{r.rainfall_mm} mm</td>
+                <td style={{ color: 'var(--text-muted)' }}>{r.irrigation_type}</td>
+                <td style={{ color: 'var(--text-muted)' }}>{r.fertilizer_type}</td>
+                <td style={{ color: 'var(--text-muted)' }}>{r.total_days} days</td>
+                <td style={{ fontWeight: 800, color: '#34d399', fontSize: '0.95rem' }}>
+                  {r.yield_kg_per_hectare?.toLocaleString()}
+                </td>
+                <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{r.NDVI_index}</td>
+                <td style={{ paddingRight: '1.5rem' }}>
+                  <span className={`badge ${r.crop_disease_status === 'None' ? 'badge-green' : r.crop_disease_status === 'Mild' ? 'badge-blue' : r.crop_disease_status === 'Moderate' ? 'badge-amber' : 'badge-red'}`}>
                     {r.crop_disease_status}
                   </span>
                 </td>
@@ -152,44 +158,31 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
         </table>
       </div>
 
-      {/* Pagination Footer */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+      {/* Table Pagination */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          Page {page} of {totalPages}
+          Page <strong style={{ color: '#ffffff' }}>{page}</strong> of <strong style={{ color: '#ffffff' }}>{totalPages}</strong>
         </span>
-
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              background: page <= 1 ? 'transparent' : 'rgba(255,255,255,0.05)',
-              color: page <= 1 ? 'var(--text-dim)' : 'var(--text-main)',
-              cursor: page <= 1 ? 'not-allowed' : 'pointer'
-            }}
+            onClick={() => onPageChange(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="tab-btn"
+            style={{ opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'not-allowed' : 'pointer' }}
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={16} /> Previous
           </button>
-
           <button
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              background: page >= totalPages ? 'transparent' : 'rgba(255,255,255,0.05)',
-              color: page >= totalPages ? 'var(--text-dim)' : 'var(--text-main)',
-              cursor: page >= totalPages ? 'not-allowed' : 'pointer'
-            }}
+            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="tab-btn"
+            style={{ opacity: page === totalPages ? 0.5 : 1, cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
           >
-            <ChevronRight size={16} />
+            Next <ChevronRight size={16} />
           </button>
         </div>
       </div>
+
     </div>
   );
 };

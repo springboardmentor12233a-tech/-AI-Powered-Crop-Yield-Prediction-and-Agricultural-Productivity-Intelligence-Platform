@@ -3,10 +3,10 @@
 :root {
   /* Stitch Design System - Precision Agritech Tokens */
   --bg-dark: #070d09;
-  --bg-card: rgba(14, 25, 18, 0.82);
-  --bg-card-hover: rgba(22, 38, 28, 0.92);
-  --border-color: rgba(27, 94, 63, 0.28);
-  --border-glow: rgba(16, 185, 129, 0.4);
+  --bg-card: rgba(14, 25, 18, 0.85);
+  --bg-card-hover: rgba(22, 38, 28, 0.95);
+  --border-color: rgba(27, 94, 63, 0.32);
+  --border-glow: rgba(16, 185, 129, 0.45);
   
   --primary-crop-green: #1b5e3f;
   --primary-emerald: #10b981;
@@ -43,7 +43,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(27, 94, 63, 0.22) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, rgba(27, 94, 63, 0.25) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(201, 146, 46, 0.12) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(43, 108, 176, 0.15) 0px, transparent 50%);
   background-attachment: fixed;
@@ -93,7 +93,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Header & Nav */
+/* Header & Nav Bar */
 .header-bar {
   display: flex;
   align-items: center;
@@ -102,9 +102,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(7, 13, 9, 0.92);
+  background: rgba(7, 13, 9, 0.94);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
+  gap: 1.5rem;
 }
 
 .brand-logo {
@@ -118,26 +119,29 @@ body {
 
 .nav-tabs {
   display: flex;
-  background: rgba(255, 255, 255, 0.04);
-  padding: 0.25rem;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.35rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
-  gap: 0.25rem;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 0.5rem 1.1rem;
+  padding: 0.55rem 1rem;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .tab-btn:hover {
@@ -146,133 +150,135 @@ body {
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, rgba(27, 94, 63, 0.45) 0%, rgba(16, 185, 129, 0.35) 100%);
+  background: linear-gradient(135deg, rgba(27, 94, 63, 0.55) 0%, rgba(16, 185, 129, 0.4) 100%);
   color: #a7f3d0;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
-/* Metric Cards Grid */
+/* Metric Cards Layout */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 .metric-card {
-  padding: 1.35rem;
+  padding: 1.35rem 1.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 1rem;
   position: relative;
   overflow: hidden;
+  border-left: 4px solid var(--primary-crop-green) !important;
 }
 
-.metric-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--primary-crop-green);
-  border-top-left-radius: var(--radius-md);
-  border-bottom-left-radius: var(--radius-md);
+.metric-card.gold {
+  border-left-color: var(--harvest-gold) !important;
 }
 
-.metric-card.gold::before {
-  background: var(--harvest-gold);
+.metric-card.blue {
+  border-left-color: var(--atmospheric-blue) !important;
 }
 
-.metric-card.blue::before {
-  background: var(--atmospheric-blue);
+.metric-card.purple {
+  border-left-color: var(--accent-purple) !important;
 }
 
-.metric-card.purple::before {
-  background: var(--accent-purple);
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
-/* Data Table */
-.data-table-container {
+.metric-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 0.2rem;
+  letter-spacing: -0.02em;
+}
+
+.metric-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
+/* Data Table Styling */
+.table-container {
+  width: 100%;
   overflow-x: auto;
   border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: rgba(10, 18, 13, 0.7);
+  margin-top: 0.75rem;
 }
 
-.data-table {
+.custom-table, .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-size: 0.88rem;
+  min-width: 1100px;
 }
 
-.data-table th {
-  padding: 0.85rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-muted);
-  font-weight: 600;
+.custom-table th, .data-table th {
+  padding: 1rem 1.25rem;
+  background: rgba(20, 36, 26, 0.95);
+  color: #94a39a;
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.data-table td {
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: var(--text-main);
-}
-
-.data-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-/* Pill Badges (Stitch MCP Specs) */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
 }
 
-.badge-green {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+.custom-table td, .data-table td {
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
-.badge-amber {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+.custom-table tr:hover td, .data-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.badge-blue {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+.custom-table tr:last-child td, .data-table tr:last-child td {
+  border-bottom: none;
 }
 
-.badge-purple {
-  background: rgba(139, 92, 246, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(139, 92, 246, 0.3);
-}
-
-.badge-red {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-/* Inputs & Form Elements */
-.search-input {
+/* Inputs & Form Controls */
+.input-control, .search-input {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 0.6rem 0.9rem;
+  color: #ffffff;
+  padding: 0.6rem 1rem;
   border-radius: var(--radius-sm);
   font-size: 0.88rem;
   outline: none;
@@ -280,9 +286,72 @@ body {
   font-family: 'Manrope', sans-serif;
 }
 
-.search-input:focus {
+.input-control:focus, .search-input:focus {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #1b5e3f 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+}
+
+/* Pill Badges (Stitch MCP Specs) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.badge-purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
+.badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 /* Animation utilities */

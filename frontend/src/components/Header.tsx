@@ -1,3 +1,4 @@
+import React from 'react';
 import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers } from 'lucide-react';
 
 interface HeaderProps {
@@ -17,69 +18,75 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="header-bar">
+      {/* Brand Logo */}
       <div className="brand-logo">
         <div style={{
-          background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+          background: 'linear-gradient(135deg, #10b981 0%, #1b5e3f 100%)',
           padding: '8px',
           borderRadius: '10px',
-          display: 'flex'
+          display: 'flex',
+          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)'
         }}>
-          <Sprout size={24} color="#ffffff" />
+          <Sprout size={22} color="#ffffff" />
         </div>
         <div>
-          <span className="gradient-text-green">YieldSense</span>
-          <span style={{ color: '#ffffff', marginLeft: '4px' }}>AI</span>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.02em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', lineHeight: 1 }}>
+            <span className="gradient-text-green">YieldSense</span>
+            <span style={{ color: '#ffffff', fontWeight: 800 }}>AI</span>
+          </div>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '3px', letterSpacing: '0.02em' }}>
             Agricultural Productivity Intelligence
           </div>
         </div>
       </div>
 
+      {/* Navigation Tabs */}
       <nav className="nav-tabs">
         <button
           className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          <BarChart3 size={16} />
+          <BarChart3 size={15} />
           KPI Overview
         </button>
         <button
           className={`tab-btn ${activeTab === 'predict' ? 'active' : ''}`}
           onClick={() => setActiveTab('predict')}
         >
-          <Cpu size={16} />
+          <Cpu size={15} />
           Yield Predictor
         </button>
         <button
           className={`tab-btn ${activeTab === 'weather' ? 'active' : ''}`}
           onClick={() => setActiveTab('weather')}
         >
-          <CloudRain size={16} />
+          <CloudRain size={15} />
           Weather Analytics
         </button>
         <button
           className={`tab-btn ${activeTab === 'soil' ? 'active' : ''}`}
           onClick={() => setActiveTab('soil')}
         >
-          <Layers size={16} />
+          <Layers size={15} />
           Soil Analysis
         </button>
         <button
           className={`tab-btn ${activeTab === 'dataset' ? 'active' : ''}`}
           onClick={() => setActiveTab('dataset')}
         >
-          <Database size={16} />
+          <Database size={15} />
           Dataset Explorer
         </button>
         <button
           className={`tab-btn ${activeTab === 'eda' ? 'active' : ''}`}
           onClick={() => setActiveTab('eda')}
         >
-          <BarChart3 size={16} />
+          <BarChart3 size={15} />
           EDA Analytics
         </button>
       </nav>
 
+      {/* Action Buttons & Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <button
           onClick={onRefreshData}
@@ -88,9 +95,13 @@ export const Header: React.FC<HeaderProps> = ({
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid var(--border-color)',
             color: 'var(--text-muted)',
-            padding: '0.5rem',
+            padding: '0.55rem',
             borderRadius: '8px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s ease'
           }}
         >
           <RefreshCw size={16} />
@@ -100,21 +111,28 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenAuthModal}
           style={{
             background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            borderRadius: '8px',
-            padding: '0.45rem 0.9rem',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
             color: '#34d399',
+            padding: '0.45rem 0.85rem',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            fontWeight: 600,
-            fontSize: '0.82rem',
-            cursor: 'pointer'
+            gap: '0.45rem',
+            transition: 'all 0.2s ease'
           }}
         >
-          <UserCheck size={16} />
+          <UserCheck size={15} />
           <span>{currentUser.username}</span>
-          <span className="badge badge-green" style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}>
+          <span style={{
+            background: 'rgba(16, 185, 129, 0.25)',
+            color: '#a7f3d0',
+            padding: '0.1rem 0.45rem',
+            borderRadius: '9999px',
+            fontSize: '0.7rem'
+          }}>
             {currentUser.role}
           </span>
         </button>
