@@ -4,7 +4,6 @@ import { Header } from './components/Header';
 import { MetricCards } from './components/MetricCards';
 import { DataExplorer } from './components/DataExplorer';
 import { EdaDashboard } from './components/EdaDashboard';
-import { ArchitectureView } from './components/ArchitectureView';
 import { AuthModal } from './components/AuthModal';
 import { YieldPredictor } from './components/YieldPredictor';
 import { WeatherAnalyticsView } from './components/WeatherAnalyticsView';
@@ -190,10 +189,6 @@ export function App() {
 
         {activeTab === 'eda' && (
           <EdaDashboard metrics={edaMetrics} />
-        )}
-
-        {activeTab === 'architecture' && (
-          <ArchitectureView />
         )}
       </main>
 

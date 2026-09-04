@@ -1,5 +1,4 @@
-import React from 'react';
-import { Sprout, BarChart3, Database, FileText, UserCheck, RefreshCw, Cpu, CloudRain, Layers } from 'lucide-react';
+import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -78,13 +77,6 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <BarChart3 size={16} />
           EDA Analytics
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'architecture' ? 'active' : ''}`}
-          onClick={() => setActiveTab('architecture')}
-        >
-          <FileText size={16} />
-          Milestone 1 Architecture
         </button>
       </nav>
 
