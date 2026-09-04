@@ -10,8 +10,22 @@ class LLMService:
     Provides real-time yield insights, agricultural risk alerts, and crop management recommendations.
     """
     def __init__(self):
+        self._load_env_file()
         self.groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    def _load_env_file(self):
+        env_path = os.path.join(os.getcwd(), ".env")
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            os.environ[k.strip()] = v.strip()
+            except Exception as e:
+                print(f"[LLMService] Could not read .env file: {e}")
 
     def generate_agricultural_insights(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Dict[str, Any]:
         # Try Groq API first if key available
