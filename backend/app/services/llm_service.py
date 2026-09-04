@@ -35,7 +35,7 @@ class LLMService:
                 if res:
                     return res
             except Exception as e:
-                print(f"[LLMService] Groq API call failed: {e}. Falling back...")
+                print(f"[LLMService] Groq API call failed: {e}. Falling back to Agronomic Engine...")
 
         # Try Gemini API second if key available
         if self.gemini_api_key:
@@ -44,7 +44,7 @@ class LLMService:
                 if res:
                     return res
             except Exception as e:
-                print(f"[LLMService] Gemini API call failed: {e}. Falling back...")
+                print(f"[LLMService] Gemini API call failed: {e}. Falling back to Agronomic Engine...")
 
         # Fallback to deterministic Agronomic AI Expert Engine
         return self._generate_expert_rule_insights(payload, prediction_result)
@@ -55,11 +55,12 @@ class LLMService:
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.groq_api_key}"
+            "Authorization": f"Bearer {self.groq_api_key}",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) YieldSenseAI/1.0"
         }
 
         body = {
-            "model": "llama-3.1-8b-instant",
+            "model": "groq/compound-mini",
             "messages": [
                 {"role": "system", "content": "You are YieldSense AI, an expert agricultural scientist assistant. Respond strictly in JSON format with keys: ai_insights, risk_alerts, recommendations."},
                 {"role": "user", "content": prompt}
@@ -73,7 +74,7 @@ class LLMService:
             res_data = json.loads(response.read().decode("utf-8"))
             content = res_data["choices"][0]["message"]["content"]
             parsed = json.loads(content)
-            parsed["llm_provider"] = "Groq LLM (llama-3.3-70b-versatile)"
+            parsed["llm_provider"] = "Groq LLM (groq/compound-mini)"
             return parsed
 
     def _call_gemini_api(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -92,7 +93,6 @@ class LLMService:
             res_data = json.loads(response.read().decode("utf-8"))
             content_text = res_data["candidates"][0]["content"]["parts"][0]["text"]
             
-            # Clean markdown JSON formatting if present
             if "```json" in content_text:
                 content_text = content_text.split("```json")[1].split("```")[0].strip()
             elif "```" in content_text:
@@ -127,26 +127,22 @@ Provide a JSON object with:
         region = str(payload.get("region", "Selected Region"))
         yield_val = float(prediction_result.get("predicted_yield_kg_ha", 0.0))
         prod_rating = str(prediction_result.get("productivity_rating", "Medium"))
-        risk_rating = str(prediction_result.get("risk_rating", "Low"))
         
         disease = str(payload.get("crop_disease_status", "None"))
         ph = float(payload.get("soil_pH", 6.5))
         temp = float(payload.get("temperature_C", 25.0))
-        rainfall = float(payload.get("rainfall_mm", 150.0))
-        ndvi = float(payload.get("NDVI_index", 0.6))
         moisture = float(payload.get("soil_moisture_%", 40.0))
+        ndvi = float(payload.get("NDVI_index", 0.6))
 
         risk_alerts: List[str] = []
         recommendations: List[str] = []
 
-        # 1. Disease Risk Check
         if disease.lower() not in ["none", "unknown"]:
             risk_alerts.append(f"CRITICAL DISEASE ALERT: {disease} infection detected in {crop} field. Immediate treatment required.")
             recommendations.append(f"Apply targeted fungicide/bactericide for {disease} and reduce canopy moisture retention.")
         else:
             recommendations.append(f"Maintain routine bio-fungicide preventative spraying for {crop}.")
 
-        # 2. Thermal Stress Check
         if temp > 32.0:
             risk_alerts.append(f"HEAT STRESS RISK: High ambient temperature ({temp}°C) exceeds optimal growth threshold.")
             recommendations.append("Increase drip irrigation frequency during early morning to mitigate heat stress.")
@@ -154,7 +150,6 @@ Provide a JSON object with:
             risk_alerts.append(f"COLD STRESS RISK: Sub-optimal temperature ({temp}°C) slowing metabolic rates.")
             recommendations.append("Apply organic mulching to protect root zone soil temperature.")
 
-        # 3. Soil pH Check
         if ph < 5.8:
             risk_alerts.append(f"SOIL ACIDITY WARNING: Soil pH of {ph} reduces nutrient bioavailability.")
             recommendations.append("Apply agricultural lime (calcium carbonate) at 500 kg/ha to raise soil pH toward 6.5.")
@@ -162,12 +157,10 @@ Provide a JSON object with:
             risk_alerts.append(f"SOIL ALKALINITY WARNING: Soil pH of {ph} restricts micronutrient uptake (iron/zinc).")
             recommendations.append("Incorporate elemental sulfur or gypsum to neutralize alkaline soil condition.")
 
-        # 4. Moisture & Irrigation
         if moisture < 30.0:
             risk_alerts.append(f"MOISTURE DEFICIT: Soil moisture level ({moisture}%) is below optimal root absorption threshold.")
             recommendations.append(f"Schedule additional {payload.get('irrigation_type', 'irrigation')} cycles to elevate soil moisture above 45%.")
 
-        # 5. NDVI Canopy Health Insights
         if ndvi > 0.65:
             summary_insight = f"{crop} cultivation in {region} shows strong canopy vigor (NDVI: {ndvi}) with estimated yield of {yield_val} kg/ha ({prod_rating} Productivity)."
         else:
