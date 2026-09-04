@@ -1,7 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Stitch Design System - Precision Agritech Tokens */
+  /* Stitch Design System - Precision Agritech Official Tokens */
+  --color-primary: #00452a;
+  --color-primary-container: #1b5e3f;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #93d5ae;
+  --color-secondary: #7f5700;
+  --color-secondary-container: #ffc159;
+  --color-on-secondary-container: #744f00;
+  --color-tertiary: #003d6f;
+  --color-tertiary-container: #005496;
+  --color-on-tertiary-container: #a2c9ff;
+  --color-surface: #eefdf1;
+  --color-surface-container-low: #e8f7eb;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-surface: #121e17;
+  --color-on-surface-variant: #404942;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Legacy & Dark Hybrid Tokens for Precision Agritech */
   --bg-dark: #070d09;
   --bg-card: rgba(14, 25, 18, 0.88);
   --bg-card-hover: rgba(22, 38, 28, 0.96);
