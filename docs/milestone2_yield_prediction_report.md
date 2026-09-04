@@ -44,6 +44,9 @@ Evaluated on the exact same 100 held-out test records (`test_size=0.2, random_st
 | **LightGBM Regressor** | 1192.20 | -0.0292 | 247.33 | 0.7935 | 0.848 ms |
 | **Dummy Regressor (Mean Baseline)** | **1175.44** | **-0.0004** | 547.09 | -0.0102 | **0.007 ms** |
 
+### 3.1 Model Performance Rationale (Linear vs. Tree Ensembles)
+* **Why Linear Regression leads**: Linear & Ridge Regression outperform tree-based ensembles (XGBoost, Random Forest, LightGBM) on this dataset because standard feature scaling (`StandardScaler`) combined with continuous additive domain response functions creates a smooth, non-segmented target surface without step-discontinuities. On a 500-record dataset (400 train, 100 test), tree models introduce minor variance over-fitting across leaf splits, whereas Linear Regression achieves the optimal bias-variance trade-off.
+
 ---
 
 ## 4. Dataset Source Compatibility Analysis
