@@ -5,7 +5,7 @@ import joblib
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
@@ -18,7 +18,7 @@ from lightgbm import LGBMRegressor
 
 def train_and_evaluate():
     print("=" * 75)
-    print("YieldSense AI - Milestone 2 ML Audit & Model Training Pipeline")
+    print("YieldSense AI - Milestone 2 ML Training & GridSearchCV Tuning Pipeline")
     print("=" * 75)
 
     dataset_path = os.path.join("datasets", "processed", "cleaned_crop_yield.csv")
@@ -69,8 +69,7 @@ def train_and_evaluate():
     X = df[categorical_features + numerical_features]
     y = df[target_column]
 
-    # 3. Build Preprocessing Pipeline
-    # Preprocessor fitted STRICTLY on X_train only
+    # 3. Build Preprocessing Pipeline (Fitted STRICTLY on X_train only)
     preprocessor = ColumnTransformer(
         transformers=[
             ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_features),
@@ -94,7 +93,31 @@ def train_and_evaluate():
     joblib.dump(preprocessor, preprocessor_path)
     print(f"      Saved fitted preprocessor to: {preprocessor_path}")
 
-    # 5. Define ML Models (including DummyRegressor Baseline & Regularized Models)
+    # 5. Define ML Models & GridSearchCV Parameter Grids
+    print("[4/7] Executing GridSearchCV Hyperparameter Tuning & Model Benchmarking...")
+    
+    # GridSearchCV Tuning for Random Forest
+    rf_param_grid = {
+        'n_estimators': [50, 100],
+        'max_depth': [5, 10, None],
+        'min_samples_leaf': [2, 4]
+    }
+    rf_grid = GridSearchCV(RandomForestRegressor(random_state=42), rf_param_grid, cv=3, scoring='neg_root_mean_squared_error')
+    rf_grid.fit(X_train_trans, y_train)
+    best_rf_model = rf_grid.best_estimator_
+    print(f"      -> GridSearchCV Best Random Forest Params: {rf_grid.best_params_}")
+
+    # GridSearchCV Tuning for XGBoost
+    xgb_param_grid = {
+        'n_estimators': [50, 100],
+        'max_depth': [3, 5],
+        'learning_rate': [0.03, 0.05]
+    }
+    xgb_grid = GridSearchCV(XGBRegressor(random_state=42), xgb_param_grid, cv=3, scoring='neg_root_mean_squared_error')
+    xgb_grid.fit(X_train_trans, y_train)
+    best_xgb_model = xgb_grid.best_estimator_
+    print(f"      -> GridSearchCV Best XGBoost Params: {xgb_grid.best_params_}")
+
     models = {
         "Dummy Regressor (Mean)": (
             DummyRegressor(strategy="mean"),
@@ -108,22 +131,21 @@ def train_and_evaluate():
             Ridge(alpha=10.0, random_state=42),
             os.path.join(models_dir, "crop_yield_ridge.pkl")
         ),
-        "Random Forest": (
-            RandomForestRegressor(n_estimators=100, max_depth=6, min_samples_leaf=5, random_state=42),
+        "Random Forest (GridSearchCV)": (
+            best_rf_model,
             os.path.join(models_dir, "crop_yield_rf.pkl")
         ),
-        "XGBoost": (
-            XGBRegressor(learning_rate=0.03, max_depth=3, n_estimators=80, random_state=42),
+        "XGBoost (GridSearchCV)": (
+            best_xgb_model,
             os.path.join(models_dir, "crop_yield_xgb.pkl")
         ),
         "LightGBM": (
-            LGBMRegressor(learning_rate=0.03, max_depth=3, n_estimators=80, random_state=42, verbosity=-1),
+            LGBMRegressor(learning_rate=0.05, max_depth=5, n_estimators=100, random_state=42, verbosity=-1),
             os.path.join(models_dir, "crop_yield_lgbm.pkl")
         )
     }
 
-    # 6. Train & Evaluate Models
-    print("[4/7] Training & Evaluating ML Models against Dummy Baseline...")
+    # 6. Evaluate Models on Held-Out Test Set
     metrics_summary = {}
     best_model_name = None
     best_rmse = float("inf")
@@ -132,7 +154,7 @@ def train_and_evaluate():
     sample_single_input = X_test_trans[:1]
 
     for name, (model, artifact_path) in models.items():
-        # Train
+        # Fit model on training set
         model.fit(X_train_trans, y_train)
         
         # Save individual model artifact
@@ -146,7 +168,7 @@ def train_and_evaluate():
         rmse = round(float(np.sqrt(mean_squared_error(y_test, y_pred))), 2)
         r2 = round(float(r2_score(y_test, y_pred)), 4)
 
-        # Measure Actual Inference Latency (ms) over 100 sample inferences
+        # Measure Inference Latency (ms)
         start_time = time.perf_counter()
         for _ in range(100):
             model.predict(sample_single_input)
@@ -160,15 +182,19 @@ def train_and_evaluate():
             "inference_latency_ms": latency_ms
         }
 
-        print(f"      -> {name:24s} | RMSE: {rmse:7.2f} | MAE: {mae:7.2f} | R2: {r2:7.4f} | Latency: {latency_ms:.3f} ms")
+        print(f"      -> {name:28s} | RMSE: {rmse:7.2f} | MAE: {mae:7.2f} | R2: {r2:7.4f} | Latency: {latency_ms:.3f} ms")
 
-        # Objective Best Model Selection: Lowest RMSE
+        # Objective Selection: Lowest RMSE
         if rmse < best_rmse:
             best_rmse = rmse
             best_model_name = name
             best_model_obj = model
 
     metrics_summary["best_model"] = best_model_name
+    metrics_summary["gridsearch_cv_tuning"] = {
+        "random_forest_best_params": rf_grid.best_params_,
+        "xgboost_best_params": xgb_grid.best_params_
+    }
     metrics_summary["metadata"] = {
         "dataset_size": len(df),
         "train_size": len(X_train),
@@ -181,7 +207,7 @@ def train_and_evaluate():
 
     print(f"[5/7] Objective Selection -> Best Model: {best_model_name} (Lowest Test RMSE: {best_rmse:.2f})")
 
-    # Save Production Artifacts
+    # Save Production Best Model Artifact
     best_model_path = os.path.join(models_dir, "best_model.pkl")
     joblib.dump(best_model_obj, best_model_path)
     print(f"      Saved production best model to: {best_model_path}")
@@ -191,7 +217,7 @@ def train_and_evaluate():
         json.dump(metrics_summary, f, indent=2)
     print(f"      Saved model performance metrics JSON to: {metrics_json_path}")
 
-    # 7. Verification: Verify saved artifacts produce identical predictions to evaluation
+    # 7. Artifact Verification
     print("[6/7] Verifying Saved Artifacts Match Evaluation Predictions...")
     loaded_preprocessor = joblib.load(preprocessor_path)
     loaded_model = joblib.load(best_model_path)
@@ -210,7 +236,7 @@ def train_and_evaluate():
     print(f"[7/7] ARTIFACT VERIFICATION PASSED: Sample Eval Pred ({eval_pred:.2f}) == Saved Artifact Pred ({loaded_pred:.2f})")
 
     print("=" * 75)
-    print("SUCCESS: ML Audit, Model Training & Verification Complete.")
+    print("SUCCESS: ML Training, GridSearchCV Tuning & Verification Complete.")
     print("=" * 75)
 
 if __name__ == "__main__":
