@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Award, AlertTriangle, Activity, BarChart2, CheckCircle, RefreshCw, Sparkles, ShieldAlert, CheckSquare } from 'lucide-react';
+import { Cpu, Award, AlertTriangle, Activity, BarChart2, CheckCircle, RefreshCw, Sparkles, ShieldAlert, CheckSquare, Info } from 'lucide-react';
 
 interface PredictorProps {
   apiBaseUrl?: string;
@@ -448,8 +448,14 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
                     })}
                   </tbody>
                 </table>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
-                  * Primary Selection Criterion: Lowest Test RMSE. Best Model selected: <strong style={{ color: '#34d399' }}>{modelMetrics.best_model}</strong>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <div>
+                    * Primary Selection Criterion: Lowest Test RMSE. Best Model selected: <strong style={{ color: '#34d399' }}>{modelMetrics.best_model}</strong>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', background: 'rgba(59, 130, 246, 0.1)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.25)', color: '#93c5fd', fontSize: '0.75rem' }}>
+                    <Info size={14} color="#60a5fa" />
+                    <span><strong>Methodological Disclosure:</strong> Metrics evaluated on Tier B agronomically-enriched validation pipeline. See <code>docs/milestone2_yield_prediction_report.md</code> for Tier A baseline.</span>
+                  </div>
                 </div>
               </div>
             )}
