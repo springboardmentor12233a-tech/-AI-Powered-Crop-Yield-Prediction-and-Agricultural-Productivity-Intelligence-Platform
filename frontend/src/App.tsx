@@ -143,21 +143,7 @@ export function App() {
 
       <main style={{ flex: 1, padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         {activeTab === 'overview' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <MetricCards summary={summary} />
-            <DataExplorer
-              records={records}
-              totalRecords={totalRecords}
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              selectedCrop={selectedCrop}
-              setSelectedCrop={setSelectedCrop}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              cropsList={summary.crops_supported}
-            />
-          </div>
+          <MetricCards summary={summary} />
         )}
 
         {activeTab === 'predict' && (

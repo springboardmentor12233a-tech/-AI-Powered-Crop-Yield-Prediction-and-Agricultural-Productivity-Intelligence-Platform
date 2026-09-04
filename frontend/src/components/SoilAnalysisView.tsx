@@ -170,6 +170,55 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
 
           </div>
 
+          {/* Crop Soil pH & Nutrient Suitability Visualizer Card */}
+          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Crop Soil pH & Health Spectrum</h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Comparing optimal soil pH boundaries for {selectedCrop} against current dataset averages</span>
+              </div>
+              <span className="badge badge-green">Optimal pH: {metrics.optimal_pH_range}</span>
+            </div>
+
+            <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                  <span>Current Soil pH Benchmark ({metrics.average_soil_pH} pH)</span>
+                  <span style={{ color: '#34d399' }}>{metrics.fertility_assessment}</span>
+                </div>
+                
+                {/* pH Spectrum Bar */}
+                <div style={{ position: 'relative', width: '100%', height: '24px', background: 'linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #10b981 50%, #3b82f6 80%, #8b5cf6 100%)', borderRadius: '8px', overflow: 'hidden' }}>
+                  {/* Optimal Zone Highlight Bracket */}
+                  <div style={{ position: 'absolute', left: '45%', width: '30%', height: '100%', border: '2px solid #ffffff', background: 'rgba(255,255,255,0.2)', boxShadow: '0 0 10px rgba(255,255,255,0.5)' }}></div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  <span>pH 4.5 (Strongly Acidic)</span>
+                  <span>pH 6.0</span>
+                  <span style={{ color: '#ffffff', fontWeight: 700 }}>pH 7.0 (Neutral)</span>
+                  <span>pH 7.5</span>
+                  <span>pH 9.0 (Alkaline)</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem', borderRadius: '6px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>Soil Moisture</span>
+                  <strong style={{ fontSize: '0.9rem', color: '#7dd3fc' }}>{metrics.average_soil_moisture_percent}%</strong>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem', borderRadius: '6px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>Soil Health Index</span>
+                  <strong style={{ fontSize: '0.9rem', color: '#34d399' }}>{metrics.soil_health_index} / 1.0</strong>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem', borderRadius: '6px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>NDVI Vigor</span>
+                  <strong style={{ fontSize: '0.9rem', color: '#c084fc' }}>{metrics.average_NDVI_index}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Actionable pH & Soil Recommendation Banner */}
           <div className="glass-card" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(59,130,246,0.06) 100%)' }}>
             <h3 style={{ fontSize: '1.1rem', color: '#ffffff', margin: '0 0 0.75rem 0', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

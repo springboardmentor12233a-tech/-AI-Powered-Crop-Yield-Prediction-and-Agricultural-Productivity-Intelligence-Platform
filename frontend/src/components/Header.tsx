@@ -120,20 +120,21 @@ export const Header: React.FC<HeaderProps> = ({
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.45rem',
+            gap: '0.5rem',
             transition: 'all 0.2s ease'
           }}
         >
           <UserCheck size={15} />
           <span>{currentUser.username}</span>
           <span style={{
-            background: 'rgba(16, 185, 129, 0.25)',
-            color: '#a7f3d0',
-            padding: '0.1rem 0.45rem',
+            background: '#1b5e3f',
+            color: '#93d5ae',
+            padding: '0.15rem 0.55rem',
             borderRadius: '9999px',
-            fontSize: '0.7rem'
+            fontSize: '0.72rem',
+            fontWeight: 700
           }}>
-            {currentUser.role}
+            {currentUser.role === 'Farmer' ? 'Agri Officer' : currentUser.role}
           </span>
         </button>
       </div>

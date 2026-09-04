@@ -170,6 +170,37 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
 
           </div>
 
+          {/* Regional Climate Trend & Microclimate Visualization Card */}
+          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Seasonal Rainfall & Climate Trend</h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Precipitation adequacy vs. diurnal temperature variance for {selectedRegion}</span>
+              </div>
+              <span className="badge badge-blue">Telemetry Synced</span>
+            </div>
+
+            <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <svg viewBox="0 0 400 130" style={{ width: '100%', height: '150px' }}>
+                <line x1="40" y1="20" x2="380" y2="20" stroke="rgba(255,255,255,0.06)" />
+                <line x1="40" y1="60" x2="380" y2="60" stroke="rgba(255,255,255,0.06)" />
+                <line x1="40" y1="100" x2="380" y2="100" stroke="rgba(255,255,255,0.06)" />
+
+                {/* Rainfall Area */}
+                <path d="M 40 100 Q 100 30, 180 45 T 320 20 T 380 90 L 380 110 L 40 110 Z" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" strokeWidth="2" />
+                
+                {/* Temp Line */}
+                <path d="M 40 70 Q 120 85, 200 40 T 380 30" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeDasharray="5 5" />
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', paddingLeft: '30px', paddingRight: '20px' }}>
+                <span>Early Season (Sowing)</span>
+                <span style={{ color: '#60a5fa', fontWeight: 700 }}>Mid-Season Peak Rain ({analytics.average_rainfall_mm} mm)</span>
+                <span style={{ color: '#f59e0b', fontWeight: 700 }}>Pre-Harvest Temp ({analytics.average_temperature_C} °C)</span>
+                <span>Harvest Window</span>
+              </div>
+            </div>
+          </div>
+
           {/* Regional Climate Summary Banner */}
           <div className="glass-card" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(59,130,246,0.06) 100%)' }}>
             <h3 style={{ fontSize: '1.1rem', color: '#ffffff', margin: '0 0 0.75rem 0', fontWeight: 700 }}>
