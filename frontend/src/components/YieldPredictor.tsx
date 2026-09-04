@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Award, AlertTriangle, Activity, BarChart2, CheckCircle, RefreshCw } from 'lucide-react';
+import { Cpu, Award, AlertTriangle, Activity, BarChart2, CheckCircle, RefreshCw, Sparkles, ShieldAlert, CheckSquare } from 'lucide-react';
 
 interface PredictorProps {
   apiBaseUrl?: string;
+}
+
+interface AIInsightsData {
+  ai_insights: string;
+  risk_alerts: string[];
+  recommendations: string[];
+  llm_provider: string;
 }
 
 export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
@@ -29,6 +36,7 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
     productivity_rating: string;
     risk_rating: string;
   } | null>(null);
+  const [aiInsights, setAiInsights] = useState<AIInsightsData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [modelMetrics, setModelMetrics] = useState<any>(null);
@@ -62,8 +70,10 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
     setLoading(true);
     setError(null);
     setPrediction(null);
+    setAiInsights(null);
 
     try {
+      // 1. Fetch ML Prediction Result
       const response = await fetch(`${apiBaseUrl}/api/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,6 +87,23 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
 
       const result = await response.json();
       setPrediction(result);
+
+      // 2. Fetch AI Insights & Risk Alerts
+      try {
+        const insightsRes = await fetch(`${apiBaseUrl}/api/predict/insights`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (insightsRes.ok) {
+          const insightsData = await insightsRes.json();
+          setAiInsights(insightsData);
+        }
+      } catch (insightErr) {
+        console.warn("AI Insights service unavailable:", insightErr);
+      }
+
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred during prediction.');
     } finally {
@@ -96,7 +123,7 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
           </h2>
         </div>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
-          Enter 14 agricultural telemetry parameters to infer predicted harvest yield (kg/ha), productivity class, and risk rating using our trained Random Forest Regressor.
+          Enter 14 agricultural telemetry parameters to infer harvest yield (kg/ha), productivity class, risk rating, and real-time AI-generated agricultural insights.
         </p>
       </div>
 
@@ -269,7 +296,7 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           {/* Prediction Output Card */}
-          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: '260px' }}>
+          <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: '240px' }}>
             <h3 style={{ fontSize: '1.1rem', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Award size={18} color="#f59e0b" />
               AI Prediction Output Result
@@ -301,7 +328,7 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
                     {prediction.predicted_yield_kg_ha.toLocaleString()} <span style={{ fontSize: '1.1rem', fontWeight: 500, color: '#34d399' }}>kg/ha</span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Inferred via Best Selected Model (Random Forest Regressor)
+                    Inferred via Production Best Model (Linear Regression)
                   </div>
                 </div>
 
@@ -328,6 +355,54 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
             )}
           </div>
 
+          {/* Real-Time AI Insights & Risk Mitigation Panel */}
+          {aiInsights && (
+            <div className="glass-card" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.08) 100%)', border: '1px solid rgba(139,92,246,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.05rem', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Sparkles size={18} color="#c084fc" />
+                  AI Agricultural Insights & Risk Mitigation Engine
+                </h3>
+                <span className="badge badge-purple" style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem' }}>
+                  {aiInsights.llm_provider}
+                </span>
+              </div>
+
+              {/* Summary Insight */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.85rem', borderRadius: '8px', marginBottom: '1rem', borderLeft: '3px solid #c084fc', fontSize: '0.88rem', color: '#e9d5ff' }}>
+                {aiInsights.ai_insights}
+              </div>
+
+              {/* Risk Alerts List */}
+              <div style={{ marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                  <ShieldAlert size={14} /> Active Crop Risk Flags
+                </span>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {aiInsights.risk_alerts.map((alert, idx) => (
+                    <li key={idx} style={{ color: alert.includes('CRITICAL') || alert.includes('WARNING') ? '#fca5a5' : '#d1d5db' }}>
+                      {alert}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Recommendations List */}
+              <div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                  <CheckSquare size={14} /> Actionable Agronomic Recommendations
+                </span>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {aiInsights.recommendations.map((rec, idx) => (
+                    <li key={idx} style={{ color: '#a7f3d0' }}>
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           {/* Model Comparison Metrics Card */}
           <div className="glass-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -353,7 +428,7 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
                     </tr>
                   </thead>
                   <tbody>
-                    {['Random Forest', 'XGBoost', 'LightGBM', 'Linear Regression'].map(modelName => {
+                    {['Linear Regression', 'Ridge Regression', 'Random Forest', 'XGBoost', 'LightGBM', 'Dummy Regressor (Mean)'].map(modelName => {
                       const m = modelMetrics[modelName];
                       if (!m) return null;
                       const isBest = modelMetrics.best_model === modelName;

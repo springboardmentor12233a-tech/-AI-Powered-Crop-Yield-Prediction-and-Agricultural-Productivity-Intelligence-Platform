@@ -1,12 +1,13 @@
 import os
 import json
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from backend.app.services.ml_service import ml_service
+from backend.app.services.llm_service import llm_service
 
-router = APIRouter(prefix="/api/predict", tags=["Yield Predictions"])
+router = APIRouter(prefix="/api/predict", tags=["Yield Predictions & AI Insights"])
 
 class YieldPredictionRequest(BaseModel):
     crop_type: str = Field(..., json_schema_extra={"example": "Wheat"})
@@ -32,10 +33,15 @@ class YieldPredictionResponse(BaseModel):
     productivity_rating: str
     risk_rating: str
 
+class AIInsightsResponse(BaseModel):
+    ai_insights: str
+    risk_alerts: List[str]
+    recommendations: List[str]
+    llm_provider: str
+
 @router.post("", response_model=YieldPredictionResponse)
 def predict_crop_yield(request: YieldPredictionRequest):
     try:
-        # Convert Pydantic object to dict with exact feature keys
         payload = {
             "crop_type": request.crop_type,
             "region": request.region,
@@ -61,6 +67,32 @@ def predict_crop_yield(request: YieldPredictionRequest):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(re))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Prediction failed: {str(e)}")
+
+@router.post("/insights", response_model=AIInsightsResponse)
+def generate_prediction_insights(request: YieldPredictionRequest):
+    try:
+        payload = {
+            "crop_type": request.crop_type,
+            "region": request.region,
+            "irrigation_type": request.irrigation_type,
+            "fertilizer_type": request.fertilizer_type,
+            "crop_disease_status": request.crop_disease_status,
+            "soil_pH": request.soil_pH,
+            "soil_moisture_%": request.soil_moisture_percent,
+            "temperature_C": request.temperature_C,
+            "rainfall_mm": request.rainfall_mm,
+            "humidity_%": request.humidity_percent,
+            "sunlight_hours": request.sunlight_hours,
+            "pesticide_usage_ml": request.pesticide_usage_ml,
+            "total_days": request.total_days,
+            "NDVI_index": request.NDVI_index
+        }
+
+        prediction_result = ml_service.predict_yield(payload)
+        insights = llm_service.generate_agricultural_insights(payload, prediction_result)
+        return insights
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Insight generation failed: {str(e)}")
 
 @router.get("/models")
 def get_model_performance_metrics():
