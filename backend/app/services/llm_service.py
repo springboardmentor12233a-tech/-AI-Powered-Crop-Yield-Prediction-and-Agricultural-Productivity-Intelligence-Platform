@@ -59,9 +59,9 @@ class LLMService:
         }
 
         body = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "llama-3.1-8b-instant",
             "messages": [
-                {"role": "system", "content": "You are YieldSense AI, a expert agricultural scientist assistant. Respond strictly in JSON format."},
+                {"role": "system", "content": "You are YieldSense AI, an expert agricultural scientist assistant. Respond strictly in JSON format with keys: ai_insights, risk_alerts, recommendations."},
                 {"role": "user", "content": prompt}
             ],
             "response_format": {"type": "json_object"},
