@@ -14,7 +14,7 @@ timeout /t 3 /nobreak > nul
 
 :: 2. Start FastAPI Backend
 echo [BACKEND] Starting FastAPI Server on http://127.0.0.1:8000...
-start "FastAPI Backend" cmd /k "cd backend && venv\Scripts\activate && uvicorn app.main:app --port 8000 --host 127.0.0.1"
+start "FastAPI Backend" cmd /k "set PYTHONPATH=%cd% && backend\venv\Scripts\activate && uvicorn backend.app.main:app --port 8000 --host 127.0.0.1 --reload"
 
 :: 3. Start React Frontend
 echo [FRONTEND] Starting React Vite Server on http://127.0.0.1:3000...

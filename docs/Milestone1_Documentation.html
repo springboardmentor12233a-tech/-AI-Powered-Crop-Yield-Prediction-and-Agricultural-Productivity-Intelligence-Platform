@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI AgriYield Predictor - Milestone 1 Documentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        :root {
+            --text-color: #111827;
+            --muted-text: #4b5563;
+            --heading-color: #000000;
+            --bg-page: #ffffff;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Times New Roman', 'Merriweather', Georgia, serif;
+            color: var(--text-color);
+            background-color: #f3f4f6;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .document-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 60px 80px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: 4px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .document-container {
+                max-width: 100%;
+                padding: 0;
+                box-shadow: none;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        h1.doc-main-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 6px;
+        }
+
+        h2.doc-milestone-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        h3.doc-section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 24px;
+        }
+
+        h3.section-heading {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+
+        h4.sub-heading {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            font-size: 14.5px;
+            margin-bottom: 12px;
+            color: #262626;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+            font-size: 14.5px;
+            color: #262626;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        code.inline-code {
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            background: #f1f5f9;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 13px;
+            color: #0f172a;
+        }
+
+        pre.code-block {
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            background: #f8fafc;
+            border-left: 3px solid #3b82f6;
+            padding: 12px 16px;
+            font-size: 13px;
+            margin: 12px 0 16px 0;
+            color: #1e293b;
+            border-radius: 2px;
+            overflow-x: auto;
+        }
+
+        pre.terminal-block {
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            background: #18181b;
+            color: #f4f4f5;
+            padding: 14px 18px;
+            font-size: 12px;
+            line-height: 1.45;
+            margin: 12px 0 16px 0;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 14px 0 18px 0;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            font-size: 11.5px;
+            text-align: left;
+        }
+
+        table.data-table th {
+            background-color: #27272a;
+            color: #ffffff;
+            padding: 7px 9px;
+            border: 1px solid #3f3f46;
+            font-weight: 600;
+        }
+
+        table.data-table td {
+            padding: 6px 9px;
+            border: 1px solid #e4e4e7;
+            color: #27272a;
+        }
+
+        table.data-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .figure-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .figure-container img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            border: 1px solid #e5e7eb;
+        }
+
+        .submitted-card {
+            margin-top: 36px;
+            padding-top: 18px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .submitted-card h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .submitted-card p {
+            font-size: 14px;
+            margin-bottom: 2px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+
+<div class="document-container">
+
+    <h1 class="doc-main-title">AI AgriYield Predictor</h1>
+    <h2 class="doc-milestone-title">Milestone 1 Documentation</h2>
+    <h3 class="doc-section-title">Requirements & Dataset Preparation</h3>
+
+    <h3 class="section-heading">Title</h3>
+    <p>AI-Based Crop Yield Prediction Using Soil and Weather Parameters.</p>
+
+    <h3 class="section-heading">Project Objective</h3>
+    <p>The objective of this project is to develop a machine learning model to predict crop yield (kg per acre) using soil nutrients, weather conditions, fertilizer usage, and weather-related features.</p>
+    <p>Since the target variable (<code class="inline-code">Yield_kg_per_acre</code>) is a continuous numerical value, this problem is treated as a regression problem.</p>
+
+    <h3 class="section-heading">Data Source</h3>
+    <p>The dataset was provided by the project mentor as part of the Infosys Springboard Virtual Internship.</p>
+    <p><strong>Dataset details:</strong></p>
+    <ul>
+        <li><strong>Total records:</strong> 1500</li>
+        <li><strong>Total columns:</strong> 12</li>
+        <li><strong>Categorical features:</strong> State, Crop, Soil_Type, Fertilizer</li>
+        <li><strong>Numerical features:</strong> N, P, K, Rainfall_mm, Temperature_C, Soil_pH, Year</li>
+        <li><strong>Target variable:</strong> Yield_kg_per_acre</li>
+    </ul>
+
+    <h3 class="section-heading">Process Followed</h3>
+    <h4 class="sub-heading">Step 1: Environment Setup</h4>
+    <ul>
+        <li>Created a virtual environment.</li>
+        <li>Installed required libraries (<code class="inline-code">pandas</code>, <code class="inline-code">numpy</code>, <code class="inline-code">seaborn</code>, <code class="inline-code">matplotlib</code>, <code class="inline-code">scikit-learn</code>).</li>
+        <li>Used Jupyter Notebook for implementation.</li>
+    </ul>
+
+    <h4 class="sub-heading">Step 2: Data Exploration</h4>
+    <p>The dataset was loaded using:</p>
+    <pre class="code-block">df = pd.read_csv("dataset.csv")
+df.head()</pre>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>State</th>
+                    <th>Crop</th>
+                    <th>Soil_Type</th>
+                    <th>Fertilizer</th>
+                    <th>N</th>
+                    <th>P</th>
+                    <th>K</th>
+                    <th>Rainfall_mm</th>
+                    <th>Temperature_C</th>
+                    <th>Yield_kg_per_acre</th>
+                    <th>Soil_pH</th>
+                    <th>Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>0</td><td>Karnataka</td><td>Soybean</td><td>Loamy</td><td>DAP</td><td>56</td><td>41</td><td>51</td><td>120</td><td>31.06</td><td>1839</td><td>6.82</td><td>2003</td></tr>
+                <tr><td>1</td><td>Odisha</td><td>Cotton</td><td>Red Soil</td><td>Urea</td><td>29</td><td>36</td><td>112</td><td>247</td><td>33.97</td><td>1062</td><td>6.41</td><td>2002</td></tr>
+                <tr><td>2</td><td>Punjab</td><td>Groundnut</td><td>Red Soil</td><td>Compost</td><td>37</td><td>38</td><td>177</td><td>142</td><td>24.21</td><td>1463</td><td>7.06</td><td>2015</td></tr>
+                <tr><td>3</td><td>Gujarat</td><td>Wheat</td><td>Red Soil</td><td>Compost</td><td>58</td><td>77</td><td>129</td><td>227</td><td>30.85</td><td>2373</td><td>5.93</td><td>2022</td></tr>
+                <tr><td>4</td><td>Andhra Pradesh</td><td>Cotton</td><td>Clay</td><td>Organic</td><td>108</td><td>61</td><td>63</td><td>263</td><td>37.03</td><td>1497</td><td>6.24</td><td>2017</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <pre class="code-block">df.info()</pre>
+    <pre class="terminal-block">&lt;class 'pandas.DataFrame'&gt;
+RangeIndex: 1500 entries, 0 to 1499
+Data columns (total 12 columns):
+ #   Column              Non-Null Count  Dtype  
+---  ------              --------------  -----  
+ 0   State               1500 non-null   str    
+ 1   Crop                1500 non-null   str    
+ 2   Soil_Type           1500 non-null   str    
+ 3   Fertilizer          1500 non-null   str    
+ 4   N                   1500 non-null   int64  
+ 5   P                   1500 non-null   int64  
+ 6   K                   1500 non-null   int64  
+ 7   Rainfall_mm         1500 non-null   int64  
+ 8   Temperature_C       1500 non-null   float64
+ 9   Yield_kg_per_acre   1500 non-null   int64  
+ 10  Soil_pH             1500 non-null   float64
+ 11  Year                1500 non-null   int64  
+dtypes: float64(2), int64(6), str(4)
+memory usage: 140.8 KB</pre>
+
+    <pre class="code-block">df.describe()</pre>
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>N</th>
+                    <th>P</th>
+                    <th>K</th>
+                    <th>Rainfall_mm</th>
+                    <th>Temperature_C</th>
+                    <th>Yield_kg_per_acre</th>
+                    <th>Soil_pH</th>
+                    <th>Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>count</strong></td><td>1500.000000</td><td>1500.000000</td><td>1500.000000</td><td>1500.000000</td><td>1500.000000</td><td>1500.000000</td><td>1500.000000</td><td>1500.000000</td></tr>
+                <tr><td><strong>mean</strong></td><td>73.435000</td><td>61.282000</td><td>102.115000</td><td>176.609000</td><td>28.148547</td><td>7881.852667</td><td>6.799247</td><td>2012.090000</td></tr>
+                <tr><td><strong>std</strong></td><td>37.750002</td><td>33.257422</td><td>54.952863</td><td>75.776182</td><td>5.783168</td><td>20673.333805</td><td>0.724098</td><td>7.293218</td></tr>
+                <tr><td><strong>min</strong></td><td>10.000000</td><td>5.000000</td><td>10.000000</td><td>50.000000</td><td>18.020000</td><td>502.000000</td><td>5.500000</td><td>2000.000000</td></tr>
+                <tr><td><strong>25%</strong></td><td>41.000000</td><td>32.000000</td><td>56.000000</td><td>113.000000</td><td>23.132500</td><td>1202.750000</td><td>6.120000</td><td>2005.000000</td></tr>
+                <tr><td><strong>50%</strong></td><td>70.000000</td><td>61.000000</td><td>100.000000</td><td>175.000000</td><td>28.450000</td><td>1673.500000</td><td>6.795000</td><td>2012.000000</td></tr>
+                <tr><td><strong>75%</strong></td><td>106.000000</td><td>91.000000</td><td>149.000000</td><td>242.000000</td><td>33.180000</td><td>2571.750000</td><td>7.400000</td><td>2019.000000</td></tr>
+                <tr><td><strong>max</strong></td><td>139.000000</td><td>119.000000</td><td>199.000000</td><td>299.000000</td><td>37.960000</td><td>89946.000000</td><td>8.000000</td><td>2024.000000</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Observations:</strong></p>
+    <ul>
+        <li>Dataset contains 1500 rows and 12 columns.</li>
+        <li>No missing values were found.</li>
+        <li>Data types were appropriate for processing.</li>
+        <li>Yield variable showed slight skewness due to some high maximum values.</li>
+    </ul>
+
+    <h4 class="sub-heading">Step 3: Data Cleaning</h4>
+    <p>Missing values were checked using:</p>
+    <pre class="code-block">df.isnull().sum()</pre>
+    <p>Duplicate rows were checked using:</p>
+    <pre class="code-block">duplicates = df.duplicated().sum()</pre>
+    <p><strong>Results:</strong></p>
+    <ul>
+        <li>No missing values</li>
+        <li>No duplicate records</li>
+    </ul>
+    <p><em>Thus, no additional cleaning was required.</em></p>
+
+    <h3 class="section-heading">Data Analysis (Graphs)</h3>
+    <h4 class="sub-heading">Graph 1: Distribution of Crop Yield</h4>
+    <pre class="code-block">plt.figure(figsize=(8,5))
+sns.histplot(df['Yield_kg_per_acre'], bins=30, kde=True)
+plt.title("Distribution of Crop Yield")
+plt.xlabel("Yield (kg per acre)")
+plt.ylabel("Frequency")
+plt.show()</pre>
+
+    <div class="figure-container">
+        <img src="images/distribution_of_crop_yield.png" alt="Distribution of Crop Yield">
+    </div>
+
+    <p><strong>Observation:</strong></p>
+    <ul>
+        <li>The yield distribution is slightly right-skewed.</li>
+        <li>Some crops have significantly higher yield values compared to the majority.</li>
+        <li>Most yield values fall within a moderate range.</li>
+    </ul>
+
+    <h4 class="sub-heading">Graph 2: Correlation Heatmap</h4>
+    <pre class="code-block">plt.figure(figsize=(10,6))
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm')
+plt.title("Correlation Matrix")
+plt.show()</pre>
+
+    <div class="figure-container">
+        <img src="images/correlation_matrix.png" alt="Correlation Matrix">
+    </div>
+
+    <p><strong>Observation:</strong></p>
+    <ul>
+        <li>The heatmap shows relationships between numerical features.</li>
+        <li>Some soil nutrients and rainfall show correlation with yield.</li>
+        <li>Helps in understanding which features may influence crop productivity.</li>
+    </ul>
+
+    <h3 class="section-heading">Feature Engineering</h3>
+    <h4 class="sub-heading">One-Hot Encoding</h4>
+    <p>Since machine learning models cannot process categorical text data directly, categorical features were converted using one-hot encoding:</p>
+    <pre class="code-block">X = df.drop("Yield_kg_per_acre", axis=1)
+y = df["Yield_kg_per_acre"]
+X_encoded = pd.get_dummies(X, drop_first=True)</pre>
+    <p>The dataset was split into features (X) and target variable (y) before applying encoding.</p>
+    <p><strong>Result:</strong></p>
+    <ul>
+        <li>Number of features increased from 12 to 39.</li>
+        <li>All categorical variables were converted into numerical format.</li>
+    </ul>
+
+    <h4 class="sub-heading">Feature Scaling</h4>
+    <p>Numerical features had different ranges (e.g., rainfall in hundreds, pH in single digits). To ensure uniform scaling of numerical features, StandardScaler was applied only to the following columns:</p>
+    <pre class="code-block">scaler = StandardScaler()
+numerical_cols = ['N', 'P', 'K', 'Rainfall_mm', 'Temperature_C', 'Soil_pH', 'Year']
+X_encoded[numerical_cols] = scaler.fit_transform(X_encoded[numerical_cols])
+print("Final dataset shape after preprocessing:", X_encoded.shape)</pre>
+    <p><strong>After scaling:</strong></p>
+    <ul>
+        <li>Numerical features were standardized (mean = 0, std = 1).</li>
+        <li>Dataset shape became (1500, 39).</li>
+        <li>No rows were lost during preprocessing.</li>
+    </ul>
+
+    <h3 class="section-heading">Challenges Faced</h3>
+    <ol>
+        <li>Initial virtual environment activation issues.</li>
+        <li>Execution delay due to kernel configuration.</li>
+        <li>Understanding the correct order of preprocessing steps.</li>
+    </ol>
+    <p><em>These were resolved through proper environment setup and debugging.</em></p>
+
+    <h3 class="section-heading">Outcome of Milestone 1</h3>
+    <ul>
+        <li>Dataset was explored and understood.</li>
+        <li>No missing or duplicate data.</li>
+        <li>Categorical features were encoded.</li>
+        <li>Numerical features were standardized.</li>
+        <li>2 important visualizations were generated.</li>
+        <li>Final dataset prepared for regression model training.</li>
+    </ul>
+
+    <h3 class="section-heading">Conclusion</h3>
+    <p>Milestone 1 successfully completed dataset preparation and preprocessing steps required for machine learning. The data is now clean, structured, encoded, and scaled, making it ready for building regression models in the next milestone.</p>
+
+    <div class="submitted-card">
+        <h4>Submitted by:</h4>
+        <p><strong>Bandi Siri</strong></p>
+        <p>siribandi17@gmail.com</p>
+    </div>
+
+</div>
+
+</body>
+</html>

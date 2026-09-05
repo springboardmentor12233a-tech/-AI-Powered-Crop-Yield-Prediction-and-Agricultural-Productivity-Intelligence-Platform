@@ -1,0 +1,260 @@
+{
+  "best_model": {
+    "name": "Linear Regression",
+    "reasoning": "Linear Regression achieved the highest Test R\u00b2 (0.0029) and lowest Test RMSE (11381.99) on the 300 held-out test records."
+  },
+  "metrics": {
+    "Linear Regression": {
+      "Train_MAE": 3337.38,
+      "Test_MAE": 4273.23,
+      "Train_MSE": 87532144.7,
+      "Test_MSE": 129549785.13,
+      "Train_RMSE": 9355.86,
+      "Test_RMSE": 11381.99,
+      "Train_R2": 0.0319,
+      "Test_R2": 0.0029,
+      "Mean_Residual": 1141.66,
+      "Std_Residual": 11324.59,
+      "MedAE": 1757.44
+    },
+    "Decision Tree": {
+      "Train_MAE": 1511.09,
+      "Test_MAE": 4561.97,
+      "Train_MSE": 24253834.41,
+      "Test_MSE": 176040702.16,
+      "Train_RMSE": 4924.82,
+      "Test_RMSE": 13268.03,
+      "Train_R2": 0.7318,
+      "Test_R2": -0.3549,
+      "Mean_Residual": 1288.65,
+      "Std_Residual": 13205.31,
+      "MedAE": 983.97
+    },
+    "Random Forest": {
+      "Train_MAE": 1408.57,
+      "Test_MAE": 4723.21,
+      "Train_MSE": 14538099.57,
+      "Test_MSE": 140838758.58,
+      "Train_RMSE": 3812.89,
+      "Test_RMSE": 11867.55,
+      "Train_R2": 0.8392,
+      "Test_R2": -0.084,
+      "Mean_Residual": 467.93,
+      "Std_Residual": 11858.32,
+      "MedAE": 1612.84
+    },
+    "Gradient Boosting": {
+      "Train_MAE": 998.01,
+      "Test_MAE": 5000.25,
+      "Train_MSE": 2926240.92,
+      "Test_MSE": 152495707.61,
+      "Train_RMSE": 1710.63,
+      "Test_RMSE": 12348.92,
+      "Train_R2": 0.9676,
+      "Test_R2": -0.1737,
+      "Mean_Residual": 540.13,
+      "Std_Residual": 12337.1,
+      "MedAE": 1318.82
+    }
+  },
+  "residuals_summary": {
+    "Linear Regression": {
+      "mean_residual": 1141.6575,
+      "std_residual": 11324.592852898408,
+      "min_residual": -7461.8125,
+      "max_residual": 75752.875,
+      "median_absolute_error": 1757.4375
+    },
+    "Decision Tree": {
+      "mean_residual": 1288.6487039667438,
+      "std_residual": 13205.305247404607,
+      "min_residual": -75787.0,
+      "max_residual": 78042.73913043478,
+      "median_absolute_error": 983.9687830687831
+    },
+    "Random Forest": {
+      "mean_residual": 467.9342333333334,
+      "std_residual": 11858.321809276349,
+      "min_residual": -18067.59,
+      "max_residual": 78535.12,
+      "median_absolute_error": 1612.835
+    },
+    "Gradient Boosting": {
+      "mean_residual": 540.1292971002604,
+      "std_residual": 12337.097225582245,
+      "min_residual": -26261.624657381562,
+      "max_residual": 78716.96380043762,
+      "median_absolute_error": 1318.8171654981368
+    }
+  },
+  "feature_importances": {
+    "Linear Regression": [
+      [
+        "Fertilizer_Urea",
+        1676974141420949.0
+      ],
+      [
+        "Fertilizer_NPK",
+        1676974141420549.2
+      ],
+      [
+        "Fertilizer_Compost",
+        1676974141420403.2
+      ],
+      [
+        "Fertilizer_DAP",
+        1676974141419680.5
+      ],
+      [
+        "Fertilizer_Organic",
+        1676974141418758.0
+      ],
+      [
+        "Crop_Barley",
+        760157057116324.0
+      ],
+      [
+        "Crop_Soybean",
+        760157057116053.5
+      ],
+      [
+        "Crop_Pulses",
+        760157057115909.8
+      ],
+      [
+        "Crop_Cotton",
+        760157057115801.4
+      ],
+      [
+        "Crop_Wheat",
+        760157057115219.4
+      ]
+    ],
+    "Decision Tree": [
+      [
+        "Soil_pH",
+        0.20115264314864006
+      ],
+      [
+        "K",
+        0.17840937687479716
+      ],
+      [
+        "N",
+        0.15978290743384818
+      ],
+      [
+        "Fertilizer_NPK",
+        0.10839563786348576
+      ],
+      [
+        "Rainfall_mm",
+        0.05320418938508406
+      ],
+      [
+        "Year",
+        0.049851991718356914
+      ],
+      [
+        "Crop_Maize",
+        0.049814253542996415
+      ],
+      [
+        "Soil_Type_Sandy",
+        0.04861432497559431
+      ],
+      [
+        "Temperature_C",
+        0.03156381775638681
+      ],
+      [
+        "Crop_Jute",
+        0.030868091577017198
+      ]
+    ],
+    "Random Forest": [
+      [
+        "Soil_pH",
+        0.11243226096692288
+      ],
+      [
+        "Temperature_C",
+        0.10765512121883755
+      ],
+      [
+        "N",
+        0.09535587770348719
+      ],
+      [
+        "Rainfall_mm",
+        0.08288200186176366
+      ],
+      [
+        "P",
+        0.07593173514408304
+      ],
+      [
+        "Year",
+        0.07106550681929191
+      ],
+      [
+        "K",
+        0.05745006297027229
+      ],
+      [
+        "Fertilizer_NPK",
+        0.03956015243831276
+      ],
+      [
+        "State_Bihar",
+        0.025955932052053307
+      ],
+      [
+        "Crop_Maize",
+        0.021800385884993525
+      ]
+    ],
+    "Gradient Boosting": [
+      [
+        "Temperature_C",
+        0.1254428112311717
+      ],
+      [
+        "Rainfall_mm",
+        0.10356160956128972
+      ],
+      [
+        "Soil_pH",
+        0.10001527589793947
+      ],
+      [
+        "N",
+        0.07411521156543009
+      ],
+      [
+        "P",
+        0.06814523000886372
+      ],
+      [
+        "K",
+        0.06204878950698188
+      ],
+      [
+        "Fertilizer_NPK",
+        0.05504925003658002
+      ],
+      [
+        "Year",
+        0.04424975066019508
+      ],
+      [
+        "State_Tamil Nadu",
+        0.04286486278923551
+      ],
+      [
+        "Crop_Coffee",
+        0.037202759938509376
+      ]
+    ]
+  }
+}

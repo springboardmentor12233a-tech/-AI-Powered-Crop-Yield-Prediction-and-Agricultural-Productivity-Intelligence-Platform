@@ -1,0 +1,230 @@
+{
+  "best_model": "Linear Regression",
+  "metrics": {
+    "Linear Regression": {
+      "train_r2": 0.0319,
+      "test_r2": 0.0029,
+      "cv_r2_mean": -0.0893,
+      "cv_r2_std": 0.0455,
+      "train_rmse": 9355.86,
+      "test_rmse": 11382.0,
+      "train_mae": 3337.38,
+      "test_mae": 4273.24,
+      "train_mse": 87532076.47,
+      "test_mse": 129549874.87
+    },
+    "Decision Tree": {
+      "train_r2": 0.7318,
+      "test_r2": -0.3549,
+      "cv_r2_mean": -1.0876,
+      "cv_r2_std": 0.5176,
+      "train_rmse": 4924.82,
+      "test_rmse": 13268.03,
+      "train_mae": 1511.09,
+      "test_mae": 4561.97,
+      "train_mse": 24253834.41,
+      "test_mse": 176040702.16
+    },
+    "Random Forest": {
+      "train_r2": 0.8392,
+      "test_r2": -0.084,
+      "cv_r2_mean": -0.1994,
+      "cv_r2_std": 0.1103,
+      "train_rmse": 3812.89,
+      "test_rmse": 11867.55,
+      "train_mae": 1408.57,
+      "test_mae": 4723.21,
+      "train_mse": 14538099.57,
+      "test_mse": 140838758.58
+    },
+    "Gradient Boosting": {
+      "train_r2": 0.9676,
+      "test_r2": -0.1737,
+      "cv_r2_mean": -0.6216,
+      "cv_r2_std": 0.5298,
+      "train_rmse": 1710.63,
+      "test_rmse": 12348.92,
+      "train_mae": 998.01,
+      "test_mae": 5000.25,
+      "train_mse": 2926240.92,
+      "test_mse": 152495707.61
+    }
+  },
+  "feature_importances": {
+    "Linear Regression": [
+      [
+        "Fertilizer_Urea",
+        1676974141420949.0
+      ],
+      [
+        "Fertilizer_NPK",
+        1676974141420549.2
+      ],
+      [
+        "Fertilizer_Compost",
+        1676974141420403.2
+      ],
+      [
+        "Fertilizer_DAP",
+        1676974141419680.5
+      ],
+      [
+        "Fertilizer_Organic",
+        1676974141418758.0
+      ],
+      [
+        "Crop_Barley",
+        760157057116324.0
+      ],
+      [
+        "Crop_Soybean",
+        760157057116053.5
+      ],
+      [
+        "Crop_Pulses",
+        760157057115909.8
+      ],
+      [
+        "Crop_Cotton",
+        760157057115801.4
+      ],
+      [
+        "Crop_Wheat",
+        760157057115219.4
+      ]
+    ],
+    "Decision Tree": [
+      [
+        "Soil_pH",
+        0.20115264314864006
+      ],
+      [
+        "K",
+        0.17840937687479716
+      ],
+      [
+        "N",
+        0.15978290743384818
+      ],
+      [
+        "Fertilizer_NPK",
+        0.10839563786348576
+      ],
+      [
+        "Rainfall_mm",
+        0.05320418938508406
+      ],
+      [
+        "Year",
+        0.049851991718356914
+      ],
+      [
+        "Crop_Maize",
+        0.049814253542996415
+      ],
+      [
+        "Soil_Type_Sandy",
+        0.04861432497559431
+      ],
+      [
+        "Temperature_C",
+        0.03156381775638681
+      ],
+      [
+        "Crop_Jute",
+        0.030868091577017198
+      ]
+    ],
+    "Random Forest": [
+      [
+        "Soil_pH",
+        0.11243226096692288
+      ],
+      [
+        "Temperature_C",
+        0.10765512121883755
+      ],
+      [
+        "N",
+        0.09535587770348719
+      ],
+      [
+        "Rainfall_mm",
+        0.08288200186176366
+      ],
+      [
+        "P",
+        0.07593173514408304
+      ],
+      [
+        "Year",
+        0.07106550681929191
+      ],
+      [
+        "K",
+        0.05745006297027229
+      ],
+      [
+        "Fertilizer_NPK",
+        0.03956015243831276
+      ],
+      [
+        "State_Bihar",
+        0.025955932052053307
+      ],
+      [
+        "Crop_Maize",
+        0.021800385884993525
+      ]
+    ],
+    "Gradient Boosting": [
+      [
+        "Temperature_C",
+        0.1254428112311717
+      ],
+      [
+        "Rainfall_mm",
+        0.10356160956128972
+      ],
+      [
+        "Soil_pH",
+        0.10001527589793947
+      ],
+      [
+        "N",
+        0.07411521156543009
+      ],
+      [
+        "P",
+        0.06814523000886372
+      ],
+      [
+        "K",
+        0.06204878950698188
+      ],
+      [
+        "Fertilizer_NPK",
+        0.05504925003658002
+      ],
+      [
+        "Year",
+        0.04424975066019508
+      ],
+      [
+        "State_Tamil Nadu",
+        0.04286486278923551
+      ],
+      [
+        "Crop_Coffee",
+        0.037202759938509376
+      ]
+    ]
+  },
+  "dataset": {
+    "total_records": 1500,
+    "train_records": 1200,
+    "test_records": 300,
+    "features_count": 43,
+    "random_state": 42
+  }
+}

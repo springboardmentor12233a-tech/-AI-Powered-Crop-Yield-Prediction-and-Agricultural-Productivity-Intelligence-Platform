@@ -1,6 +1,8 @@
 import os
+import sys
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 class PreprocessingService:
     @staticmethod
@@ -10,87 +12,90 @@ class PreprocessingService:
         return pd.read_csv(file_path)
 
     @staticmethod
-    def analyze_data(df: pd.DataFrame) -> dict:
-        analysis = {
+    def explore_dataset(df: pd.DataFrame) -> dict:
+        """Step 2 & 3: Data Exploration and Cleaning checks"""
+        return {
             "shape": df.shape,
+            "head": df.head().to_dict(orient="records"),
+            "columns": list(df.columns),
+            "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
             "missing_values": df.isnull().sum().to_dict(),
             "duplicates": int(df.duplicated().sum()),
-            "columns": list(df.columns),
-            "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()}
+            "description": df.describe().to_dict()
         }
-        return analysis
 
     @staticmethod
-    def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-        cleaned_df = df.copy()
-        
-        # 1. Drop duplicate rows if any
-        cleaned_df = cleaned_df.drop_duplicates()
-        
-        # 2. Fix anomalies/outliers
-        # Anomaly 1: Rainfall has negative values (e.g. -8.699). Clamp to 0.0 minimum.
-        if 'Rainfall' in cleaned_df.columns:
-            cleaned_df['Rainfall'] = cleaned_df['Rainfall'].apply(lambda x: max(0.0, x))
-            
-        # Anomaly 2: Yield has negative values (e.g. -0.323). Clamp to 0.0 minimum.
-        if 'Yield' in cleaned_df.columns:
-            cleaned_df['Yield'] = cleaned_df['Yield'].apply(lambda x: max(0.0, x))
-            
-        # 3. Handle missing values
-        # Drop rows with NaN if they represent corrupted data
-        cleaned_df = cleaned_df.dropna()
-        
-        return cleaned_df
+    def preprocess_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
+        """
+        Step 4: Feature Engineering
+        - Split features and target (Yield_kg_per_acre)
+        - One-Hot Encoding for categorical columns (drop_first=True)
+        - StandardScaler for numerical columns
+        """
+        # Separate features and target
+        if "Yield_kg_per_acre" in df.columns:
+            X = df.drop("Yield_kg_per_acre", axis=1)
+            y = df["Yield_kg_per_acre"]
+        else:
+            X = df.copy()
+            y = None
+
+        # One-Hot Encoding
+        X_encoded = pd.get_dummies(X, drop_first=True)
+
+        # Standard Scaling for numerical features
+        numerical_cols = [col for col in ['N', 'P', 'K', 'Rainfall_mm', 'Temperature_C', 'Soil_pH', 'Year'] if col in X_encoded.columns]
+        if numerical_cols:
+            scaler = StandardScaler()
+            X_encoded[numerical_cols] = scaler.fit_transform(X_encoded[numerical_cols])
+
+        return X, y, X_encoded
 
     @classmethod
     def run_pipeline(cls, raw_path: str, processed_path: str) -> dict:
-        print(f"Loading raw dataset from {raw_path}...")
+        print(f"Loading dataset from {raw_path}...")
         df = cls.load_dataset(raw_path)
         
-        print("Analyzing raw dataset...")
-        raw_stats = cls.analyze_data(df)
+        print("Performing exploration & validation...")
+        exploration = cls.explore_dataset(df)
         
-        print("Cleaning dataset...")
-        cleaned_df = cls.clean_data(df)
+        print("Applying feature engineering (One-Hot Encoding + Scaling)...")
+        X, y, X_encoded = cls.preprocess_dataset(df)
         
-        print("Analyzing cleaned dataset...")
-        clean_stats = cls.analyze_data(cleaned_df)
-        
-        # Ensure processed directory exists
+        # Save preprocessed dataset
         os.makedirs(os.path.dirname(processed_path), exist_ok=True)
         
-        print(f"Saving cleaned dataset to {processed_path}...")
-        cleaned_df.to_csv(processed_path, index=False)
-        print("Pipeline complete.")
+        preprocessed_df = X_encoded.copy()
+        if y is not None:
+            preprocessed_df["Yield_kg_per_acre"] = y
+            
+        print(f"Saving preprocessed dataset to {processed_path} (Shape: {preprocessed_df.shape})...")
+        preprocessed_df.to_csv(processed_path, index=False)
         
+        # Also save cleaned version without one-hot encoding
+        cleaned_file = os.path.join(os.path.dirname(processed_path), "crop_yield_cleaned.csv")
+        df.to_csv(cleaned_file, index=False)
+        
+        print("Pipeline execution complete.")
         return {
-            "raw_stats": raw_stats,
-            "cleaned_stats": clean_stats
+            "initial_shape": df.shape,
+            "encoded_shape": X_encoded.shape,
+            "total_features": X_encoded.shape[1],
+            "missing_values": exploration["missing_values"],
+            "duplicates": exploration["duplicates"]
         }
 
 if __name__ == "__main__":
-    # Path configuration for standalone execution
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Go up: services -> app -> backend -> YieldSense-AI
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
     
-    raw_file = os.path.join(base_dir, "dataset", "raw", "kaggle_crop_yield", "crop_yield.csv")
-    processed_file = os.path.join(base_dir, "dataset", "processed", "crop_yield_cleaned.csv")
-    
-    # Download raw dataset if not present
+    raw_file = os.path.join(base_dir, "dataset.csv")
     if not os.path.exists(raw_file):
-        os.makedirs(os.path.dirname(raw_file), exist_ok=True)
-        url = "https://raw.githubusercontent.com/Explore-AI/Public-Data/master/Data/Python/Crop_yield.csv"
-        print(f"Downloading sample raw dataset from {url}...")
-        import urllib.request
-        try:
-            urllib.request.urlretrieve(url, raw_file)
-            print("Download complete.")
-        except Exception as e:
-            print(f"Error downloading dataset: {e}")
-            sys.exit(1)
+        raw_file = os.path.join(base_dir, "dataset", "dataset.csv")
         
+    processed_file = os.path.join(base_dir, "dataset", "processed", "preprocessed_crop_yield.csv")
+    
     stats = PreprocessingService.run_pipeline(raw_file, processed_file)
-    print("\n--- Preprocessing verification successful! ---")
-    print(f"Raw shape: {stats['raw_stats']['shape']}")
-    print(f"Cleaned shape: {stats['cleaned_stats']['shape']}")
+    print("\n--- Preprocessing Pipeline Results ---")
+    print(f"Original shape: {stats['initial_shape']}")
+    print(f"Features after One-Hot Encoding & Scaling: {stats['encoded_shape']}")

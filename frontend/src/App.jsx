@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Trees, Landmark, LogOut, User, Menu, X, ShieldCheck, Database } from 'lucide-react';
+import { LayoutDashboard, Trees, Landmark, LogOut, User, Menu, X, ShieldCheck, Database, BrainCircuit } from 'lucide-react';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import FarmManagement from './pages/FarmManagement';
 import CropManagement from './pages/CropManagement';
 import DatasetPage from './pages/Dataset';
+import YieldPrediction from './pages/YieldPrediction';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -29,6 +30,7 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Predict Yield', path: '/predict', icon: BrainCircuit },
     { name: 'Farms', path: '/farms', icon: Landmark },
     { name: 'Crops', path: '/crops', icon: Trees },
     { name: 'Dataset', path: '/dataset', icon: Database },
@@ -194,6 +196,13 @@ export default function App() {
           <ProtectedRoute>
             <Layout>
               <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/predict" element={
+          <ProtectedRoute>
+            <Layout>
+              <YieldPrediction />
             </Layout>
           </ProtectedRoute>
         } />

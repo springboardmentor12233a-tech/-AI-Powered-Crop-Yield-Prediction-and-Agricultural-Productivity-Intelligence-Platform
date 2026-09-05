@@ -1,0 +1,221 @@
+{
+  "model_name": "YieldSense AI Crop Yield Regressor",
+  "algorithm": "LinearRegression",
+  "version": "2.0.0",
+  "created_at": "2026-09-05T09:08:04.665513Z",
+  "target_variable": {
+    "name": "Yield_kg_per_acre",
+    "unit": "kg/acre",
+    "converted_unit": "tons/acre (1 ton = 1000 kg)"
+  },
+  "dataset_summary": {
+    "source_path": "C:\\Users\\sirib\\YieldSense-AI\\dataset.csv",
+    "total_records": 1500,
+    "train_records": 1200,
+    "test_records": 300,
+    "test_ratio": 0.2,
+    "random_state": 42
+  },
+  "input_features": {
+    "categorical": [
+      "State",
+      "Crop",
+      "Soil_Type",
+      "Fertilizer"
+    ],
+    "numerical": [
+      "N",
+      "P",
+      "K",
+      "Rainfall_mm",
+      "Temperature_C",
+      "Soil_pH",
+      "Year"
+    ],
+    "total_raw_features": 11,
+    "total_transformed_features": 43,
+    "transformed_feature_names": [
+      "N",
+      "P",
+      "K",
+      "Rainfall_mm",
+      "Temperature_C",
+      "Soil_pH",
+      "Year",
+      "State_Andhra Pradesh",
+      "State_Bihar",
+      "State_Gujarat",
+      "State_Haryana",
+      "State_Karnataka",
+      "State_Kerala",
+      "State_Madhya Pradesh",
+      "State_Maharashtra",
+      "State_Odisha",
+      "State_Punjab",
+      "State_Rajasthan",
+      "State_Tamil Nadu",
+      "State_Uttar Pradesh",
+      "State_West Bengal",
+      "Crop_Barley",
+      "Crop_Coffee",
+      "Crop_Cotton",
+      "Crop_Groundnut",
+      "Crop_Jute",
+      "Crop_Maize",
+      "Crop_Pulses",
+      "Crop_Rice",
+      "Crop_Soybean",
+      "Crop_Sugarcane",
+      "Crop_Tea",
+      "Crop_Wheat",
+      "Soil_Type_Black",
+      "Soil_Type_Clay",
+      "Soil_Type_Loamy",
+      "Soil_Type_Red Soil",
+      "Soil_Type_Sandy",
+      "Fertilizer_Compost",
+      "Fertilizer_DAP",
+      "Fertilizer_NPK",
+      "Fertilizer_Organic",
+      "Fertilizer_Urea"
+    ]
+  },
+  "categorical_valid_values": {
+    "State": [
+      "Andhra Pradesh",
+      "Bihar",
+      "Gujarat",
+      "Haryana",
+      "Karnataka",
+      "Kerala",
+      "Madhya Pradesh",
+      "Maharashtra",
+      "Odisha",
+      "Punjab",
+      "Rajasthan",
+      "Tamil Nadu",
+      "Uttar Pradesh",
+      "West Bengal"
+    ],
+    "Crop": [
+      "Barley",
+      "Coffee",
+      "Cotton",
+      "Groundnut",
+      "Jute",
+      "Maize",
+      "Pulses",
+      "Rice",
+      "Soybean",
+      "Sugarcane",
+      "Tea",
+      "Wheat"
+    ],
+    "Soil_Type": [
+      "Black",
+      "Clay",
+      "Loamy",
+      "Red Soil",
+      "Sandy"
+    ],
+    "Fertilizer": [
+      "Compost",
+      "DAP",
+      "NPK",
+      "Organic",
+      "Urea"
+    ]
+  },
+  "numerical_scaling_parameters": {
+    "N": {
+      "mean": 73.99333333333334,
+      "scale": 38.34462094682324,
+      "var": 1470.3099555555557
+    },
+    "P": {
+      "mean": 60.085,
+      "scale": 33.37785356090672,
+      "var": 1114.0811083333333
+    },
+    "K": {
+      "mean": 106.395,
+      "scale": 54.224892577118126,
+      "var": 2940.338975
+    },
+    "Rainfall_mm": {
+      "mean": 179.46416666666667,
+      "scale": 72.37156704101564,
+      "var": 5237.643715972222
+    },
+    "Temperature_C": {
+      "mean": 27.828041666666667,
+      "scale": 5.672904671764771,
+      "var": 32.18184741493056
+    },
+    "Soil_pH": {
+      "mean": 6.733425,
+      "scale": 0.714977635576806,
+      "var": 0.5111930193750001
+    },
+    "Year": {
+      "mean": 2012.1075,
+      "scale": 7.360657381194517,
+      "var": 54.179277083333325
+    }
+  },
+  "performance_metrics": {
+    "Train_MAE": 3337.38,
+    "Test_MAE": 4273.23,
+    "Train_MSE": 87532144.7,
+    "Test_MSE": 129549785.13,
+    "Train_RMSE": 9355.86,
+    "Test_RMSE": 11381.99,
+    "Train_R2": 0.0319,
+    "Test_R2": 0.0029,
+    "Mean_Residual": 1141.66,
+    "Std_Residual": 11324.59,
+    "MedAE": 1757.44
+  },
+  "feature_importances": [
+    [
+      "Fertilizer_Urea",
+      1676974141420949.0
+    ],
+    [
+      "Fertilizer_NPK",
+      1676974141420549.2
+    ],
+    [
+      "Fertilizer_Compost",
+      1676974141420403.2
+    ],
+    [
+      "Fertilizer_DAP",
+      1676974141419680.5
+    ],
+    [
+      "Fertilizer_Organic",
+      1676974141418758.0
+    ],
+    [
+      "Crop_Barley",
+      760157057116324.0
+    ],
+    [
+      "Crop_Soybean",
+      760157057116053.5
+    ],
+    [
+      "Crop_Pulses",
+      760157057115909.8
+    ],
+    [
+      "Crop_Cotton",
+      760157057115801.4
+    ],
+    [
+      "Crop_Wheat",
+      760157057115219.4
+    ]
+  ]
+}
