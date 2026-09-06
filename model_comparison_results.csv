@@ -1,0 +1,5 @@
+Model,Best CV RMSE,Test MAE,Test RMSE,Test R2,Best Parameters
+XGBoost,0.6428976991164628,0.5191049332143337,0.649876658861324,0.6862621570045162,"{'model__learning_rate': 0.05, 'model__max_depth': 3, 'model__n_estimators': 200}"
+Gradient Boosting,0.6407641459925546,0.5204940332984848,0.6524000286866195,0.6838210366050763,"{'model__learning_rate': 0.1, 'model__max_depth': 2, 'model__n_estimators': 100}"
+Ridge,0.6409754804389045,0.5236709795232818,0.6533008443280046,0.6829472917302171,{'model__alpha': 10.0}
+Random Forest,0.6554724079639537,0.534786465829521,0.6675923283044402,0.6689239973648218,"{'model__max_depth': 10, 'model__min_samples_split': 5, 'model__n_estimators': 200}"
