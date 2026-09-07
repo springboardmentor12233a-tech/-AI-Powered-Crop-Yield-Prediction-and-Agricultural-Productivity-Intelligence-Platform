@@ -91,3 +91,38 @@ def predict_yield(input_data: schemas.CropPredictionInput, token: str = Depends(
         "predicted_crop_yield": round(float(predicted_yield), 2),
         "unit": "tons/hectare"
     }
+# Helper function to securely get the logged-in user from the JWT token
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+# POST route to save a new field
+@app.post("/fields", response_model=schemas.FieldResponse)
+def create_field(field: schemas.FieldCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    new_field = models.Field(
+        name=field.name,
+        location=field.location,
+        area=field.area,
+        soil=field.soil,
+        owner_id=current_user.id
+    )
+    db.add(new_field)
+    db.commit()
+    db.refresh(new_field)
+    return new_field
+
+# GET route to load all fields for the logged-in user
+@app.get("/fields", response_model=list[schemas.FieldResponse])
+def get_fields(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    fields = db.query(models.Field).filter(models.Field.owner_id == current_user.id).all()
+    return fields
