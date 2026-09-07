@@ -35,8 +35,10 @@ export default function YieldSenseApp() {
   const [forecastResult, setForecastResult] = useState(null);
   const [isPredicting, setIsPredicting] = useState(false);
   
+  // Restored all input fields to the state
   const [forecastForm, setForecastForm] = useState({
-    crop: "Maize", area: "12", rainfall: "899", temp: "25", pesticide: "0"
+    crop: "Maize", area: "12", rainfall: "899", temp: "25", 
+    nitrogen: "90", phosphorus: "50", potassium: "60", ph: "6.5", pesticide: "0"
   });
 
   // --- FIELD REGISTRY STATE ---
@@ -79,7 +81,7 @@ export default function YieldSenseApp() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setToken(null);
-    setFields([]); // Clear fields on logout for security
+    setFields([]); 
     setActiveTab("overview");
   };
 
@@ -92,7 +94,7 @@ export default function YieldSenseApp() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setFields(data); // Populate dashboard with fields from Neon DB
+          setFields(data);
         }
       })
       .catch(err => console.error("Failed to load fields", err));
@@ -116,7 +118,11 @@ export default function YieldSenseApp() {
           rainfall: parseFloat(forecastForm.rainfall),
           temperature: parseFloat(forecastForm.temp),
           pesticide: parseFloat(forecastForm.pesticide),
-          area: parseFloat(forecastForm.area)
+          area: parseFloat(forecastForm.area),
+          nitrogen: parseFloat(forecastForm.nitrogen),
+          phosphorus: parseFloat(forecastForm.phosphorus),
+          potassium: parseFloat(forecastForm.potassium),
+          ph: parseFloat(forecastForm.ph)
         })
       });
 
@@ -153,12 +159,12 @@ export default function YieldSenseApp() {
           total: data.predicted_crop_yield, 
           perAcre: dynamicPerAcre, 
           crop: forecastForm.crop,
-          unit: data.unit,
+          unit: data.unit || "tons/hectare",
           riskStatus, riskColor, riskMsg, confidence
         });
         setIsForecastGenerated(true);
       } else {
-        alert("Prediction failed. Check token or inputs.");
+        alert("Prediction failed. Check token or backend inputs schema.");
       }
     } catch (error) {
       alert("Failed to connect to FastAPI backend. Ensure it is running.");
@@ -201,7 +207,6 @@ export default function YieldSenseApp() {
   };
 
   const handleRemoveField = (indexToRemove) => {
-    // Note: This removes it visually. To remove from the DB, you would add a DELETE fetch call here.
     setFields(fields.filter((_, index) => index !== indexToRemove));
   };
 
@@ -426,6 +431,29 @@ export default function YieldSenseApp() {
                         <input type="number" step="0.1" value={forecastForm.temp} onChange={e => setForecastForm({...forecastForm, temp: e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-[#12281C]" />
                       </div>
                     </div>
+                    
+                    {/* Restored N, P, K, pH Inputs */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-xs font-bold mb-2 text-gray-500">Nitrogen (kg/ha)</label>
+                        <input type="number" step="0.1" value={forecastForm.nitrogen} onChange={e => setForecastForm({...forecastForm, nitrogen: e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-[#12281C]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold mb-2 text-gray-500">Phosphorus (kg/ha)</label>
+                        <input type="number" step="0.1" value={forecastForm.phosphorus} onChange={e => setForecastForm({...forecastForm, phosphorus: e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-[#12281C]" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-xs font-bold mb-2 text-gray-500">Potassium (kg/ha)</label>
+                        <input type="number" step="0.1" value={forecastForm.potassium} onChange={e => setForecastForm({...forecastForm, potassium: e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-[#12281C]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold mb-2 text-gray-500">Soil pH</label>
+                        <input type="number" step="0.1" value={forecastForm.ph} onChange={e => setForecastForm({...forecastForm, ph: e.target.value})} className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-[#12281C]" />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold mb-2 text-gray-500">Pesticide (tonnes)</label>
