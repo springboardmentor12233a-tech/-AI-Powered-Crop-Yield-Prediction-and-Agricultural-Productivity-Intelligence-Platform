@@ -57,3 +57,13 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+
+# ---------- Machine Learning / Data ----------
+*.csv
+*.xlsx
+*.joblib
+*.pkl
+*.h5
+*.pt
+data/processed/
+models/
