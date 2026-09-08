@@ -1,0 +1,6 @@
+crop_type,avg_yield,soil_ph_low,soil_ph_high,soil_moisture_low,soil_moisture_high,nitrogen_content_low,nitrogen_content_high,phosphorus_content_low,phosphorus_content_high,potassium_content_low,potassium_content_high
+Wheat,6.25,5.61,7.39,20.0,39.92,1.2,2.36,0.47,1.19,0.91,1.65
+Barley,6.29,5.5,7.33,19.13,38.92,1.02,2.43,0.53,1.18,0.94,1.68
+Rice,6.24,5.52,7.41,21.0,40.78,1.03,2.38,0.52,1.27,0.88,1.69
+Soybean,6.27,5.52,7.65,20.49,41.04,1.16,2.43,0.5,1.12,0.95,1.64
+Corn,6.23,5.59,7.43,20.23,39.38,1.2,2.4,0.61,1.21,0.87,1.61

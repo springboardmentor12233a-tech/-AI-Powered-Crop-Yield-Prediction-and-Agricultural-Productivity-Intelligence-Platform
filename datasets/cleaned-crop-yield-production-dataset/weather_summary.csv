@@ -1,0 +1,16 @@
+region,season,avg_temperature,total_rainfall
+Central,Autumn,22.47,663.51
+Central,Spring,22.23,655.69
+Central,Summer,22.92,673.98
+East,Autumn,22.13,672.93
+East,Spring,22.27,661.35
+East,Summer,22.63,660.57
+North,Autumn,22.4,625.27
+North,Spring,22.52,655.26
+North,Summer,22.51,637.58
+South,Autumn,22.59,708.28
+South,Spring,22.62,647.83
+South,Summer,22.94,715.62
+West,Autumn,23.1,647.59
+West,Spring,22.61,645.58
+West,Summer,22.85,683.12
