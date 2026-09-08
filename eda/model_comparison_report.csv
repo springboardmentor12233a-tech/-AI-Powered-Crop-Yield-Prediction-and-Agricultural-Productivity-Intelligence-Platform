@@ -1,0 +1,6 @@
+model,stage,rmse,mae,r2
+XGBoost,tuned,0.6567,0.5266,0.677
+Linear Regression,baseline,0.6586,0.5266,0.6751
+Random Forest,tuned,0.6696,0.5358,0.6641
+Random Forest,baseline,0.6742,0.5372,0.6595
+XGBoost,baseline,0.7008,0.5628,0.6321
