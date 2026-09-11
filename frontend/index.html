@@ -1,62 +1,627 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YieldSense AI </title>
+    <title>YieldSense AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F5F2E8;
+            --panel: #FFFDF7;
+            --green: #1F3D2B;
+            --green-dark: #16301F;
+            --gold: #C89B3C;
+            --gold-soft: #F1E4C3;
+            --soil: #5B3A29;
+            --soil-soft: #EFE3D8;
+            --sky: #3A6B7A;
+            --sky-soft: #DCEAEC;
+            --ink: #22271F;
+            --line: #DDD5C2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'IBM Plex Sans', sans-serif;
+            line-height: 1.5;
+        }
+
+        header {
+            background: var(--green);
+            color: var(--gold-soft);
+            padding: 40px 32px 34px;
+            border-bottom: 6px solid var(--gold);
+        }
+
+        header .eyebrow {
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            color: #B9D0BE;
+            margin: 0 0 6px;
+        }
+
+        header h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: clamp(28px, 4vw, 42px);
+            margin: 0 0 10px;
+            color: #FBF8EF;
+            max-width: 780px;
+        }
+
+        header p {
+            max-width: 620px;
+            margin: 0;
+            color: #D9E4DA;
+            font-size: 15px;
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 40px 32px 80px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        @media (max-width: 880px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 28px 30px;
+        }
+
+        .panel h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 21px;
+            font-weight: 600;
+            margin: 0 0 4px;
+            color: var(--green-dark);
+        }
+
+        .panel .sub {
+            font-size: 13px;
+            color: #6B7268;
+            margin: 0 0 22px;
+        }
+
+        fieldset {
+            border: none;
+            padding: 0;
+            margin: 0 0 26px;
+        }
+
+        fieldset legend {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--soil);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0 0 12px;
+            border-bottom: 1px solid var(--line);
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px 16px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 13px;
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .field .hint {
+            font-size: 11px;
+            color: #8C8875;
+        }
+
+        select,
+        input[type="number"] {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 14px;
+            padding: 9px 10px;
+            border: 1px solid #C9C1AA;
+            border-radius: 3px;
+            background: #FFFEFB;
+            color: var(--ink);
+        }
+
+        select:focus,
+        input:focus {
+            outline: 2px solid var(--gold);
+            outline-offset: 1px;
+            border-color: var(--gold);
+        }
+
+        button.predict {
+            width: 100%;
+            background: var(--green);
+            color: #FBF8EF;
+            border: none;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: background 0.15s ease;
+        }
+
+        button.predict:hover {
+            background: var(--green-dark);
+        }
+
+        button.predict:disabled {
+            background: #9AA79E;
+            cursor: wait;
+        }
+
+        .results {
+            position: sticky;
+            top: 24px;
+        }
+
+        .results .empty {
+            color: #8C8875;
+            font-size: 14px;
+            padding: 30px 0;
+            text-align: center;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 6px 0 22px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 20px;
+        }
+
+        .hero .label {
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--soil);
+            margin-bottom: 8px;
+        }
+
+        .hero .value {
+            font-family: 'Fraunces', serif;
+            font-weight: 700;
+            font-size: 52px;
+            color: var(--green-dark);
+            line-height: 1;
+        }
+
+        .hero .value span {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--soil);
+            margin-left: 6px;
+        }
+
+        .subsection {
+            border-radius: 4px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+        }
+
+        .subsection.weather {
+            background: var(--sky-soft);
+        }
+
+        .subsection.soil {
+            background: var(--soil-soft);
+        }
+
+        .subsection h3 {
+            margin: 0 0 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .subsection.weather h3 {
+            color: var(--sky);
+        }
+
+        .subsection.soil h3 {
+            color: var(--soil);
+        }
+
+        .subsection.advisory {
+            background: var(--gold-soft);
+        }
+
+        .subsection.advisory h3 {
+            color: #8A6A1F;
+        }
+
+        .advisory-text {
+            margin: 0;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--ink);
+        }
+
+        .kv {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13.5px;
+            padding: 4px 0;
+        }
+
+        .kv span:first-child {
+            color: #55564C;
+        }
+
+        .kv span:last-child {
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .flag {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 12px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .flag.below {
+            background: #F4DCC7;
+            color: #8A4B1F;
+        }
+
+        .flag.above {
+            background: #D7E8DC;
+            color: #1F5233;
+        }
+
+        .error-box {
+            background: #F6DEDA;
+            border: 1px solid #D98E7F;
+            color: #7A2E1E;
+            padding: 12px 14px;
+            border-radius: 3px;
+            font-size: 13.5px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #8C8875;
+            padding: 20px 0 40px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>YieldSense AI: Crop Yield Prediction & Agricultural Productivity Forecasting System</h1>
+    <header>
+        <p class="eyebrow">Crop Yield Prediction &amp; Agricultural Productivity Forecasting</p>
+        <h1>YieldSense AI</h1>
+        <p>Estimate crop yield from historical farming data, weather patterns, and soil characteristics — built for
+            farmers and agricultural planners.</p>
+    </header>
 
-    <h2>Crop Yield Prediction System</h2>
+    <main>
+        <section class="panel">
+            <h2>Predict a yield</h2>
+            <p class="sub">Fill in your field details. Weather and soil values default to historical averages if left
+                blank.</p>
 
-    <p>
-        An AI-based crop yield prediction system for analyzing agricultural data and predicting crop yield that helps farmers and agricultural organizations estimate future crop production using historical farming data, weather conditions and soil characteristics. 
-    </p>
+            <fieldset>
+                <legend>Crop &amp; field</legend>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="crop">Crop</label>
+                        <select id="crop">
+                            <option value="Arecanut">Arecanut</option>
+                            <option value="Arhar/Tur">Arhar/Tur</option>
+                            <option value="Bajra">Bajra</option>
+                            <option value="Banana">Banana</option>
+                            <option value="Barley">Barley</option>
+                            <option value="Black pepper">Black pepper</option>
+                            <option value="Cardamom">Cardamom</option>
+                            <option value="Cashewnut">Cashewnut</option>
+                            <option value="Castor seed">Castor seed</option>
+                            <option value="Coconut">Coconut</option>
+                            <option value="Coriander">Coriander</option>
+                            <option value="Cotton(lint)">Cotton(lint)</option>
+                            <option value="Cowpea(Lobia)">Cowpea(Lobia)</option>
+                            <option value="Dry chillies">Dry chillies</option>
+                            <option value="Garlic">Garlic</option>
+                            <option value="Ginger">Ginger</option>
+                            <option value="Gram">Gram</option>
+                            <option value="Groundnut">Groundnut</option>
+                            <option value="Guar seed">Guar seed</option>
+                            <option value="Horse-gram">Horse-gram</option>
+                            <option value="Jowar">Jowar</option>
+                            <option value="Jute">Jute</option>
+                            <option value="Khesari">Khesari</option>
+                            <option value="Linseed">Linseed</option>
+                            <option value="Maize">Maize</option>
+                            <option value="Masoor">Masoor</option>
+                            <option value="Mesta">Mesta</option>
+                            <option value="Moong(Green Gram)">Moong(Green Gram)</option>
+                            <option value="Moth">Moth</option>
+                            <option value="Niger seed">Niger seed</option>
+                            <option value="Oilseeds total">Oilseeds total</option>
+                            <option value="Onion">Onion</option>
+                            <option value="Other  Rabi pulses">Other Rabi pulses</option>
+                            <option value="Other Cereals">Other Cereals</option>
+                            <option value="Other Kharif pulses">Other Kharif pulses</option>
+                            <option value="Other Summer Pulses">Other Summer Pulses</option>
+                            <option value="Peas & beans (Pulses)">Peas & beans (Pulses)</option>
+                            <option value="Potato">Potato</option>
+                            <option value="Ragi">Ragi</option>
+                            <option value="Rapeseed &Mustard">Rapeseed & Mustard</option>
+                            <option value="Rice" selected>Rice</option>
+                            <option value="Safflower">Safflower</option>
+                            <option value="Sannhamp">Sannhamp</option>
+                            <option value="Sesamum">Sesamum</option>
+                            <option value="Small millets">Small millets</option>
+                            <option value="Soyabean">Soyabean</option>
+                            <option value="Sugarcane">Sugarcane</option>
+                            <option value="Sunflower">Sunflower</option>
+                            <option value="Sweet potato">Sweet potato</option>
+                            <option value="Tapioca">Tapioca</option>
+                            <option value="Tobacco">Tobacco</option>
+                            <option value="Turmeric">Turmeric</option>
+                            <option value="Urad">Urad</option>
+                            <option value="Wheat">Wheat</option>
+                            <option value="other oilseeds">Other oilseeds</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="state">State</label>
+                        <select id="state">
 
-    <hr>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Assam" selected>Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Chhattisgarh">Chhattisgarh</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                            <option value="Jharkhand">Jharkhand</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Puducherry">Puducherry</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Tripura">Tripura</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </select>
 
-    <h3>Crop Information</h3>
+                    </div>
+                    <div class="field">
+                        <label for="season">Season</label>
+                        <select id="season">
+                            <option value="Kharif" selected>Kharif</option>
+                            <option value="Rabi">Rabi</option>
+                            <option value="Whole Year">Whole Year</option>
+                            <option value="Autumn">Autumn</option>
+                            <option value="Summer">Summer</option>
+                            <option value="Winter">Winter</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
 
-    <label for="crop">Select Crop:</label>
+            <fieldset>
+                <legend>Inputs &amp; usage</legend>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="area">Area (hectares)</label>
+                        <input type="number" id="area" value="1000">
+                    </div>
+                    <div class="field">
+                        <label for="fertilizer">Fertilizer (kg)</label>
+                        <input type="number" id="fertilizer" value="50000">
+                    </div>
+                    <div class="field">
+                        <label for="pesticide">Pesticide (kg)</label>
+                        <input type="number" id="pesticide" value="500">
+                    </div>
+                </div>
+            </fieldset>
 
-    <select id="crop">
-        <option value="Arecanut">Arecanut</option>
-        <option value="Rice">Rice</option>
-        <option value="Wheat">Wheat</option>
-        <option value="Cotton">Cotton</option>
-        <option value="Maize">Maize</option>
-    </select>
+            <fieldset>
+                <legend>Weather &amp; soil (optional)</legend>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="avg_temp_c">Avg temperature (°C)</label>
+                        <input type="number" id="avg_temp_c" placeholder="27">
+                    </div>
+                    <div class="field">
+                        <label for="total_rainfall_mm">Rainfall (mm)</label>
+                        <input type="number" id="total_rainfall_mm" placeholder="1200">
+                    </div>
+                    <div class="field">
+                        <label for="avg_humidity_percent">Humidity (%)</label>
+                        <input type="number" id="avg_humidity_percent" placeholder="75">
+                    </div>
+                    <div class="field">
+                        <label for="N">Nitrogen (N)</label>
+                        <input type="number" id="N" placeholder="60">
+                    </div>
+                    <div class="field">
+                        <label for="P">Phosphorus (P)</label>
+                        <input type="number" id="P" placeholder="30">
+                    </div>
+                    <div class="field">
+                        <label for="K">Potassium (K)</label>
+                        <input type="number" id="K" placeholder="20">
+                    </div>
+                    <div class="field">
+                        <label for="pH">pH</label>
+                        <input type="number" id="pH" step="0.1" placeholder="6.5">
+                    </div>
+                </div>
+            </fieldset>
 
-    <br><br>
+            <button class="predict" id="predictBtn" onclick="predictYield()">Predict yield</button>
+        </section>
 
-    <label for="area">Area:</label>
-    <input type="number" id="area" placeholder="Enter area">
+        <section class="panel results">
+            <h2>Forecast</h2>
+            <p class="sub">Your prediction and its context will appear here.</p>
+            <div id="resultArea">
+                <div class="empty">Fill in the form and click Predict yield to see a forecast.</div>
+            </div>
+        </section>
+    </main>
 
-    <br><br>
-
-    <button onclick="showMessage()">Predict Yield</button>
-
-    <p id="result"></p>
+    <footer>YieldSense AI — crop yield prediction, weather analytics &amp; soil analysis</footer>
 
     <script>
-    async function showMessage() {
-        const result = document.getElementById("result");
+        async function predictYield() {
+            const btn = document.getElementById('predictBtn');
+            const resultArea = document.getElementById('resultArea');
 
-        try {
-            const response = await fetch("http://127.0.0.1:5000/api/status");
-            const data = await response.json();
+            btn.disabled = true;
+            btn.innerText = 'Predicting…';
+            resultArea.innerHTML = '<div class="empty">Crunching the numbers…</div>';
 
-            result.innerText =
-                data.project + " - " + data.status;
-        } catch (error) {
-            result.innerText =
-                "Unable to connect to the backend.";
+            const payload = {
+                crop: document.getElementById('crop').value,
+                state: document.getElementById('state').value,
+                season: document.getElementById('season').value,
+                area: document.getElementById('area').value,
+                fertilizer: document.getElementById('fertilizer').value,
+                pesticide: document.getElementById('pesticide').value,
+                avg_temp_c: document.getElementById('avg_temp_c').value,
+                total_rainfall_mm: document.getElementById('total_rainfall_mm').value,
+                avg_humidity_percent: document.getElementById('avg_humidity_percent').value,
+                N: document.getElementById('N').value,
+                P: document.getElementById('P').value,
+                K: document.getElementById('K').value,
+                pH: document.getElementById('pH').value
+            };
+
+            try {
+                const [predRes, reportRes] = await Promise.all([
+                    fetch('http://127.0.0.1:5000/api/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }),
+                    fetch('http://127.0.0.1:5000/api/report', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                ]);
+
+                const pred = await predRes.json();
+                const report = await reportRes.json();
+
+                let recommendation = null;
+                if (!pred.error) {
+                    const recRes = await fetch('http://127.0.0.1:5000/api/recommend', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...payload,
+                            predicted_yield: pred.predicted_yield,
+                            avg_historical_rainfall_mm: report.avg_historical_rainfall_mm
+                        })
+                    });
+                    const recData = await recRes.json();
+                    recommendation = recData.recommendation || null;
+                }
+
+                if (pred.error) {
+                    resultArea.innerHTML = `<div class="error-box">Prediction failed: ${pred.error}</div>`;
+                    return;
+                }
+
+                const flagClass = report.rainfall_vs_history === 'above average' ? 'above' : 'below';
+                const soil = report.soil_info || {};
+
+                resultArea.innerHTML = `
+  <div class="hero">
+    <div class="label">Predicted yield</div>
+    <div class="value">${pred.predicted_yield}<span>tonnes / hectare</span></div>
+  </div>
+
+  ${recommendation ? `
+  <div class="subsection advisory">
+    <h3>Advisor's note</h3>
+    <p class="advisory-text">${recommendation}</p>
+  </div>` : ''}
+
+  <div class="subsection weather">
+    <h3>Weather analytics</h3>
+    <div class="kv"><span>Historical avg rainfall</span><span>${report.avg_historical_rainfall_mm} mm</span></div>
+    <div class="kv"><span>Historical avg temperature</span><span>${report.avg_historical_temp_c} °C</span></div>
+    <span class="flag ${flagClass}">Your input is ${report.rainfall_vs_history}</span>
+  </div>
+
+  <div class="subsection soil">
+    <h3>Soil analysis</h3>
+    <div class="kv"><span>Nitrogen (N)</span><span>${soil.N ?? '—'}</span></div>
+    <div class="kv"><span>Phosphorus (P)</span><span>${soil.P ?? '—'}</span></div>
+    <div class="kv"><span>Potassium (K)</span><span>${soil.K ?? '—'}</span></div>
+    <div class="kv"><span>pH</span><span>${soil.pH ?? '—'}</span></div>
+  </div>
+`;
+            } catch (error) {
+                resultArea.innerHTML = '<div class="error-box">Unable to reach the backend. Make sure Flask is running at 127.0.0.1:5000.</div>';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Predict yield';
+            }
         }
-    }
-</script>
+    </script>
 
 </body>
+
 </html>
