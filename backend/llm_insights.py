@@ -5,6 +5,9 @@ import urllib.request
 import urllib.error
 from fastapi import HTTPException
 from pydantic import BaseModel, ValidationError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class LLMInsightsResponse(BaseModel):
     summary: str
