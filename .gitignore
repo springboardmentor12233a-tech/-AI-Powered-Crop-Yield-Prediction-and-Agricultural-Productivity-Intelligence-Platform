@@ -29,9 +29,13 @@ frontend/.vite/
 # ---------- Jupyter ----------
 .ipynb_checkpoints/
 
-# ---------- IDE ----------
+# ---------- IDE & AI Assistants ----------
 .vscode/
 .idea/
+.agents/
+.gemini/
+.cursor/
+.cursorrules
 
 # ---------- Operating System ----------
 .DS_Store

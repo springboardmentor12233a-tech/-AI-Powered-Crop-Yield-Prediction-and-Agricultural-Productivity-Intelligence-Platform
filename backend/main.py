@@ -8,6 +8,8 @@ from contextlib import asynccontextmanager
 from .prediction import predict_yield, load_pipeline
 from .weather_analysis import load_historical_weather_analysis, assess_weather
 from .soil_analysis import load_historical_soil_analysis, assess_soil_suitability
+from .agricultural_report import generate_agricultural_report
+from .llm_insights import generate_llm_insights
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -127,6 +129,13 @@ class SoilAnalysisRequest(BaseModel):
             }
         }
 
+class AgriculturalReportRequest(PredictionRequest):
+    """
+    Inherits all fields from PredictionRequest because generating a full report
+    requires all parameters to make a yield prediction.
+    """
+    pass
+
 @app.get("/health", summary="Health Check")
 def health_check():
     """
@@ -198,6 +207,49 @@ def soil_analysis(request: SoilAnalysisRequest):
         return result
     except Exception as e:
         logger.error(f"Soil analysis error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/agricultural-report", summary="Structured Agricultural Forecast Report")
+def agricultural_report(request: AgriculturalReportRequest):
+    """
+    Generate a deterministic agricultural forecasting report combining
+    yield prediction, historical weather context, and historical soil context.
+    """
+    try:
+        if hasattr(request, "model_dump"):
+            input_dict = request.model_dump(by_alias=True)
+        else:
+            input_dict = request.dict(by_alias=True)
+            
+        report = generate_agricultural_report(input_dict)
+        return report
+    except Exception as e:
+        logger.error(f"Agricultural report error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/llm-insights", summary="LLM-Powered Agricultural Insights")
+def llm_insights(request: AgriculturalReportRequest):
+    """
+    Convert the structured agricultural report into concise, human-readable insights
+    using an external LLM. Strictly grounded in the provided report.
+    """
+    try:
+        # Generate the structured report first
+        if hasattr(request, "model_dump"):
+            input_dict = request.model_dump(by_alias=True)
+        else:
+            input_dict = request.dict(by_alias=True)
+            
+        base_report = generate_agricultural_report(input_dict)
+        
+        # Pass to the LLM Insights module
+        insights = generate_llm_insights(base_report)
+        return insights
+    except HTTPException as he:
+        # Re-raise known HTTPExceptions (e.g., from generate_llm_insights)
+        raise he
+    except Exception as e:
+        logger.error(f"LLM insights error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
