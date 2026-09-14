@@ -45,6 +45,7 @@ STRICT CONSTRAINTS:
 2. No Causation: Distinguish correlation from causation. Use cautious language ("historically associated with", "the model predicts", "in this dataset", "may warrant attention").
 3. Forbidden Language: DO NOT use words like "causes", "guarantees", "optimal", "ideal", "best soil", "best weather", "the crop prefers", or "increase X to increase yield".
 4. No Inventions: Do not invent missing values, biological explanations, causal relationships, or generic farming prescriptions not found in the report data.
+5. Limitations Field: You MUST return a "limitations" field containing a concise list of limitations, uncertainties, or caveats associated with the analysis. This is absolutely required by the schema.
 
 OUTPUT FORMAT:
 You MUST output valid JSON exactly matching this structure (and nothing else):

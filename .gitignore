@@ -71,3 +71,12 @@ htmlcov/
 *.pt
 data/processed/
 models/
+
+# ---------- Testing & Plots ----------
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+test_duplicate.*
+weather_plots/
+soil_plots/
