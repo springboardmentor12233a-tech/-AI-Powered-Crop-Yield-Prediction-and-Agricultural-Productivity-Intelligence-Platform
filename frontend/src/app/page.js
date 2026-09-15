@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const CROP_TYPES = ["Wheat", "Corn", "Rice", "Soybean", "Barley"];
 const REGIONS = ["North", "South", "East", "West", "Central"];
@@ -49,6 +50,14 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
 
   function handleChange(e) {
     const { name, value } = e.target;
