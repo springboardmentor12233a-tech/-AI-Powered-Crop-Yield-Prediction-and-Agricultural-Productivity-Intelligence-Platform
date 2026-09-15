@@ -24,7 +24,7 @@ VAL_PATH = "../datasets/cleaned-crop-yield-production-dataset/val_processed.csv"
 TARGET = "yield_tpha"
 RANDOM_STATE = 42
 MODEL_OUTPUT_PATH = "../backend/models/xgboost_yield_model.pkl"
-REPORT_OUTPUT_PATH = "model_comparison_report.csv"
+REPORT_OUTPUT_PATH = "../backend/model_comparison_report.csv"
 
 # Best params found by GridSearchCV in Step 4
 BEST_XGB_PARAMS = {"learning_rate": 0.1, "max_depth": 3, "n_estimators": 100}

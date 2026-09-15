@@ -1,69 +1,273 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+
+const CROP_TYPES = ["Wheat", "Corn", "Rice", "Soybean", "Barley"];
+const REGIONS = ["North", "South", "East", "West", "Central"];
+const SEASONS = ["Spring", "Summer", "Autumn"];
+
+const initialForm = {
+  crop_type: "Wheat",
+  region: "North",
+  season: "Autumn",
+  harvest_date: "2024-03-09",
+  soil_ph: "",
+  soil_moisture: "",
+  avg_temperature: "",
+  total_rainfall: "",
+  fertilizer_amount: "",
+  pesticide_usage: "",
+  sunlight_hours: "",
+  nitrogen_content: "",
+  phosphorus_content: "",
+  potassium_content: "",
+  irrigation_frequency: "",
+};
+
+const NUMBER_FIELDS = [
+  { name: "soil_ph", label: "Soil pH", step: "0.01" },
+  { name: "soil_moisture", label: "Soil Moisture (%)", step: "0.01" },
+  { name: "avg_temperature", label: "Avg Temperature (°C)", step: "0.01" },
+  { name: "total_rainfall", label: "Total Rainfall (mm)", step: "0.01" },
+  { name: "fertilizer_amount", label: "Fertilizer Amount", step: "0.01" },
+  { name: "pesticide_usage", label: "Pesticide Usage", step: "0.01" },
+  { name: "sunlight_hours", label: "Sunlight Hours", step: "0.01" },
+  { name: "nitrogen_content", label: "Nitrogen Content", step: "0.01" },
+  { name: "phosphorus_content", label: "Phosphorus Content", step: "0.01" },
+  { name: "potassium_content", label: "Potassium Content", step: "0.01" },
+  { name: "irrigation_frequency", label: "Irrigation Frequency", step: "1" },
+];
+
+const FLAG_STYLES = {
+  healthy: "bg-green-100 text-green-800 border-green-300",
+  "too high": "bg-red-100 text-red-800 border-red-300",
+  "too low": "bg-orange-100 text-orange-800 border-orange-300",
+};
 
 export default function Home() {
+  const [form, setForm] = useState(initialForm);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    // convert numeric fields from string -> number before sending
+    const payload = { ...form };
+    for (const { name } of NUMBER_FIELDS) {
+      payload[name] = parseFloat(payload[name]);
+    }
+
+    try {
+      const res = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-zinc-50 py-12 px-4">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-3xl font-semibold text-zinc-900 mb-1">
+          YieldSense AI
+        </h1>
+        <p className="text-zinc-600 mb-8">
+          Enter your field&apos;s conditions to get a yield prediction and
+          farming insight.
+        </p>
+
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Crop Type
+              </label>
+              <select
+                name="crop_type"
+                value={form.crop_type}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+              >
+                {CROP_TYPES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Region
+              </label>
+              <select
+                name="region"
+                value={form.region}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+              >
+                {REGIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Season
+              </label>
+              <select
+                name="season"
+                value={form.season}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+              >
+                {SEASONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Harvest Date
+              </label>
+              <input
+                type="date"
+                name="harvest_date"
+                value={form.harvest_date}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+              />
+            </div>
+
+            {NUMBER_FIELDS.map(({ name, label, step }) => (
+              <div key={name}>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  {label}
+                </label>
+                <input
+                  type="number"
+                  step={step}
+                  name={name}
+                  value={form[name]}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                />
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-lg bg-green-700 text-white font-medium py-2.5 hover:bg-green-800 transition-colors disabled:opacity-60"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            {loading ? "Predicting..." : "Predict Yield"}
+          </button>
+        </form>
+
+        {error && (
+          <div className="mt-6 rounded-lg border border-red-300 bg-red-50 text-red-800 px-4 py-3 text-sm">
+            {error}
+          </div>
+        )}
+
+        {result && (
+          <div className="mt-8 space-y-6">
+            <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm text-center">
+              <p className="text-sm text-zinc-500 mb-1">Predicted Yield</p>
+              <p className="text-4xl font-bold text-green-700">
+                {result.predicted_yield} t/ha
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+                Soil Health
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.entries(result.soil_flags).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      FLAG_STYLES[value] || "bg-zinc-100 text-zinc-800 border-zinc-300"
+                    }`}
+                  >
+                    <p className="font-medium capitalize">
+                      {key.replace(/_/g, " ")}
+                    </p>
+                    <p className="capitalize">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+                Weather Context
+              </h2>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-zinc-500">Your Temperature</p>
+                  <p className="font-medium text-zinc-900">
+                    {form.avg_temperature} °C
+                  </p>
+                  <p className="text-zinc-400 text-xs mt-1">
+                    Typical: {result.weather_context.typical_avg_temperature} °C
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500">Your Rainfall</p>
+                  <p className="font-medium text-zinc-900">
+                    {form.total_rainfall} mm
+                  </p>
+                  <p className="text-zinc-400 text-xs mt-1">
+                    Typical: {result.weather_context.typical_total_rainfall} mm
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-zinc-900 mb-3">
+                AI Insight
+              </h2>
+              <p className="text-zinc-700 leading-relaxed text-sm">
+                {result.llm_insight}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
