@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.routers import auth, predictions, recommendations, analytics
+from src.api.routers import predictions, recommendations, analytics
 
 app = FastAPI(
     title="YieldSense AI - Agricultural Intelligence Platform API",
@@ -8,7 +8,7 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS for Next.js frontend communication
+# Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,7 +18,6 @@ app.add_middleware(
 )
 
 # Mount Routers
-app.include_router(auth.router)
 app.include_router(predictions.router)
 app.include_router(recommendations.router)
 app.include_router(analytics.router)

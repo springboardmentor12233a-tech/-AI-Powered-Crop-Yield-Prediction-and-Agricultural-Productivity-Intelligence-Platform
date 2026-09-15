@@ -4,7 +4,6 @@ from typing import Optional, List, Dict, Any
 
 from src.ml.models.registry import predict_crop_yield, predict_crop_recommendation
 from src.analytics.agricultural_insights import generate_agricultural_insights
-from src.api.routers.auth import UserProfile, get_current_user
 
 router = APIRouter(prefix="/api/predict", tags=["Predictions"])
 

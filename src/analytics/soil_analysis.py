@@ -6,6 +6,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 DATA_DIR = os.path.join(BASE_DIR, "data", "processed")
 ARTIFACTS_DIR = os.path.join(BASE_DIR, "artifacts")
 
+_CACHED_SOIL_SUMMARY = None
+
 def classify_soil_ph(ph_value: float) -> dict:
     """Classifies soil pH according to standard USDA agronomic standards."""
     if ph_value < 5.5:
@@ -37,7 +39,11 @@ def classify_soil_ph(ph_value: float) -> dict:
     }
 
 def get_soil_analysis_summary():
-    """Calculates soil analysis metrics and texture comparisons from the datasets."""
+    """Calculates and caches soil analysis metrics and texture comparisons from the datasets."""
+    global _CACHED_SOIL_SUMMARY
+    if _CACHED_SOIL_SUMMARY is not None:
+        return _CACHED_SOIL_SUMMARY
+
     rec_path = os.path.join(DATA_DIR, "crop_recommendation_cleaned.csv")
     yield_path = os.path.join(DATA_DIR, "smart_crop_yield_cleaned.csv")
     
@@ -74,12 +80,13 @@ def get_soil_analysis_summary():
     # Crop yield by Soil Type breakdown
     crop_soil_pivot = df_yield.groupby(["Crop", "Soil_Type"])["Yield_ton_per_ha"].mean().unstack().round(2).to_dict()
     
-    return {
+    _CACHED_SOIL_SUMMARY = {
         "crop_recommendation_ph_stats": ph_stats_rec,
         "yield_dataset_ph_stats": ph_stats_yield,
         "soil_texture_performance": soil_yield_perf,
         "crop_soil_interaction": crop_soil_pivot
     }
+    return _CACHED_SOIL_SUMMARY
 
 def generate_soil_analysis_report():
     """Generates the artifacts/soil_analysis_report.md markdown file."""

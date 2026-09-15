@@ -6,8 +6,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 DATA_DIR = os.path.join(BASE_DIR, "data", "processed")
 ARTIFACTS_DIR = os.path.join(BASE_DIR, "artifacts")
 
+_CACHED_WEATHER_SUMMARY = None
+
 def get_weather_analytics_summary():
-    """Calculates statistical weather distributions and crop climatic envelopes from the processed datasets."""
+    """Calculates and caches statistical weather distributions and crop climatic envelopes from the processed datasets."""
+    global _CACHED_WEATHER_SUMMARY
+    if _CACHED_WEATHER_SUMMARY is not None:
+        return _CACHED_WEATHER_SUMMARY
+
     rec_path = os.path.join(DATA_DIR, "crop_recommendation_cleaned.csv")
     yield_path = os.path.join(DATA_DIR, "smart_crop_yield_cleaned.csv")
     
@@ -70,11 +76,12 @@ def get_weather_analytics_summary():
                 "avg_rainfall": float(round(crop_df["Rainfall"].mean(), 1))
             }
             
-    return {
+    _CACHED_WEATHER_SUMMARY = {
         "crop_recommendation_weather": rec_weather_stats,
         "yield_forecasting_weather": yield_weather_stats,
         "crop_climatic_profiles": crop_profiles
     }
+    return _CACHED_WEATHER_SUMMARY
 
 def generate_weather_analytics_report():
     """Generates the artifacts/weather_analytics_report.md markdown file."""
