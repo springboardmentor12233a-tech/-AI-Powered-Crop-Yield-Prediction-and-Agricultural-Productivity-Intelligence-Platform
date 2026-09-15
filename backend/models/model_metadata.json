@@ -1,0 +1,28 @@
+{
+    "model_name": "AgriYield XGBoost",
+    "algorithm": "XGBRegressor",
+    "parameters": {
+        "learning_rate": 0.05,
+        "max_depth": 4,
+        "n_estimators": 200,
+        "random_state": 42
+    },
+    "metrics": {
+        "mae": 237.7193991616245,
+        "rmse": 583.0429065824204,
+        "r2": 0.8539922774156659
+    },
+    "target": "Yield",
+    "features": [
+        "Year",
+        "State Name",
+        "Dist Name",
+        "Crop",
+        "Area",
+        "Previous_Year_Yield",
+        "Previous_Year_Area",
+        "Previous_Year_Production"
+    ],
+    "training_period": "1979-2009",
+    "test_period": "2010-2017"
+}
