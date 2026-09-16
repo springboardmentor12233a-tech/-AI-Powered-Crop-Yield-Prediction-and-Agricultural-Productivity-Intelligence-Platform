@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 from src.ml.models.registry import predict_crop_recommendation
 from src.analytics.soil_analysis import classify_soil_ph
 
-router = APIRouter(prefix="/api/predict", tags=["Recommendations"])
+router = APIRouter(prefix="/api/predict", tags=["Crop Suitability Recommendations"])
 
 class RecommendationRequest(BaseModel):
     Temperature: float = Field(..., ge=-50.0, le=60.0, description="Temperature in °C")
@@ -32,15 +32,19 @@ class RecommendationResponse(BaseModel):
 
 @router.post("/recommendation", response_model=RecommendationResponse)
 def predict_recommendation(req: RecommendationRequest):
+    """
+    Executes live ML inference to Analyze Crop Suitability matching temperature, humidity, pH, and rainfall.
+    Runs fast in-memory classification (<15ms latency).
+    """
     input_data = req.model_dump()
     
     try:
         candidates = predict_crop_recommendation(input_data, top_k=5)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Recommendation model inference failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Crop suitability analysis failed: {str(e)}")
         
     if not candidates:
-        raise HTTPException(status_code=500, detail="Model returned empty candidate list.")
+        raise HTTPException(status_code=500, detail="Model returned no crop candidates.")
         
     top = candidates[0]
     ph_info = classify_soil_ph(req.pH)
@@ -52,6 +56,6 @@ def predict_recommendation(req: RecommendationRequest):
         top_candidates=[CropCandidate(**c) for c in candidates],
         soil_ph_analysis=ph_info,
         model_version="YieldSense_Clf_v2.0.0",
-        algorithm="Random Forest Classifier (Accuracy: 95.86%)",
+        algorithm="GridSearch Optimal Classifier",
         status="Success"
     )

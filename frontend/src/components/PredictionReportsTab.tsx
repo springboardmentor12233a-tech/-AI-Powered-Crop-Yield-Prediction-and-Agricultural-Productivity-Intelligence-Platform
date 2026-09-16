@@ -1,87 +1,176 @@
-import React, { useState } from 'react';
-import { YieldInput, PredictionReportResponse } from '../types';
-import { generatePredictionReport } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { YieldInput, SavedReport } from '../types';
+import { fetchPredictionHistory, downloadReportPdf } from '../services/api';
 import { FormattedReportViewer } from './FormattedReportViewer';
 
 interface PredictionReportsTabProps {
   inputState: YieldInput;
+  isLoggedIn: boolean;
+  onOpenAuth: () => void;
 }
 
-export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({ inputState }) => {
-  const [report, setReport] = useState<PredictionReportResponse | null>(null);
+export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
+  isLoggedIn,
+  onOpenAuth,
+}) => {
+  const [history, setHistory] = useState<SavedReport[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedReport, setSelectedReport] = useState<SavedReport | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const handleGenerate = async () => {
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadHistory();
+    }
+  }, [isLoggedIn]);
+
+  const loadHistory = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const data = await generatePredictionReport(inputState);
-      setReport(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to compile agronomic prediction report.');
+      const records = await fetchPredictionHistory();
+      setHistory(records);
+    } catch {
+      setHistory([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDownloadPdf = async (reportId: string) => {
+    setDownloadingId(reportId);
+    try {
+      await downloadReportPdf(reportId, `YieldSense_AI_Crop_Yield_Report_${reportId}.pdf`);
+    } catch (err: any) {
+      alert(err.message || 'Failed to download PDF.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Top Banner with Generation Trigger */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6 animate-fade-in">
+      {/* Title Banner */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">📋</span>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Official Agronomic Prediction Report
-            </h2>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded-full text-xs font-semibold mb-2">
+            <span>📄 My Prediction Reports</span>
           </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            Crop Yield Assessment Reports
+          </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Compile a comprehensive intelligence summary for {inputState.plot_label || 'Current Plot'} (Target Crop: {inputState.Crop}).
+            View your saved yield prediction assessments and download printable A4 PDF documents.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={loading}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-5 rounded-xl text-sm transition duration-150 flex items-center gap-2 shadow-md shadow-emerald-900/20 disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Compiling Document...</span>
-            </>
-          ) : (
-            <>
-              <span>⚡ Generate & Preview Report</span>
-            </>
-          )}
-        </button>
+        {isLoggedIn && (
+          <button
+            onClick={loadHistory}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl transition self-start sm:self-auto"
+          >
+            🔄 Refresh History
+          </button>
+        )}
       </div>
 
-      {error && (
-        <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-2xl p-4 text-rose-800 dark:text-rose-300 text-xs">
-          <strong>Report Compilation Failed:</strong> {error}
+      {!isLoggedIn ? (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 text-center space-y-4 max-w-md mx-auto">
+          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+            🔐
+          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            Sign In to Access Your Saved Reports
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Authenticated farmers can save predictions, view detailed agronomic assessments, and download PDF reports anytime.
+          </p>
+          <button
+            onClick={onOpenAuth}
+            className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow-md"
+          >
+            Sign In / Create Account
+          </button>
+        </div>
+      ) : loading ? (
+        <div className="text-center py-12 text-xs text-slate-500">Loading your saved report history...</div>
+      ) : history.length === 0 ? (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 text-center space-y-3">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+            📋
+          </div>
+          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+            No Saved Reports Yet
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+            When you run a yield forecast, your reports will be saved here automatically.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {history.map((rpt) => (
+            <div
+              key={rpt.report_id}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition space-y-4 flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono text-[11px] font-bold rounded-lg">
+                    {rpt.report_id}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {rpt.created_at ? rpt.created_at.substring(0, 10) : ''}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    {rpt.crop} Forecast
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {rpt.field_name || 'Main Field'} ({rpt.region})
+                  </p>
+                </div>
+
+                <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-100 dark:border-emerald-900/60">
+                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                    Estimated Yield
+                  </span>
+                  <span className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-200">
+                    {rpt.predicted_yield.toFixed(2)}{' '}
+                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                      ton/ha
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setSelectedReport(rpt)}
+                  className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition text-center"
+                >
+                  View Report
+                </button>
+                <button
+                  onClick={() => handleDownloadPdf(rpt.report_id)}
+                  disabled={downloadingId === rpt.report_id}
+                  className="py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition text-center disabled:opacity-50"
+                >
+                  {downloadingId === rpt.report_id ? 'Downloading...' : '📥 PDF Download'}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Render Formatted Report or Empty State */}
-      {report ? (
-        <FormattedReportViewer report={report} />
-      ) : (
-        <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl p-12 sm:p-16 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center">
-          <span className="text-4xl mb-3">📄</span>
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-            No Report Generated Yet
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-            Click the generate button above to compile an official, exportable prediction report based on your currently configured field parameters.
-          </p>
-        </div>
+      {/* Selected Report Modal Viewer */}
+      {selectedReport && (
+        <FormattedReportViewer
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+          onDownloadPdf={() => handleDownloadPdf(selectedReport.report_id)}
+        />
       )}
     </div>
   );

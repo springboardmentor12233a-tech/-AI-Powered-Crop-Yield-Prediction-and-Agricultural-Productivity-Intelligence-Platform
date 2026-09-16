@@ -9,6 +9,13 @@ venv/
 env/
 ENV/
 
+# Local database
+data/*.db
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
 # Environment / secrets
 .env
 .env.*
