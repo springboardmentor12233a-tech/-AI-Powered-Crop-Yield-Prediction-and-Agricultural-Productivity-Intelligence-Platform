@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+backend/__pycache__/
+notebook/catboost_info/

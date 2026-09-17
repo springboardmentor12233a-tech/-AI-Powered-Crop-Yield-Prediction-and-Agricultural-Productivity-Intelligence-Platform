@@ -1,0 +1,29 @@
+{
+    "model": "YieldSense Soil Weather Yield Model",
+    "dataset_rows": 3360,
+    "features": [
+        "soil_ph",
+        "soil_moisture",
+        "avg_temperature",
+        "total_rainfall",
+        "fertilizer_amount",
+        "pesticide_usage",
+        "sunlight_hours",
+        "nitrogen_content",
+        "phosphorus_content",
+        "potassium_content",
+        "irrigation_frequency",
+        "crop_type",
+        "region",
+        "season",
+        "harvest_month"
+    ],
+    "categorical_features": [
+        "crop_type",
+        "region",
+        "season"
+    ],
+    "mae": 0.529169245800211,
+    "rmse": 0.6608064091724685,
+    "r2": 0.6813902398101747
+}
