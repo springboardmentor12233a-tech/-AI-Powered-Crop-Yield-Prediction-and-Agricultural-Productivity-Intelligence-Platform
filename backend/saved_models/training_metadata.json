@@ -1,0 +1,75 @@
+{
+  "best_model_name": "Linear Regression",
+  "best_params": {
+    "fit_intercept": false
+  },
+  "best_r2": 0.9772,
+  "target_column": "Yield_kg_per_acre",
+  "categorical_features": [
+    "Crop",
+    "Weather_Condition",
+    "Soil_Type",
+    "Region"
+  ],
+  "numerical_features": [
+    "Rainfall_mm",
+    "Temperature_C",
+    "Fertilizer_Used",
+    "Irrigation_Used",
+    "Nitrogen",
+    "Phosphorus",
+    "Potassium",
+    "Soil_pH"
+  ],
+  "feature_order": [
+    "Crop",
+    "Weather_Condition",
+    "Soil_Type",
+    "Region",
+    "Rainfall_mm",
+    "Temperature_C",
+    "Fertilizer_Used",
+    "Irrigation_Used",
+    "Nitrogen",
+    "Phosphorus",
+    "Potassium",
+    "Soil_pH"
+  ],
+  "ohe_categories": {
+    "Crop": [
+      "Barley",
+      "Cotton",
+      "Maize",
+      "Rice",
+      "Sorghum",
+      "Soybean",
+      "Sugarcane",
+      "Wheat"
+    ],
+    "Weather_Condition": [
+      "Cloudy",
+      "Rainy",
+      "Stormy",
+      "Sunny",
+      "Windy"
+    ],
+    "Soil_Type": [
+      "Chalky",
+      "Clay",
+      "Loamy",
+      "Peaty",
+      "Sandy",
+      "Silty"
+    ],
+    "Region": [
+      "Central",
+      "East",
+      "North",
+      "South",
+      "West"
+    ]
+  },
+  "train_size": 1760,
+  "test_size": 440,
+  "total_rows": 2200
+}

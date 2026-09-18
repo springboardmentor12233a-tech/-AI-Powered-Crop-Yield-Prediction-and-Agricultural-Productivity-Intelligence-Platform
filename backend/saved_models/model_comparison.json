@@ -1,0 +1,60 @@
+[
+  {
+    "model_name": "Linear Regression",
+    "best_params": {
+      "fit_intercept": false
+    },
+    "r2_score": 0.9772,
+    "mae": 132.4204,
+    "rmse": 169.5007,
+    "cv_best_score": 0.9807
+  },
+  {
+    "model_name": "Decision Tree",
+    "best_params": {
+      "max_depth": 10,
+      "min_samples_leaf": 4,
+      "min_samples_split": 10
+    },
+    "r2_score": 0.9349,
+    "mae": 229.1485,
+    "rmse": 286.6109,
+    "cv_best_score": 0.9314
+  },
+  {
+    "model_name": "Random Forest",
+    "best_params": {
+      "max_depth": 20,
+      "min_samples_split": 2,
+      "n_estimators": 200
+    },
+    "r2_score": 0.9576,
+    "mae": 187.6121,
+    "rmse": 231.3547,
+    "cv_best_score": 0.9579
+  },
+  {
+    "model_name": "Gradient Boosting",
+    "best_params": {
+      "learning_rate": 0.1,
+      "max_depth": 3,
+      "n_estimators": 200
+    },
+    "r2_score": 0.9753,
+    "mae": 139.9348,
+    "rmse": 176.5829,
+    "cv_best_score": 0.9771
+  },
+  {
+    "model_name": "Extra Trees",
+    "best_params": {
+      "max_depth": null,
+      "min_samples_split": 5,
+      "n_estimators": 200
+    },
+    "r2_score": 0.9563,
+    "mae": 187.5208,
+    "rmse": 234.7507,
+    "cv_best_score": 0.9545
+  }
+]
