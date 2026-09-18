@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, jwt_required
 from dotenv import load_dotenv
 from predict_service import predict_and_generate_insight
 from models import db
@@ -30,6 +30,7 @@ def home():
 
 
 @app.route("/predict", methods=["POST"])
+@jwt_required()
 def predict():
     field = request.get_json()
     if field is None:

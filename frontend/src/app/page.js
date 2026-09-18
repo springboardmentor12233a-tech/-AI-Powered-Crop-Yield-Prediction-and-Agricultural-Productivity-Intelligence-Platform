@@ -45,6 +45,9 @@ const FLAG_STYLES = {
   "too low": "bg-orange-100 text-orange-800 border-orange-300",
 };
 
+const INPUT_CLASS =
+  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400";
+
 export default function Home() {
   const [form, setForm] = useState(initialForm);
   const [result, setResult] = useState(null);
@@ -77,9 +80,13 @@ export default function Home() {
     }
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch("http://127.0.0.1:5000/predict", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -118,7 +125,7 @@ export default function Home() {
                 name="crop_type"
                 value={form.crop_type}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={INPUT_CLASS}
               >
                 {CROP_TYPES.map((c) => (
                   <option key={c} value={c}>
@@ -136,7 +143,7 @@ export default function Home() {
                 name="region"
                 value={form.region}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={INPUT_CLASS}
               >
                 {REGIONS.map((r) => (
                   <option key={r} value={r}>
@@ -154,7 +161,7 @@ export default function Home() {
                 name="season"
                 value={form.season}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={INPUT_CLASS}
               >
                 {SEASONS.map((s) => (
                   <option key={s} value={s}>
@@ -173,7 +180,7 @@ export default function Home() {
                 name="harvest_date"
                 value={form.harvest_date}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={INPUT_CLASS}
               />
             </div>
 
@@ -189,7 +196,7 @@ export default function Home() {
                   value={form[name]}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                  className={INPUT_CLASS}
                 />
               </div>
             ))}

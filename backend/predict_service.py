@@ -8,8 +8,9 @@ API (and eventually the frontend) can call:
      preprocessed (Step 2) - so the model sees data in the same shape
   3. Predict yield
   4. Flag soil conditions against this dataset's derived healthy ranges (Step 6)
-  5. Send everything to Groq for a plain-language insight (Step 7)
-  6. Return one combined dictionary - this is what the frontend will receive
+  5. Calculate a simple risk level from how many soil flags are off (Milestone 3)
+  6. Send everything to Groq for a plain-language insight (Step 7)
+  7. Return one combined dictionary - this is what the frontend will receive
 
 By: Shivani
 """
@@ -83,6 +84,25 @@ def flag_soil(field: dict) -> dict:
     return flags
 
 
+def calculate_risk_level(soil_flags: dict) -> str:
+    """
+    Milestone 3 - Risk Assessment.
+    Counts how many soil parameters fall outside the healthy range
+    ('too low' or 'too high') and maps that count to a simple risk label:
+      0 flagged  -> Low
+      1 flagged  -> Medium
+      2+ flagged -> High
+    """
+    flagged_count = sum(1 for flag in soil_flags.values() if flag != "healthy")
+
+    if flagged_count == 0:
+        return "Low"
+    elif flagged_count == 1:
+        return "Medium"
+    else:
+        return "High"
+
+
 def get_weather_context(field: dict) -> dict:
     """Looks up the typical avg_temperature/total_rainfall for this
     region+season, to give the input's own weather some context."""
@@ -127,7 +147,10 @@ Weather:
     response = requests.post(
         GROQ_API_URL,
         headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-        json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}], "max_tokens": 300},
+        # Raised from 300 -> 500: gpt-oss-20b spends some of its token budget
+        # on internal reasoning before the visible answer, so a tight cap
+        # can cut the response off mid-sentence.
+        json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}], "max_tokens": 500},
     )
     if response.status_code != 200:
         return f"LLM insight unavailable: {response.text}"
@@ -141,12 +164,14 @@ def predict_and_generate_insight(field: dict) -> dict:
     predicted_yield = float(_model.predict(X)[0])
 
     soil_flags = flag_soil(field)
+    risk_level = calculate_risk_level(soil_flags)
     weather_context = get_weather_context(field)
     insight = get_llm_insight(field, predicted_yield, soil_flags, weather_context)
 
     return {
         "predicted_yield": round(predicted_yield, 2),
         "soil_flags": soil_flags,
+        "risk_level": risk_level,
         "weather_context": weather_context,
         "llm_insight": insight,
     }

@@ -74,7 +74,10 @@ def get_llm_insight(field_data: dict) -> str:
         json={
             "model": GROQ_MODEL,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 200,
+            # Raised from 200 -> 500: gpt-oss-20b is a reasoning model, so part
+            # of the token budget goes to internal reasoning before the visible
+            # answer. 200 was too tight and cut responses off mid-sentence.
+            "max_tokens": 500,
         },
     )
 
@@ -82,6 +85,15 @@ def get_llm_insight(field_data: dict) -> str:
         raise RuntimeError(f"Groq API error {response.status_code}: {response.text}")
 
     data = response.json()
+
+    # Helpful during testing: tells you WHY the response ended.
+    # "stop" = model finished naturally. "length" = still hit the token cap,
+    # raise max_tokens further if you see this.
+    finish_reason = data["choices"][0].get("finish_reason")
+    if finish_reason == "length":
+        print(f"[warning] Response was cut off (finish_reason='length'). "
+              f"Consider raising max_tokens further.")
+
     return data["choices"][0]["message"]["content"].strip()
 
 
