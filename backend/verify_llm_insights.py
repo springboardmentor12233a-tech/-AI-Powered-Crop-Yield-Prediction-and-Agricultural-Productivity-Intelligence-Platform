@@ -1,17 +1,12 @@
 import json
 import logging
-from backend.main import (
-    app, load_pipeline, load_historical_weather_analysis, load_historical_soil_analysis,
-    health_check, predict, weather_analysis, soil_analysis, agricultural_report,
-    PredictionRequest, WeatherAnalysisRequest, SoilAnalysisRequest, AgriculturalReportRequest,
-    llm_insights
-)
-from fastapi import HTTPException
+from fastapi.testclient import TestClient
+from backend.app.main import app
+from backend.app.api.auth import get_current_user
+import os
 
-# Initialize globals
-load_pipeline()
-load_historical_weather_analysis()
-load_historical_soil_analysis()
+# Override authentication dependency for testing
+app.dependency_overrides[get_current_user] = lambda: {"id": 1, "email": "test@test.com", "role": "admin"}
 
 sample_payload = {
     "region": "Central USA",
@@ -34,78 +29,84 @@ sample_payload = {
     "observation_date": "2024-06-15"
 }
 
-print("Testing health_check ...")
-health_res = health_check()
-assert health_res["status"] == "healthy"
-print("OK")
+with TestClient(app) as client:
+    print("Testing GET /health ...")
+    health_res = client.get("/health")
+    assert health_res.status_code == 200, f"Health check failed: {health_res.text}"
+    assert health_res.json()["status"] == "healthy"
+    print("OK")
 
-print("Testing predict ...")
-pred_req = PredictionRequest(**sample_payload)
-pred_res = predict(pred_req)
-assert "predicted_yield_kg_per_hectare" in pred_res
-print("OK")
+    print("Testing POST /ml/predict ...")
+    pred_res = client.post("/ml/predict", json=sample_payload)
+    assert pred_res.status_code == 200, f"Predict failed: {pred_res.text}"
+    assert "predicted_yield_kg_per_hectare" in pred_res.json()
+    print("OK")
 
-print("Testing weather_analysis ...")
-weather_req = WeatherAnalysisRequest(**sample_payload)
-weather_res = weather_analysis(weather_req)
-assert "weather_assessment" in weather_res
-print("OK")
+    print("Testing POST /ml/weather-analysis ...")
+    weather_res = client.post("/ml/weather-analysis", json=sample_payload)
+    assert weather_res.status_code == 200, f"Weather analysis failed: {weather_res.text}"
+    assert "weather_assessment" in weather_res.json()
+    print("OK")
 
-print("Testing soil_analysis ...")
-soil_req = SoilAnalysisRequest(**sample_payload)
-soil_res = soil_analysis(soil_req)
-assert "soil_suitability_assessment" in soil_res
-print("OK")
+    print("Testing POST /ml/soil-analysis ...")
+    soil_res = client.post("/ml/soil-analysis", json=sample_payload)
+    assert soil_res.status_code == 200, f"Soil analysis failed: {soil_res.text}"
+    assert "soil_suitability_assessment" in soil_res.json()
+    print("OK")
 
-print("Testing agricultural_report ...")
-report_req = AgriculturalReportRequest(**sample_payload)
-report_res = agricultural_report(report_req)
-assert "yield_prediction" in report_res
-print("OK")
+    print("Testing POST /ml/agricultural-report ...")
+    report_res = client.post("/ml/agricultural-report", json=sample_payload)
+    assert report_res.status_code == 200, f"Agricultural report failed: {report_res.text}"
+    assert "yield_prediction" in report_res.json()
+    print("OK")
 
-print("Testing llm_insights ...")
-try:
-    insights_res = llm_insights(report_req)
-    print("OK - LLM generated a response (API Key was present)")
-    print("\n--- LLM RESPONSE ---")
-    print(json.dumps(insights_res, indent=2))
-    print("--------------------\n")
+    print("Testing /openapi.json contains /ml/llm-insights ...")
+    openapi_res = client.get("/openapi.json")
+    assert openapi_res.status_code == 200
+    assert "/ml/llm-insights" in openapi_res.json()["paths"]
+    print("OK")
+
+    print("Testing POST /ml/llm-insights ...")
+    insights_res = client.post("/ml/llm-insights", json=sample_payload)
     
-    # Validate the structure
-    assert isinstance(insights_res, dict), "Response is not a JSON object"
-    assert "summary" in insights_res
-    assert "yield_interpretation" in insights_res
-    assert "weather_insights" in insights_res
-    assert "soil_insights" in insights_res
-    assert "attention_points" in insights_res
-    assert "limitations" in insights_res
-    
-    assert isinstance(insights_res["summary"], str), "summary must be string"
-    assert isinstance(insights_res["yield_interpretation"], str), "yield_interpretation must be string"
-    assert isinstance(insights_res["weather_insights"], list), "weather_insights must be list"
-    assert isinstance(insights_res["soil_insights"], list), "soil_insights must be list"
-    assert isinstance(insights_res["attention_points"], list), "attention_points must be list"
-    assert isinstance(insights_res["limitations"], list), "limitations must be list"
-    print("OK - Response validated against required structure.")
-except HTTPException as e:
-    if e.status_code == 503 and "GROQ_API_KEY" in str(e.detail):
+    if insights_res.status_code == 200:
+        data = insights_res.json()
+        print("OK - LLM generated a response")
+        print("\n--- LLM RESPONSE ---")
+        print(json.dumps(data, indent=2))
+        print("--------------------\n")
+        
+        # Validate the structure
+        assert isinstance(data, dict), "Response is not a JSON object"
+        assert "summary" in data
+        assert "yield_interpretation" in data
+        assert "weather_insights" in data
+        assert "soil_insights" in data
+        assert "attention_points" in data
+        assert "limitations" in data
+        
+        assert isinstance(data["summary"], str), "summary must be string"
+        assert isinstance(data["yield_interpretation"], str), "yield_interpretation must be string"
+        assert isinstance(data["weather_insights"], list), "weather_insights must be list"
+        assert isinstance(data["soil_insights"], list), "soil_insights must be list"
+        assert isinstance(data["attention_points"], list), "attention_points must be list"
+        assert isinstance(data["limitations"], list), "limitations must be list"
+        print("OK - Response validated against required structure.")
+        
+    elif insights_res.status_code == 503 and "GROQ_API_KEY" in insights_res.text:
         print("OK - Caught expected 503 Service Unavailable (Groq API key not configured).")
-        print(f"Exception message: {e.detail}")
-    elif e.status_code == 502:
-        import os
+        print(f"Exception message: {insights_res.json()['detail']}")
+    elif insights_res.status_code == 502:
         key = os.environ.get("GROQ_API_KEY", "")
         if "your_real_api_key_here" in key or not key:
             print("OK - Caught expected 502 Bad Gateway (Invalid or placeholder API key).")
-            print(f"Exception message: {e.detail}")
+            print(f"Exception message: {insights_res.json()['detail']}")
         else:
             print("FAILED - Caught 502 Bad Gateway with a real-looking API key. Provider error or invalid key.")
-            print(f"Exception message: {e.detail}")
+            print(f"Exception message: {insights_res.json()['detail']}")
             exit(1)
     else:
-        print(f"FAILED - Unexpected HTTPException: {e.status_code} - {e.detail}")
+        print(f"FAILED - Unexpected HTTP Status: {insights_res.status_code} - {insights_res.text}")
         exit(1)
-except Exception as e:
-    print(f"FAILED - Unexpected exception: {str(e)}")
-    exit(1)
 
 print("Validation completed successfully. All LLM Insights integration requirements are met.")
