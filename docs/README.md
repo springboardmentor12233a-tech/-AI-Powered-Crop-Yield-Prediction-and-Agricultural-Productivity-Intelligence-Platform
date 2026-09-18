@@ -26,8 +26,7 @@
 20. [How to Run the Project](#20-how-to-run-the-project)
 21. [Environment Variables](#21-environment-variables)
 22. [Current Project Status](#22-current-project-status)
-23. [5-Minute Presentation Summary](#23-5-minute-presentation-summary)
-24. [Important Concepts to Understand](#24-important-concepts-to-understand)
+23. [Important Concepts to Understand](#24-important-concepts-to-understand)
 
 ---
 
@@ -745,68 +744,7 @@ MODEL_DIR=./saved_models
 
 ---
 
-## 23. 5-Minute Presentation Summary
-
-Use this as a speaking guide for your presentation:
-
----
-
-**[0:00 – 0:30] Introduction**  
-"Hello, my project is called **YieldSense AI** — a crop yield prediction and agricultural forecasting system. It uses machine learning and AI to help farmers estimate how much crop they will harvest before the season begins."
-
----
-
-**[0:30 – 1:00] Problem**  
-"Farmers face a major problem — they cannot predict crop yield accurately. They rely on experience and guesswork, which leads to wasted resources and financial losses. There was no simple, data-driven tool available to them."
-
----
-
-**[1:00 – 1:30] Objective**  
-"My goal was to build a complete AI-powered platform that takes farm parameters as input — like soil type, rainfall, NPK values, and weather condition — and predicts the expected crop yield in kg per acre. I also added weather analysis, soil analysis, and AI-generated farming recommendations."
-
----
-
-**[1:30 – 2:00] Dataset**  
-"I used a programmatically generated dataset of 2200 records with 12 features including crop type, rainfall, temperature, NPK values, soil type, and weather condition. The target variable is Yield in kg per acre, ranging from 514 to 5987 kg/acre."
-
----
-
-**[2:00 – 2:45] ML Training**  
-"I trained 5 regression models: Linear Regression, Decision Tree, Random Forest, Gradient Boosting, and Extra Trees. For each model, I used GridSearchCV with 5-fold cross-validation to find the best hyperparameters automatically. All models were built using a scikit-learn Pipeline with OneHotEncoding for categorical features and StandardScaling for numerical features."
-
----
-
-**[2:45 – 3:00] Best Model Results**  
-"After comparing all models on R², MAE, and RMSE, **Linear Regression came out best** with an R² of **0.9772**, meaning it explains 97.7% of the variation in yield. The average prediction error is just 132 kg/acre."
-
----
-
-**[3:00 – 3:20] Weather and Soil Analysis**  
-"The platform also provides weather analysis — showing how rainfall, temperature, and weather conditions affect yield — and soil analysis — showing how NPK levels, soil pH, and soil type relate to yield. These are computed from the actual dataset using Pandas."
-
----
-
-**[3:20 – 3:45] Groq AI Insights**  
-"When a prediction is made, the user can click 'Get AI Insights'. This sends the farm parameters and ML prediction to the Groq LLM, which generates a detailed agricultural analysis — explaining why that yield was predicted, assessing the soil, and recommending practical farming actions."
-
----
-
-**[3:45 – 4:15] Frontend and Backend**  
-"The backend is built with FastAPI in Python — it has 11 REST API endpoints including prediction, authentication, weather analysis, soil analysis, and AI insights. The frontend is built with React and Vite — it has 4 pages: Login, Register, Dashboard, and Predict. The frontend and backend are fully connected using Axios."
-
----
-
-**[4:15 – 4:30] Testing**  
-"I wrote an automated test script that tests all 10 API endpoints — registration, login, authentication, prediction, model comparison, weather analysis, soil analysis, and AI insights. All 10 tests passed."
-
----
-
-**[4:30 – 5:00] Conclusion**  
-"YieldSense AI successfully combines machine learning, data analysis, and AI language models into a practical agricultural tool. It helps farmers make data-driven decisions, reduce uncertainty, and improve crop planning. The system is fully functional with a working backend, frontend, and AI integration. Thank you."
-
----
-
-## 24. Important Concepts to Understand
+## 23. Important Concepts to Understand
 
 ### Regression
 Regression is a type of machine learning where the model **predicts a number** (not a category). In this project, we predict crop yield — a continuous number like 3657 kg/acre — which makes it a regression problem.
