@@ -66,3 +66,22 @@ data improvement and model optimization in later milestones.
 Milestone 2 model training was completed successfully. Multiple ML models
 were trained and compared using GridSearchCV and evaluation metrics.
 The best-performing model based on MAE was Random Forest.
+
+## 9. External LLM-Based Agricultural Insights
+
+Groq API was integrated into the Smart Farming project
+to generate AI-based agricultural insights.
+
+The external LLM analyzes agricultural input data and
+generates:
+- Key observations
+- Possible agricultural risks
+- Practical farming recommendations
+- Factors affecting crop yield
+
+The integration was tested successfully using the
+Groq API and the AI-generated response was displayed
+in the Jupyter Notebook.
+
+This feature demonstrates the use of an external LLM
+for agricultural decision support.
