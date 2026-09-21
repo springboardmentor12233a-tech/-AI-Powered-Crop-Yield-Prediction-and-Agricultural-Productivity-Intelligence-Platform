@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Farming AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <h2>🌱 SmartFarming AI</h2>
+    <span>Crop Intelligence Platform</span>
+  </header>
+
+  <section class="hero">
+    <div>
+      <span class="tag">AI-POWERED AGRICULTURE</span>
+      <h1>Smart Farming,<br><span>Better Harvest.</span></h1>
+      <p>Predict crop yield and get intelligent farming insights using agricultural data.</p>
+    </div>
+    <div class="hero-icon">🌾</div>
+  </section>
+
+  <main class="container">
+    <section class="form-card">
+      <h2>🌿 Crop Yield Prediction</h2>
+      <p class="muted">Enter farm details to explore your crop yield.</p>
+
+      <form id="farmForm">
+        <div class="form-grid">
+
+          <div class="field">
+            <label>Crop Type</label>
+            <select id="crop" required>
+              <option value="">Select Crop</option>
+              <option>Wheat</option>
+              <option>Rice</option>
+              <option>Maize</option>
+              <option>Cotton</option>
+              <option>Sugarcane</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Region</label>
+            <select id="region" required>
+              <option value="">Select Region</option>
+              <option>North India</option>
+              <option>South India</option>
+              <option>East India</option>
+              <option>West India</option>
+              <option>Central India</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Soil Moisture (%)</label>
+            <input id="moisture" type="number" min="0" max="100" step="any" placeholder="e.g. 35.9" required>
+          </div>
+
+          <div class="field">
+            <label>Soil pH</label>
+            <input id="ph" type="number" min="0" max="14" step="any" placeholder="e.g. 6.5" required>
+          </div>
+
+          <div class="field">
+            <label>Temperature (°C)</label>
+            <input id="temperature" type="number" step="any" placeholder="e.g. 25" required>
+          </div>
+
+          <div class="field">
+            <label>Rainfall (mm)</label>
+            <input id="rainfall" type="number" min="0" step="any" placeholder="e.g. 75" required>
+          </div>
+
+          <div class="field">
+            <label>Humidity (%)</label>
+            <input id="humidity" type="number" min="0" max="100" step="any" placeholder="e.g. 70" required>
+          </div>
+
+          <div class="field">
+            <label>Sunlight (hours/day)</label>
+            <input id="sunlight" type="number" min="0" max="24" step="any" placeholder="e.g. 7" required>
+          </div>
+
+          <div class="field full">
+            <label>Irrigation Type</label>
+            <select id="irrigation" required>
+              <option value="">Select Irrigation</option>
+              <option>Drip</option>
+              <option>Sprinkler</option>
+              <option>Manual</option>
+            </select>
+          </div>
+
+        </div>
+
+        <button type="submit" id="predictBtn">
+          Predict Crop Yield →
+        </button>
+      </form>
+    </section>
+
+    <section class="result-card" id="result">
+      <div class="result-icon">📊</div>
+      <h2>Your Prediction</h2>
+      <p class="muted">Your crop analysis will appear here.</p>
+      <div class="placeholder">
+        Enter your farm details and click Predict Crop Yield.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>🌱 SmartFarming AI | AI-Powered Crop Yield Prediction</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
