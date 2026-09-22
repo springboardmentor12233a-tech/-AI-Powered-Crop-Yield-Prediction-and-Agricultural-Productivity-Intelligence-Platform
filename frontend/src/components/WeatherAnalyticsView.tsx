@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CloudRain, Sun, Thermometer, Wind, Info } from 'lucide-react';
+import { CloudRain, Sun, Thermometer, Wind } from 'lucide-react';
 
 interface WeatherProps {
   apiBaseUrl?: string;
@@ -10,19 +10,21 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
   const [availableRegions, setAvailableRegions] = useState<string[]>([
     'India', 'United States', 'Brazil', 'China', 'France', 'Germany', 'Mexico', 'Egypt', 'Australia', 'South Africa'
   ]);
+  const [isLiveMode, setIsLiveMode] = useState(false);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchWeather(selectedRegion);
-  }, [selectedRegion]);
+    fetchWeather(selectedRegion, isLiveMode);
+  }, [selectedRegion, isLiveMode]);
 
-  const fetchWeather = async (region: string) => {
+  const fetchWeather = async (region: string, live: boolean = false) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${apiBaseUrl}/api/weather/analysis?region=${encodeURIComponent(region)}`);
+      const url = `${apiBaseUrl}/api/weather/analysis?region=${encodeURIComponent(region)}${live ? '&live=true' : ''}`;
+      const response = await fetch(url);
       if (!response.ok) {
         // Fallback fetch all data to get valid regions
         const fallbackRes = await fetch(`${apiBaseUrl}/api/weather/analysis`);
@@ -32,7 +34,7 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
             setAvailableRegions(fullData.available_regions);
             const firstRegion = fullData.available_regions[0];
             setSelectedRegion(firstRegion);
-            return fetchWeather(firstRegion);
+            return fetchWeather(firstRegion, live);
           }
         }
         const errJson = await response.json();
@@ -66,46 +68,65 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
               </h2>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
-              Analyze seasonal rainfall adequacy, temperature stress risks, and sunlight exposure index per agricultural region.
+              Analyze seasonal rainfall adequacy, temperature stress risks, and live satellite weather telemetries.
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.5rem 0.9rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-            <Info size={16} color="#60a5fa" />
-            <span style={{ fontSize: '0.8rem', color: '#93c5fd', fontWeight: 600 }}>
-              {data?.status_claim || 'Dataset-based Weather Analytics'}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              onClick={() => setIsLiveMode(!isLiveMode)}
+              style={{
+                background: isLiveMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                border: isLiveMode ? '1px solid #10b981' : '1px solid var(--border-color)',
+                color: isLiveMode ? '#34d399' : 'var(--text-muted)',
+                padding: '0.5rem 0.9rem',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <Wind size={14} />
+              {isLiveMode ? 'Live Satellite Stream Active (Open-Meteo API)' : 'Switch to Live Open-Meteo Weather API'}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Region Selector Bar */}
-      <div className="glass-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <label style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700 }}>Select Region:</label>
-        <select
-          value={selectedRegion}
-          onChange={(e) => setSelectedRegion(e.target.value)}
-          style={{
-            background: '#0c1610',
-            color: '#ffffff',
-            border: '1px solid var(--border-color)',
-            padding: '0.65rem 1.25rem',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            minWidth: '240px',
-            outline: 'none'
-          }}
-        >
-          {availableRegions.map(reg => (
-            <option key={reg} value={reg} style={{ background: '#0c1610', color: '#ffffff' }}>
-              {reg}
-            </option>
-          ))}
-        </select>
-        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          Showing telemetry metrics for <strong style={{ color: '#34d399' }}>{selectedRegion}</strong>
-        </span>
+      <div className="glass-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <label style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700 }}>Select Region:</label>
+          <select
+            value={selectedRegion}
+            onChange={(e) => setSelectedRegion(e.target.value)}
+            style={{
+              background: '#0c1610',
+              color: '#ffffff',
+              border: '1px solid var(--border-color)',
+              padding: '0.65rem 1.25rem',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              minWidth: '240px',
+              outline: 'none'
+            }}
+          >
+            {availableRegions.map(reg => (
+              <option key={reg} value={reg} style={{ background: '#0c1610', color: '#ffffff' }}>
+                {reg.toUpperCase()}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="badge badge-blue">
+            {data?.status_claim || 'Dataset-based Weather Analytics'}
+          </span>
+        </div>
       </div>
 
       {error && (
