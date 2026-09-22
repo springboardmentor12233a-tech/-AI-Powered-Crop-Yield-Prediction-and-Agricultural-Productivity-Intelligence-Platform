@@ -10,7 +10,7 @@ The automated data cleaning pipeline processed **28242 real historical crop reco
 - **Cleaned Output File**: `datasets/processed/cleaned_crop_yield.csv`
 - **Total Cleaned Rows**: 28242
 - **Total Features**: 18
-- **Crops Supported**: Maize, Potatoes, Rice, paddy, Sorghum, Soybeans, Wheat, Cassava, Sweet potatoes, Plantains and others, Yams
+- **Crops Supported**: Maize, Potato, Rice, Sorghum, Soybean, Wheat, Cassava, Sweet Potato, Plantains, Yams
 - **Regions Supported**: 101 countries/regions
 
 ---

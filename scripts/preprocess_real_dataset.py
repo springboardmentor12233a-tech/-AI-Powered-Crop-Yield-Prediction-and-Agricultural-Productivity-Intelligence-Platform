@@ -27,10 +27,19 @@ def preprocess_real_kaggle_dataset():
     # Map core columns
     # Area -> region, Item -> crop_type, Year -> harvest_year, hg/ha_yield -> yield_kg_per_hectare
     # average_rain_fall_mm_per_year -> rainfall_mm, pesticides_tonnes -> pesticide_tonnes, avg_temp -> temperature_C
+    crop_name_map = {
+        'Rice, paddy': 'Rice',
+        'Plantains and others': 'Plantains',
+        'Soybeans': 'Soybean',
+        'Sweet potatoes': 'Sweet Potato',
+        'Potatoes': 'Potato'
+    }
+
     df = pd.DataFrame()
     df["farm_id"] = [f"FARM{str(i+1).zfill(5)}" for i in range(len(raw_df))]
     df["region"] = raw_df["Area"].astype(str).str.strip()
-    df["crop_type"] = raw_df["Item"].astype(str).str.strip()
+    raw_crops = raw_df["Item"].astype(str).str.strip()
+    df["crop_type"] = raw_crops.map(lambda c: crop_name_map.get(c, c))
     
     # Target yield conversion: 1 kg/ha = 10 hg/ha
     df["yield_kg_per_hectare"] = (raw_df["hg/ha_yield"] / 10.0).round(2)

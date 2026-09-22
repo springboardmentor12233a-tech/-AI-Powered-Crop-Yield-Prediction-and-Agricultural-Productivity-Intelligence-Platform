@@ -3,10 +3,10 @@
   "data_source": "datasets/processed/cleaned_crop_yield.csv",
   "total_records_analyzed": 28242,
   "global_soil_averages": {
-    "soil_pH": 6.37,
+    "soil_pH": 6.48,
     "soil_moisture_percent": 41.4,
     "NDVI_index": 0.625,
-    "overall_soil_health_index": 0.7553
+    "overall_soil_health_index": 0.7749
   },
   "crop_specific_soil_breakdown": {
     "Maize": {
@@ -21,28 +21,28 @@
       "soil_health_index": 0.7515,
       "fertility_assessment": "High Fertility"
     },
-    "Potatoes": {
+    "Potato": {
       "record_count": 4276,
-      "average_soil_pH": 5.8,
+      "average_soil_pH": 6.5,
       "optimal_pH_range": "6.0 - 7.2",
-      "pH_suitability_status": "Slightly Acidic",
-      "pH_recommendation": "Soil pH 5.80 is below optimal (6.0-7.2) for Potatoes. Consider agricultural lime application.",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.50 is within the optimal range (6.0-7.2) for Potato.",
       "average_soil_moisture_percent": 40.19,
       "moisture_sufficiency_percent": 73.07,
       "average_NDVI_index": 0.821,
-      "soil_health_index": 0.7092,
+      "soil_health_index": 0.8303,
       "fertility_assessment": "High Fertility"
     },
-    "Rice, paddy": {
+    "Rice": {
       "record_count": 3388,
-      "average_soil_pH": 6.51,
-      "optimal_pH_range": "6.0 - 7.2",
+      "average_soil_pH": 6.21,
+      "optimal_pH_range": "5.5 - 6.8",
       "pH_suitability_status": "Optimal",
-      "pH_recommendation": "Soil pH 6.51 is within the optimal range (6.0-7.2) for Rice, paddy.",
+      "pH_recommendation": "Soil pH 6.21 is within the optimal range (5.5-6.8) for Rice.",
       "average_soil_moisture_percent": 41.9,
       "moisture_sufficiency_percent": 76.19,
       "average_NDVI_index": 0.604,
-      "soil_health_index": 0.7748,
+      "soil_health_index": 0.7243,
       "fertility_assessment": "High Fertility"
     },
     "Sorghum": {
@@ -57,16 +57,16 @@
       "soil_health_index": 0.6848,
       "fertility_assessment": "Moderate Fertility"
     },
-    "Soybeans": {
+    "Soybean": {
       "record_count": 3223,
-      "average_soil_pH": 6.59,
-      "optimal_pH_range": "6.0 - 7.2",
+      "average_soil_pH": 6.49,
+      "optimal_pH_range": "6.0 - 7.0",
       "pH_suitability_status": "Optimal",
-      "pH_recommendation": "Soil pH 6.59 is within the optimal range (6.0-7.2) for Soybeans.",
+      "pH_recommendation": "Soil pH 6.49 is within the optimal range (6.0-7.0) for Soybean.",
       "average_soil_moisture_percent": 40.88,
       "moisture_sufficiency_percent": 74.33,
       "average_NDVI_index": 0.459,
-      "soil_health_index": 0.7098,
+      "soil_health_index": 0.7254,
       "fertility_assessment": "High Fertility"
     },
     "Wheat": {
@@ -93,28 +93,28 @@
       "soil_health_index": 0.7648,
       "fertility_assessment": "High Fertility"
     },
-    "Sweet potatoes": {
+    "Sweet Potato": {
       "record_count": 2890,
-      "average_soil_pH": 5.9,
+      "average_soil_pH": 6.5,
       "optimal_pH_range": "6.0 - 7.2",
-      "pH_suitability_status": "Slightly Acidic",
-      "pH_recommendation": "Soil pH 5.90 is below optimal (6.0-7.2) for Sweet potatoes. Consider agricultural lime application.",
+      "pH_suitability_status": "Optimal",
+      "pH_recommendation": "Soil pH 6.50 is within the optimal range (6.0-7.2) for Sweet Potato.",
       "average_soil_moisture_percent": 42.78,
       "moisture_sufficiency_percent": 77.78,
       "average_NDVI_index": 0.747,
-      "soil_health_index": 0.7192,
+      "soil_health_index": 0.8234,
       "fertility_assessment": "High Fertility"
     },
-    "Plantains and others": {
+    "Plantains": {
       "record_count": 556,
-      "average_soil_pH": 6.51,
+      "average_soil_pH": 6.11,
       "optimal_pH_range": "6.0 - 7.2",
       "pH_suitability_status": "Optimal",
-      "pH_recommendation": "Soil pH 6.51 is within the optimal range (6.0-7.2) for Plantains and others.",
+      "pH_recommendation": "Soil pH 6.11 is within the optimal range (6.0-7.2) for Plantains.",
       "average_soil_moisture_percent": 51.41,
       "moisture_sufficiency_percent": 93.47,
       "average_NDVI_index": 0.735,
-      "soil_health_index": 0.8688,
+      "soil_health_index": 0.8018,
       "fertility_assessment": "High Fertility"
     },
     "Yams": {

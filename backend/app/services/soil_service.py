@@ -16,11 +16,22 @@ class SoilService:
             return data
 
         crop_breakdown = data.get("crop_specific_soil_breakdown", {})
+        query_norm = crop_type.strip().lower()
         matched_crop = None
+
+        # 1. Exact case-insensitive match
         for crop_key in crop_breakdown.keys():
-            if crop_key.lower() == crop_type.strip().lower():
+            if crop_key.lower() == query_norm:
                 matched_crop = crop_key
                 break
+
+        # 2. Substring / Alias matching if no exact match
+        if not matched_crop:
+            for crop_key in crop_breakdown.keys():
+                key_norm = crop_key.lower()
+                if query_norm in key_norm or key_norm in query_norm or query_norm.rstrip('s') in key_norm or key_norm.rstrip('s') in query_norm:
+                    matched_crop = crop_key
+                    break
 
         if not matched_crop:
             valid_crops = list(crop_breakdown.keys())
