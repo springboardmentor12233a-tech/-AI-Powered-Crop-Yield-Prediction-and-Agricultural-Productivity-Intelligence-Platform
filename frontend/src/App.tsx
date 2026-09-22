@@ -8,6 +8,8 @@ import { AuthModal } from './components/AuthModal';
 import { YieldPredictor } from './components/YieldPredictor';
 import { WeatherAnalyticsView } from './components/WeatherAnalyticsView';
 import { SoilAnalysisView } from './components/SoilAnalysisView';
+import { AnalyticsReportsView } from './components/AnalyticsReportsView';
+import { RecommendationsHubView } from './components/RecommendationsHubView';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -156,6 +158,14 @@ export function App() {
 
         {activeTab === 'soil' && (
           <SoilAnalysisView />
+        )}
+
+        {activeTab === 'recommendations' && (
+          <RecommendationsHubView />
+        )}
+
+        {activeTab === 'analytics-reports' && (
+          <AnalyticsReportsView />
         )}
 
         {activeTab === 'dataset' && (

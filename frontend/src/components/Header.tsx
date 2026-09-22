@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers } from 'lucide-react';
+import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers, FileText, Sparkles } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -69,6 +69,20 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Layers size={15} />
           Soil Analysis
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'recommendations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('recommendations')}
+        >
+          <Sparkles size={15} />
+          AI Recommendations
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'analytics-reports' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics-reports')}
+        >
+          <FileText size={15} />
+          Analytics & Reports
         </button>
         <button
           className={`tab-btn ${activeTab === 'dataset' ? 'active' : ''}`}

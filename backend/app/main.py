@@ -10,6 +10,7 @@ from backend.app.api.analytics import router as analytics_router
 from backend.app.api.predictions import router as predictions_router
 from backend.app.api.weather import router as weather_router
 from backend.app.api.soil import router as soil_router
+from backend.app.api.reports import router as reports_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -31,13 +32,14 @@ plots_dir = "eda_plots"
 os.makedirs(plots_dir, exist_ok=True)
 app.mount("/eda_plots", StaticFiles(directory=plots_dir), name="eda_plots")
 
-# Include API Routers (Milestone 1 + Milestone 2)
+# Include API Routers (Milestone 1 + Milestone 2 + Milestone 3)
 app.include_router(auth_router)
 app.include_router(data_router)
 app.include_router(analytics_router)
 app.include_router(predictions_router)
 app.include_router(weather_router)
 app.include_router(soil_router)
+app.include_router(reports_router)
 
 @app.get("/")
 def root():
