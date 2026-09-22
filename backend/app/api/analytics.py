@@ -109,7 +109,7 @@ def get_farm_comparison():
     return {
         "status": "success",
         "total_farms_compared": len(farms),
-        "total_hectares_monitored": sum(f["hectares"] for f in farms),
+        "total_hectares_monitored": sum(int(f["hectares"]) for f in farms if isinstance(f["hectares"], (int, float))),
         "highest_yield_sector": "Sector C2 (4,610 kg/ha)",
         "farm_comparisons": farms
     }
