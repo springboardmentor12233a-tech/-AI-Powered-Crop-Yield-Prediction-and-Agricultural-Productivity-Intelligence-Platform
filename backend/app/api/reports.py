@@ -26,9 +26,9 @@ def export_summary_report(req: ReportExportRequest):
 
     # Filter
     if req.crop_type:
-        records = [r for r in records if r["Crop"].lower() == req.crop_type.lower()]
+        records = [r for r in records if str(r["Crop"]).lower() == req.crop_type.lower()]
     if req.region:
-        records = [r for r in records if r["Region"].lower() == req.region.lower()]
+        records = [r for r in records if str(r["Region"]).lower() == req.region.lower()]
 
     if req.format.lower() == "csv":
         output = io.StringIO()
