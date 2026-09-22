@@ -11,12 +11,24 @@ interface EdaDashboardProps {
 }
 
 export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
-  const cropData = [
-    { crop: 'Rice', yield: 4450, count: 98, color: '#10b981' },
-    { crop: 'Maize', yield: 4390, count: 102, color: '#34d399' },
-    { crop: 'Cotton', yield: 4320, count: 100, color: '#3b82f6' },
-    { crop: 'Wheat', yield: 4280, count: 104, color: '#f59e0b' },
-    { crop: 'Soybean', yield: 4120, count: 96, color: '#c084fc' }
+  const totalRecords = metrics.total_records || 28242;
+  const breakdown = metrics.crop_breakdown || {};
+  const cropList = Object.entries(breakdown).map(([crop, data], idx) => {
+    const colors = ['#10b981', '#34d399', '#3b82f6', '#f59e0b', '#c084fc', '#60a5fa', '#f43f5e', '#a855f7', '#06b6d4', '#eab308'];
+    return {
+      crop,
+      yield: Math.round(data.avg_yield),
+      count: data.count,
+      color: colors[idx % colors.length]
+    };
+  });
+
+  const displayCrops = cropList.length > 0 ? cropList.slice(0, 5) : [
+    { crop: 'Potato', yield: 19980, count: 4276, color: '#10b981' },
+    { crop: 'Cassava', yield: 15048, count: 2045, color: '#34d399' },
+    { crop: 'Rice', yield: 4073, count: 3388, color: '#3b82f6' },
+    { crop: 'Maize', yield: 3631, count: 4121, color: '#f59e0b' },
+    { crop: 'Wheat', yield: 3012, count: 3857, color: '#c084fc' }
   ];
 
   return (
@@ -33,28 +45,26 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               </h2>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
-              Statistical distributions, correlation heatmaps, and agricultural factor dependencies across 500 farm records.
+              Statistical distributions, correlation heatmaps, and agricultural factor dependencies across {totalRecords.toLocaleString()} farm records.
             </p>
           </div>
 
           <span className="badge badge-green" style={{ fontSize: '0.82rem', padding: '0.4rem 0.85rem' }}>
-            500 Dataset Samples Analyzed
+            {totalRecords.toLocaleString()} Dataset Samples Analyzed
           </span>
         </div>
 
-        {metrics.crop_breakdown && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginTop: '1.25rem' }}>
-            {cropData.map((item) => (
-              <div key={item.crop} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{item.crop}</div>
-                <div className="num-tabular" style={{ fontSize: '1.35rem', fontWeight: 800, color: item.color, margin: '0.25rem 0' }}>
-                  {item.yield.toLocaleString()} <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>kg/ha</span>
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{item.count} farms analyzed</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginTop: '1.25rem' }}>
+          {displayCrops.map((item) => (
+            <div key={item.crop} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{item.crop}</div>
+              <div className="num-tabular" style={{ fontSize: '1.35rem', fontWeight: 800, color: item.color, margin: '0.25rem 0' }}>
+                {item.yield.toLocaleString()} <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>kg/ha</span>
               </div>
-            ))}
-          </div>
-        )}
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{item.count.toLocaleString()} farms analyzed</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Dynamic Theme-Matched EDA Visualizations Grid */}
@@ -117,13 +127,13 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
           </div>
 
           <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', gap: '0.75rem', justifyContent: 'center' }}>
-            {cropData.map((c, idx) => (
+            {displayCrops.map((c, idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ width: '65px', fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>{c.crop}</span>
+                <span style={{ width: '85px', fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.crop}</span>
                 <div style={{ flex: 1, height: '14px', background: 'rgba(255,255,255,0.06)', borderRadius: '9999px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(c.yield / 5000) * 100}%`, height: '100%', background: c.color, borderRadius: '9999px' }}></div>
+                  <div style={{ width: `${Math.min(100, Math.max(10, (c.yield / 22000) * 100))}%`, height: '100%', background: c.color, borderRadius: '9999px' }}></div>
                 </div>
-                <span className="num-tabular" style={{ fontSize: '0.8rem', fontWeight: 800, color: c.color, width: '85px', textAlign: 'right' }}>
+                <span className="num-tabular" style={{ fontSize: '0.8rem', fontWeight: 800, color: c.color, width: '90px', textAlign: 'right' }}>
                   {c.yield.toLocaleString()} <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>kg/ha</span>
                 </span>
               </div>

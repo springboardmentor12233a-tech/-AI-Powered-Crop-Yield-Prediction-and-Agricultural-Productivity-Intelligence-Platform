@@ -3,6 +3,22 @@ from typing import Optional, Dict, Any, List
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
+@router.get("/metrics")
+def get_eda_metrics():
+    """
+    Returns EDA statistical summary metrics generated from datasets/processed/cleaned_crop_yield.csv
+    """
+    import os, json
+    json_path = os.path.join("datasets", "processed", "eda_summary_metrics.json")
+    if not os.path.exists(json_path):
+        raise HTTPException(status_code=404, detail="EDA summary metrics file not found.")
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read EDA metrics: {str(e)}")
+
 @router.get("/seasonal-trends")
 def get_seasonal_trends(crop_type: Optional[str] = Query(None, description="Optional crop filter")):
     """
