@@ -6,7 +6,10 @@ interface WeatherProps {
 }
 
 export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
-  const [selectedRegion, setSelectedRegion] = useState('North India');
+  const [selectedRegion, setSelectedRegion] = useState('India');
+  const [availableRegions, setAvailableRegions] = useState<string[]>([
+    'India', 'United States', 'Brazil', 'China', 'France', 'Germany', 'Mexico', 'Egypt', 'Australia', 'South Africa'
+  ]);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +24,25 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
     try {
       const response = await fetch(`${apiBaseUrl}/api/weather/analysis?region=${encodeURIComponent(region)}`);
       if (!response.ok) {
+        // Fallback fetch all data to get valid regions
+        const fallbackRes = await fetch(`${apiBaseUrl}/api/weather/analysis`);
+        if (fallbackRes.ok) {
+          const fullData = await fallbackRes.json();
+          if (fullData.available_regions?.length) {
+            setAvailableRegions(fullData.available_regions);
+            const firstRegion = fullData.available_regions[0];
+            setSelectedRegion(firstRegion);
+            return fetchWeather(firstRegion);
+          }
+        }
         const errJson = await response.json();
         throw new Error(errJson.detail || 'Failed to fetch weather analytics');
       }
       const json = await response.json();
       setData(json);
+      if (json.available_regions?.length) {
+        setAvailableRegions(json.available_regions);
+      }
     } catch (err: any) {
       setError(err.message || 'Error fetching weather data.');
     } finally {
@@ -80,11 +97,11 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
             outline: 'none'
           }}
         >
-          <option value="North India" style={{ background: '#0c1610', color: '#ffffff' }}>North India</option>
-          <option value="South India" style={{ background: '#0c1610', color: '#ffffff' }}>South India</option>
-          <option value="South USA" style={{ background: '#0c1610', color: '#ffffff' }}>South USA</option>
-          <option value="Central USA" style={{ background: '#0c1610', color: '#ffffff' }}>Central USA</option>
-          <option value="East Africa" style={{ background: '#0c1610', color: '#ffffff' }}>East Africa</option>
+          {availableRegions.map(reg => (
+            <option key={reg} value={reg} style={{ background: '#0c1610', color: '#ffffff' }}>
+              {reg}
+            </option>
+          ))}
         </select>
         <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
           Showing telemetry metrics for <strong style={{ color: '#34d399' }}>{selectedRegion}</strong>

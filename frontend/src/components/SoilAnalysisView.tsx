@@ -80,11 +80,9 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
             outline: 'none'
           }}
         >
-          <option value="Wheat" style={{ background: '#0c1610', color: '#ffffff' }}>Wheat</option>
-          <option value="Rice" style={{ background: '#0c1610', color: '#ffffff' }}>Rice</option>
-          <option value="Maize" style={{ background: '#0c1610', color: '#ffffff' }}>Maize</option>
-          <option value="Soybean" style={{ background: '#0c1610', color: '#ffffff' }}>Soybean</option>
-          <option value="Cotton" style={{ background: '#0c1610', color: '#ffffff' }}>Cotton</option>
+          {['Wheat', 'Rice', 'Maize', 'Soybeans', 'Potatoes', 'Cassava', 'Sweet potatoes', 'Plantains', 'Yams', 'Sorghum'].map(c => (
+            <option key={c} value={c} style={{ background: '#0c1610', color: '#ffffff' }}>{c}</option>
+          ))}
         </select>
         <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
           Showing soil telemetry metrics for <strong style={{ color: '#34d399' }}>{selectedCrop}</strong>

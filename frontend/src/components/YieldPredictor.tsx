@@ -15,9 +15,9 @@ interface AIInsightsData {
 export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
   const [formData, setFormData] = useState({
     crop_type: 'Wheat',
-    region: 'North India',
+    region: 'India',
     irrigation_type: 'Drip',
-    fertilizer_type: 'NPK 14-35-14',
+    fertilizer_type: 'NPK 15-15-15',
     crop_disease_status: 'None',
     soil_pH: 6.5,
     'soil_moisture_%': 45.0,
@@ -147,30 +147,26 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Crop Type</label>
                   <select name="crop_type" value={formData.crop_type} onChange={handleChange} className="search-input" style={{ width: '100%', marginTop: '0.2rem' }}>
-                    <option value="Wheat">Wheat</option>
-                    <option value="Rice">Rice</option>
-                    <option value="Maize">Maize</option>
-                    <option value="Soybean">Soybean</option>
-                    <option value="Cotton">Cotton</option>
+                    {['Wheat', 'Rice', 'Maize', 'Soybeans', 'Potatoes', 'Cassava', 'Sweet potatoes', 'Plantains', 'Yams', 'Sorghum'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Region</label>
                   <select name="region" value={formData.region} onChange={handleChange} className="search-input" style={{ width: '100%', marginTop: '0.2rem' }}>
-                    <option value="North India">North India</option>
-                    <option value="South India">South India</option>
-                    <option value="South USA">South USA</option>
-                    <option value="Central USA">Central USA</option>
-                    <option value="East Africa">East Africa</option>
+                    {['India', 'United States', 'Brazil', 'China', 'France', 'Germany', 'Mexico', 'Egypt', 'Australia', 'South Africa', 'Pakistan', 'Nigeria', 'Spain', 'Turkey', 'Canada'].map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Crop Disease Status</label>
                   <select name="crop_disease_status" value={formData.crop_disease_status} onChange={handleChange} className="search-input" style={{ width: '100%', marginTop: '0.2rem' }}>
                     <option value="None">None</option>
-                    <option value="Leaf Rust">Leaf Rust</option>
-                    <option value="Blight">Blight</option>
-                    <option value="Powdery Mildew">Powdery Mildew</option>
+                    <option value="Mild">Mild</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Severe">Severe</option>
                   </select>
                 </div>
               </div>

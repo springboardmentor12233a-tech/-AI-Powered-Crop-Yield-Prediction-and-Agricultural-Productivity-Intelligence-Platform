@@ -132,39 +132,55 @@ Provide a JSON object with:
         ph = float(payload.get("soil_pH", 6.5))
         temp = float(payload.get("temperature_C", 25.0))
         moisture = float(payload.get("soil_moisture_%", 40.0))
+        rainfall = float(payload.get("rainfall_mm", 150.0))
         ndvi = float(payload.get("NDVI_index", 0.6))
+        fertilizer = str(payload.get("fertilizer_type", "NPK"))
+        irrigation = str(payload.get("irrigation_type", "Drip"))
 
         risk_alerts: List[str] = []
         recommendations: List[str] = []
 
+        # 1. Pathogen & Disease Diagnostics
         if disease.lower() not in ["none", "unknown"]:
-            risk_alerts.append(f"CRITICAL DISEASE ALERT: {disease} infection detected in {crop} field. Immediate treatment required.")
-            recommendations.append(f"Apply targeted fungicide/bactericide for {disease} and reduce canopy moisture retention.")
+            risk_alerts.append(f"HIGH PATHOGEN RISK: {disease} infection detected in {crop} field. Urgent intervention needed.")
+            recommendations.append(f"Apply targeted bio-fungicide for {disease} and trim dense foliage to increase airflow.")
         else:
-            recommendations.append(f"Maintain routine bio-fungicide preventative spraying for {crop}.")
+            recommendations.append(f"Maintain routine bio-protective spraying for {crop} to preserve disease-free state.")
 
-        if temp > 32.0:
-            risk_alerts.append(f"HEAT STRESS RISK: High ambient temperature ({temp}°C) exceeds optimal growth threshold.")
-            recommendations.append("Increase drip irrigation frequency during early morning to mitigate heat stress.")
-        elif temp < 15.0:
-            risk_alerts.append(f"COLD STRESS RISK: Sub-optimal temperature ({temp}°C) slowing metabolic rates.")
-            recommendations.append("Apply organic mulching to protect root zone soil temperature.")
+        # 2. Temperature & Climate Diagnostics
+        if temp > 30.0:
+            risk_alerts.append(f"HEAT STRESS ALERT: High ambient temperature ({temp}°C) exceeds optimal growing range for {crop}.")
+            recommendations.append("Increase early morning drip irrigation frequency to regulate root zone temperature.")
+        elif temp < 16.0:
+            risk_alerts.append(f"COLD STRESS ALERT: Sub-optimal temperature ({temp}°C) slows canopy photosynthetic rate.")
+            recommendations.append("Apply organic mulching to insulate root zone soil temperature.")
+        else:
+            recommendations.append(f"Temperature of {temp}°C is within optimal physiological thermal range for {crop}.")
 
+        # 3. Soil pH Diagnostics
         if ph < 5.8:
-            risk_alerts.append(f"SOIL ACIDITY WARNING: Soil pH of {ph} reduces nutrient bioavailability.")
-            recommendations.append("Apply agricultural lime (calcium carbonate) at 500 kg/ha to raise soil pH toward 6.5.")
-        elif ph > 7.5:
-            risk_alerts.append(f"SOIL ALKALINITY WARNING: Soil pH of {ph} restricts micronutrient uptake (iron/zinc).")
-            recommendations.append("Incorporate elemental sulfur or gypsum to neutralize alkaline soil condition.")
-
-        if moisture < 30.0:
-            risk_alerts.append(f"MOISTURE DEFICIT: Soil moisture level ({moisture}%) is below optimal root absorption threshold.")
-            recommendations.append(f"Schedule additional {payload.get('irrigation_type', 'irrigation')} cycles to elevate soil moisture above 45%.")
-
-        if ndvi > 0.65:
-            summary_insight = f"{crop} cultivation in {region} shows strong canopy vigor (NDVI: {ndvi}) with estimated yield of {yield_val} kg/ha ({prod_rating} Productivity)."
+            risk_alerts.append(f"SOIL ACIDITY WARNING: Soil pH ({ph}) reduces nitrogen and phosphorus bioavailability.")
+            recommendations.append("Apply agricultural lime (calcium carbonate) at 400-500 kg/ha to buffer soil pH toward 6.5.")
+        elif ph > 7.6:
+            risk_alerts.append(f"SOIL ALKALINITY WARNING: Soil pH ({ph}) restricts micronutrient (iron/zinc) uptake.")
+            recommendations.append("Incorporate elemental sulfur or gypsum to reduce soil alkalinity.")
         else:
-            summary_insight = f"{crop} cultivation in {region} exhibits moderate vegetative vigor (NDVI: {ndvi}) with predicted yield of {yield_val} kg/ha."
+            recommendations.append(f"Soil pH ({ph}) is in the optimal nutrient absorption band for {crop}.")
+
+        # 4. Irrigation & Hydrological Balance
+        if moisture < 35.0 or rainfall < 100.0:
+            risk_alerts.append(f"MOISTURE DEFICIT: Soil moisture ({moisture}%) and rainfall ({rainfall}mm) are below root demand.")
+            recommendations.append(f"Schedule a 25mm {irrigation} cycle to raise soil moisture index above 50%.")
+        else:
+            recommendations.append(f"Soil moisture ({moisture}%) with {irrigation} irrigation supports strong transpiration.")
+
+        # 5. Canopy Vigor & Fertilizer Guidance
+        if ndvi > 0.65:
+            summary_insight = f"{crop} in {region} shows excellent canopy vigor (NDVI: {ndvi}) with predicted yield of {yield_val:,.0f} kg/ha ({prod_rating} Productivity)."
+            recommendations.append(f"Optimize final split-application of {fertilizer} to maximize grain filling and weight.")
+        else:
+            summary_insight = f"{crop} in {region} shows moderate vegetative density (NDVI: {ndvi}) with predicted yield of {yield_val:,.0f} kg/ha."
+            recommendations.append(f"Boost foliar nitrogen application and monitor canopy expansion weekly.")
 
         if not risk_alerts:
             risk_alerts.append("No critical agronomic risk flags detected. Environmental parameters remain within optimal bounds.")
@@ -173,7 +189,7 @@ Provide a JSON object with:
             "ai_insights": summary_insight,
             "risk_alerts": risk_alerts,
             "recommendations": recommendations,
-            "llm_provider": "Agronomic AI Expert Engine (Offline Engine)"
+            "llm_provider": "YieldSense Expert Agronomic Engine"
         }
 
 llm_service = LLMService()
