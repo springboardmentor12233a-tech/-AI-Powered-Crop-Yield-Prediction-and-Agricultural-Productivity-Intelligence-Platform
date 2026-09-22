@@ -109,13 +109,23 @@ export function App() {
     }
   };
 
+  const handleCropChange = (crop: string) => {
+    setSelectedCrop(crop);
+    setPage(1);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
   const generateLocalFallbackRecords = () => {
     const crops = ['Wheat', 'Rice', 'Maize', 'Soybean', 'Cotton'];
     const regions = ['North India', 'South USA', 'Central USA', 'East Africa'];
-    const sampleData = Array.from({ length: 15 }, (_, i) => ({
-      farm_id: `FARM${String((page - 1) * 15 + i + 1).padStart(4, '0')}`,
+    let fullDataset = Array.from({ length: 500 }, (_, i) => ({
+      farm_id: `FARM${String(i + 1).padStart(4, '0')}`,
       region: regions[i % regions.length],
-      crop_type: selectedCrop || crops[i % crops.length],
+      crop_type: crops[i % crops.length],
       soil_pH: Number((5.8 + (i % 3) * 0.4).toFixed(2)),
       temperature_C: Number((22.5 + (i % 5) * 2.1).toFixed(1)),
       rainfall_mm: Number((120.0 + (i % 4) * 45.0).toFixed(1)),
@@ -128,13 +138,39 @@ export function App() {
       NDVI_index: Number((0.45 + (i % 5) * 0.08).toFixed(2)),
       crop_disease_status: i % 4 === 0 ? 'Mild' : 'None'
     }));
-    setRecords(sampleData);
+
+    if (selectedCrop) {
+      fullDataset = fullDataset.filter(r => r.crop_type.toLowerCase() === selectedCrop.toLowerCase());
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      fullDataset = fullDataset.filter(r =>
+        r.farm_id.toLowerCase().includes(q) ||
+        r.region.toLowerCase().includes(q) ||
+        r.crop_type.toLowerCase().includes(q)
+      );
+    }
+
+    const total = fullDataset.length;
+    const limit = 15;
+    const totalP = Math.max(1, Math.ceil(total / limit));
+    const startIdx = (page - 1) * limit;
+    const paginated = fullDataset.slice(startIdx, startIdx + limit);
+
+    setRecords(paginated);
+    setTotalRecords(total);
+    setTotalPages(totalP);
   };
 
   useEffect(() => {
     fetchDataSummary();
     fetchEdaMetrics();
   }, []);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [page, selectedCrop, searchQuery]);
 
   const handleLoginSuccess = (user: { username: string; role: string; email: string; token: string }) => {
     setCurrentUser(user);
@@ -199,9 +235,9 @@ export function App() {
             totalPages={totalPages}
             onPageChange={setPage}
             selectedCrop={selectedCrop}
-            setSelectedCrop={setSelectedCrop}
+            setSelectedCrop={handleCropChange}
             searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
+            setSearchQuery={handleSearchChange}
             cropsList={summary.crops_supported}
           />
         )}

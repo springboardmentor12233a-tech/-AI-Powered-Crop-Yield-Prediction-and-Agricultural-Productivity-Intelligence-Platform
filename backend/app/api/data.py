@@ -24,12 +24,12 @@ def get_crop_records(
 ):
     df = load_data()
 
-    if crop_type:
-        df = df[df["crop_type"].str.lower() == crop_type.lower()]
-    if region:
-        df = df[df["region"].str.lower() == region.lower()]
-    if search:
-        search_lower = search.lower()
+    if crop_type and crop_type.strip():
+        df = df[df["crop_type"].astype(str).str.strip().str.lower() == crop_type.strip().lower()]
+    if region and region.strip():
+        df = df[df["region"].astype(str).str.strip().str.lower() == region.strip().lower()]
+    if search and search.strip():
+        search_lower = search.strip().lower()
         mask = df.astype(str).apply(lambda row: row.str.lower().str.contains(search_lower).any(), axis=1)
         df = df[mask]
 
@@ -38,11 +38,13 @@ def get_crop_records(
     end_idx = start_idx + limit
     paginated_df = df.iloc[start_idx:end_idx].fillna("")
 
+    total_pages = max(1, (total_records + limit - 1) // limit) if limit > 0 else 1
+
     return {
         "total_records": total_records,
         "page": page,
         "limit": limit,
-        "total_pages": (total_records + limit - 1) // limit,
+        "total_pages": total_pages,
         "data": paginated_df.to_dict(orient="records")
     }
 
