@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers, FileText, Sparkles } from 'lucide-react';
+import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers, FileText, Sparkles, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -7,6 +7,7 @@ interface HeaderProps {
   currentUser: { username: string; role: string; email: string };
   onOpenAuthModal: () => void;
   onRefreshData: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,7 +15,8 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   currentUser,
   onOpenAuthModal,
-  onRefreshData
+  onRefreshData,
+  onLogout
 }) => {
   return (
     <header className="header-bar">
@@ -137,6 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
             gap: '0.5rem',
             transition: 'all 0.2s ease'
           }}
+          title="Switch User Persona / View Account"
         >
           <UserCheck size={15} />
           <span>{currentUser.username}</span>
@@ -151,6 +154,27 @@ export const Header: React.FC<HeaderProps> = ({
             {currentUser.role === 'Farmer' ? 'Agri Officer' : currentUser.role}
           </span>
         </button>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            title="Sign Out"
+            style={{
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: '#fca5a5',
+              padding: '0.55rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </header>
   );

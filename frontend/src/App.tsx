@@ -10,14 +10,25 @@ import { WeatherAnalyticsView } from './components/WeatherAnalyticsView';
 import { SoilAnalysisView } from './components/SoilAnalysisView';
 import { AnalyticsReportsView } from './components/AnalyticsReportsView';
 import { RecommendationsHubView } from './components/RecommendationsHubView';
+import { LoginPage } from './components/LoginPage';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState({
-    username: 'farmer',
-    role: 'Farmer',
-    email: 'farmer@yieldsense.ai'
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem('yieldsense_user'));
+  });
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('yieldsense_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      username: 'farmer',
+      role: 'Farmer',
+      email: 'farmer@yieldsense.ai'
+    };
   });
 
   // Data states
@@ -125,9 +136,20 @@ export function App() {
     fetchEdaMetrics();
   }, []);
 
-  useEffect(() => {
-    fetchRecords();
-  }, [page, selectedCrop, searchQuery]);
+  const handleLoginSuccess = (user: { username: string; role: string; email: string; token: string }) => {
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('yieldsense_token');
+    localStorage.removeItem('yieldsense_user');
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -141,6 +163,7 @@ export function App() {
           fetchRecords();
           fetchEdaMetrics();
         }}
+        onLogout={handleLogout}
       />
 
       <main style={{ flex: 1, padding: '2rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
