@@ -99,10 +99,10 @@ def train_and_evaluate():
     # GridSearchCV Tuning for Random Forest
     rf_param_grid = {
         'n_estimators': [50, 100],
-        'max_depth': [5, 10, None],
-        'min_samples_leaf': [2, 4]
+        'max_depth': [8, 12],
+        'min_samples_leaf': [2]
     }
-    rf_grid = GridSearchCV(RandomForestRegressor(random_state=42), rf_param_grid, cv=3, scoring='neg_root_mean_squared_error')
+    rf_grid = GridSearchCV(RandomForestRegressor(random_state=42, n_jobs=-1), rf_param_grid, cv=3, scoring='neg_root_mean_squared_error', n_jobs=-1)
     rf_grid.fit(X_train_trans, y_train)
     best_rf_model = rf_grid.best_estimator_
     print(f"      -> GridSearchCV Best Random Forest Params: {rf_grid.best_params_}")
@@ -111,9 +111,9 @@ def train_and_evaluate():
     xgb_param_grid = {
         'n_estimators': [50, 100],
         'max_depth': [3, 5],
-        'learning_rate': [0.03, 0.05]
+        'learning_rate': [0.05]
     }
-    xgb_grid = GridSearchCV(XGBRegressor(random_state=42), xgb_param_grid, cv=3, scoring='neg_root_mean_squared_error')
+    xgb_grid = GridSearchCV(XGBRegressor(random_state=42, n_jobs=-1), xgb_param_grid, cv=3, scoring='neg_root_mean_squared_error', n_jobs=-1)
     xgb_grid.fit(X_train_trans, y_train)
     best_xgb_model = xgb_grid.best_estimator_
     print(f"      -> GridSearchCV Best XGBoost Params: {xgb_grid.best_params_}")

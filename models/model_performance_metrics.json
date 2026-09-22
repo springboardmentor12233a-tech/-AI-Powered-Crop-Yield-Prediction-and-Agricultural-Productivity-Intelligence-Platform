@@ -1,57 +1,57 @@
 {
   "Dummy Regressor (Mean)": {
-    "mae": 448.18,
-    "rmse": 547.09,
-    "r2": -0.0102,
-    "inference_latency_ms": 0.025
+    "mae": 6446.01,
+    "rmse": 8516.85,
+    "r2": -0.0,
+    "inference_latency_ms": 0.018
   },
   "Linear Regression": {
-    "mae": 142.87,
-    "rmse": 182.52,
-    "r2": 0.8876,
-    "inference_latency_ms": 0.197
+    "mae": 2730.06,
+    "rmse": 3858.79,
+    "r2": 0.7947,
+    "inference_latency_ms": 0.097
   },
   "Ridge Regression": {
-    "mae": 144.82,
-    "rmse": 184.3,
-    "r2": 0.8854,
-    "inference_latency_ms": 0.202
+    "mae": 2721.17,
+    "rmse": 3861.81,
+    "r2": 0.7944,
+    "inference_latency_ms": 0.117
   },
   "Random Forest (GridSearchCV)": {
-    "mae": 171.37,
-    "rmse": 218.78,
-    "r2": 0.8384,
-    "inference_latency_ms": 5.536
+    "mae": 1014.87,
+    "rmse": 2003.33,
+    "r2": 0.9447,
+    "inference_latency_ms": 27.062
   },
   "XGBoost (GridSearchCV)": {
-    "mae": 146.78,
-    "rmse": 195.66,
-    "r2": 0.8708,
-    "inference_latency_ms": 1.021
+    "mae": 1255.01,
+    "rmse": 2246.98,
+    "r2": 0.9304,
+    "inference_latency_ms": 1.035
   },
   "LightGBM": {
-    "mae": 143.28,
-    "rmse": 193.64,
-    "r2": 0.8734,
-    "inference_latency_ms": 1.563
+    "mae": 1268.88,
+    "rmse": 2305.25,
+    "r2": 0.9267,
+    "inference_latency_ms": 1.303
   },
-  "best_model": "Linear Regression",
+  "best_model": "Random Forest (GridSearchCV)",
   "gridsearch_cv_tuning": {
     "random_forest_best_params": {
-      "max_depth": null,
+      "max_depth": 12,
       "min_samples_leaf": 2,
-      "n_estimators": 50
+      "n_estimators": 100
     },
     "xgboost_best_params": {
       "learning_rate": 0.05,
-      "max_depth": 3,
+      "max_depth": 5,
       "n_estimators": 100
     }
   },
   "metadata": {
-    "dataset_size": 500,
-    "train_size": 400,
-    "test_size": 100,
+    "dataset_size": 28242,
+    "train_size": 22593,
+    "test_size": 5649,
     "random_state": 42,
     "features": [
       "crop_type",
@@ -70,6 +70,6 @@
       "NDVI_index"
     ],
     "target": "yield_kg_per_hectare",
-    "timestamp": "2026-09-04 19:17:16"
+    "timestamp": "2026-09-22 19:22:28"
   }
 }
