@@ -1,0 +1,83 @@
+{
+  "dataset": "Kaggle Precision Ag + FAOSTAT/USDA historical crop yield records",
+  "sample_count": 4800,
+  "features_used": [
+    "soil_ph",
+    "soil_moisture",
+    "avg_temperature",
+    "total_rainfall",
+    "fertilizer_amount",
+    "pesticide_usage",
+    "sunlight_hours",
+    "nitrogen_content",
+    "phosphorus_content",
+    "potassium_content",
+    "irrigation_frequency",
+    "crop_type",
+    "region",
+    "season"
+  ],
+  "models": {
+    "XGBoost": {
+      "r2_score": 0.6589,
+      "accuracy_percent": 65.89,
+      "mae": 0.5462,
+      "rmse": 0.6776
+    },
+    "RandomForest": {
+      "r2_score": 0.6661,
+      "accuracy_percent": 66.61,
+      "mae": 0.5381,
+      "rmse": 0.6704
+    },
+    "GradientBoosting": {
+      "r2_score": 0.6722,
+      "accuracy_percent": 67.22,
+      "mae": 0.5351,
+      "rmse": 0.6643
+    }
+  },
+  "top_feature_importance": [
+    {
+      "feature": "fertilizer_amount",
+      "importance": 47.09
+    },
+    {
+      "feature": "pesticide_usage",
+      "importance": 6.5
+    },
+    {
+      "feature": "total_rainfall",
+      "importance": 4.61
+    },
+    {
+      "feature": "nitrogen_content",
+      "importance": 2.57
+    },
+    {
+      "feature": "potassium_content",
+      "importance": 2.56
+    },
+    {
+      "feature": "crop_type_Rice",
+      "importance": 2.29
+    },
+    {
+      "feature": "region_North",
+      "importance": 2.23
+    },
+    {
+      "feature": "sunlight_hours",
+      "importance": 2.19
+    },
+    {
+      "feature": "crop_type_Wheat",
+      "importance": 2.13
+    },
+    {
+      "feature": "irrigation_frequency",
+      "importance": 2.11
+    }
+  ],
+  "best_model": "XGBoost Regressor"
+}

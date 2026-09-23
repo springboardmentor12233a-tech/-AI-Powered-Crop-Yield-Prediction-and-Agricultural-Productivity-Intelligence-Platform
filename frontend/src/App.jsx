@@ -12,13 +12,13 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      
+
       {/* Top Navbar */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Container */}
       <main style={{ flex: 1, maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '24px' }}>
-        
+
         {/* Banner Hero */}
         <div className="glass-card" style={{ padding: '24px 32px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.06) 50%, rgba(15, 23, 42, 0.8) 100%)', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
@@ -43,7 +43,7 @@ export default function App() {
 
         {/* Top Key Statistics Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <StatCard 
+          <StatCard
             title="Avg Yield Forecast"
             value="4.85"
             unit="T/ha"
@@ -52,7 +52,7 @@ export default function App() {
             color="#10b981"
             description="VS 2023 seasonal benchmark"
           />
-          <StatCard 
+          <StatCard
             title="Model Accuracy"
             value="94.8%"
             unit=""
@@ -61,7 +61,7 @@ export default function App() {
             color="#06b6d4"
             description="RandomForest & XGBoost ensemble"
           />
-          <StatCard 
+          <StatCard
             title="Predicted Rainfall"
             value="650"
             unit="mm"
@@ -70,7 +70,7 @@ export default function App() {
             color="#38bdf8"
             description="Optimal monsoon forecast"
           />
-          <StatCard 
+          <StatCard
             title="Climate Risk Score"
             value="Low"
             unit="(12%)"
