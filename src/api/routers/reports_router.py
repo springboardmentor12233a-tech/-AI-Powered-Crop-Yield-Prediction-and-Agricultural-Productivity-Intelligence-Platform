@@ -14,17 +14,20 @@ from src.db.database import (
     get_user_by_id,
     get_user_farm
 )
-from src.analytics.prediction_report import build_prediction_report, format_markdown_report
+from src.analytics.prediction_report import build_prediction_report
+from src.analytics.risk_assessment import assess_agricultural_risks
+from src.analytics.llm_provider import generate_agricultural_llm_report
+from src.analytics.pdf_utils import sanitize_for_reportlab
 from src.ml.models.registry import predict_crop_yield, predict_crop_recommendation
 
 # ReportLab imports for generating real A4 PDFs
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
-router = APIRouter(prefix="/api/reports", tags=["Reports & History"])
+router = APIRouter(prefix="/api/reports", tags=["Reports & PDF Generation"])
 
 class CreateReportRequest(BaseModel):
     Crop: str = Field(..., description="Crop variety")
@@ -59,10 +62,128 @@ def get_report_by_id(report_id: str, user_id: Optional[int] = Depends(get_curren
         raise HTTPException(status_code=404, detail="Report not found or access denied.")
     return {"report": record, "status": "Success"}
 
-def build_pdf_document(report: dict, farmer_name: str) -> bytes:
+@router.post("/generate")
+def generate_interactive_report(req: CreateReportRequest, user_id: Optional[int] = Depends(get_current_user_id)):
     """
-    Generates a professional, print-ready A4 PDF document using ReportLab.
+    Generates an end-to-end Agricultural Productivity & Seasonal Intelligence Report:
+    - Runs in-memory ML yield regression & crop suitability classification
+    - Evaluates agricultural risk categories (Low/Moderate/High)
+    - Generates LLM explanations or deterministic fallback
+    - Persists report to database when authenticated
     """
+    input_dict = req.model_dump()
+    predicted_yield = predict_crop_yield(input_dict)
+    
+    rec_input = {
+        "Temperature": req.Temperature_C,
+        "Humidity": req.Humidity_pct,
+        "pH": req.Soil_pH,
+        "Rainfall": req.Rainfall_mm
+    }
+    try:
+        recommendations = predict_crop_recommendation(rec_input, top_k=3)
+    except Exception:
+        recommendations = []
+        
+    risk_assessment = assess_agricultural_risks(
+        crop=req.Crop,
+        soil_ph=req.Soil_pH,
+        soil_type=req.Soil_Type,
+        rainfall_mm=req.Rainfall_mm,
+        temperature_c=req.Temperature_C,
+        humidity_pct=req.Humidity_pct,
+        fertilizer_kg=req.Fertilizer_Used_kg,
+        pesticides_kg=req.Pesticides_Used_kg,
+        irrigation=req.Irrigation,
+        previous_crop=req.Previous_Crop,
+        predicted_yield=predicted_yield
+    )
+    
+    llm_report = generate_agricultural_llm_report(
+        crop=req.Crop,
+        region=req.Region,
+        soil_type=req.Soil_Type,
+        soil_ph=req.Soil_pH,
+        rainfall_mm=req.Rainfall_mm,
+        temperature_c=req.Temperature_C,
+        humidity_pct=req.Humidity_pct,
+        fertilizer_kg=req.Fertilizer_Used_kg,
+        pesticides_kg=req.Pesticides_Used_kg,
+        irrigation=req.Irrigation,
+        previous_crop=req.Previous_Crop,
+        predicted_yield=predicted_yield,
+        risk_data=risk_assessment
+    )
+    
+    # Base structured report
+    report_dict = build_prediction_report(
+        farm_id="FARM-01",
+        plot_label=req.field_name or "North Field",
+        crop=req.Crop,
+        region=req.Region,
+        soil_type=req.Soil_Type,
+        soil_ph=req.Soil_pH,
+        rainfall_mm=req.Rainfall_mm,
+        temperature_c=req.Temperature_C,
+        humidity_pct=req.Humidity_pct,
+        fertilizer_kg=req.Fertilizer_Used_kg,
+        pesticides_kg=req.Pesticides_Used_kg,
+        planting_density=req.Planting_Density,
+        irrigation=req.Irrigation,
+        previous_crop=req.Previous_Crop,
+        predicted_yield=predicted_yield,
+        recommended_crops=recommendations
+    )
+    report_dict["risk_assessment"] = risk_assessment
+    report_dict["llm_insights"] = llm_report
+    
+    report_id = f"RPT-{uuid.uuid4().hex[:8].upper()}"
+    report_dict["report_id"] = report_id
+    
+    if user_id:
+        try:
+            save_user_prediction(
+                user_id=user_id,
+                report_id=report_id,
+                payload=input_dict,
+                predicted_yield=predicted_yield,
+                insights=report_dict
+            )
+        except Exception as e:
+            print(f"Error saving user report: {e}")
+            
+    return report_dict
+
+@router.get("/{report_id}/pdf")
+def download_report_pdf(report_id: str, user_id: Optional[int] = Depends(get_current_user_id)):
+    """
+    Generates and returns an authentic, publication-quality A4 PDF report document
+    with header, farmer metadata, prediction results, risk evaluation, and AI insights.
+    """
+    record = None
+    farmer = None
+    farm = None
+    
+    if user_id:
+        record = get_prediction_by_report_id(user_id, report_id)
+        farmer = get_user_by_id(user_id)
+        farm = get_user_farm(user_id)
+        
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Report '{report_id}' not found for authenticated farmer.")
+        
+    pdf_buffer = generate_pdf_buffer(record, farmer, farm)
+    
+    return Response(
+        content=pdf_buffer.getvalue(),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=YieldSense_Report_{report_id}.pdf"
+        }
+    )
+
+def generate_pdf_buffer(record: dict, farmer: Optional[dict], farm: Optional[dict]) -> io.BytesIO:
+    """Generates ReportLab A4 PDF document containing all report data."""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -75,184 +196,205 @@ def build_pdf_document(report: dict, farmer_name: str) -> bytes:
     
     styles = getSampleStyleSheet()
     
-    # Custom Palette
-    PRIMARY_GREEN = colors.HexColor("#166534")  # Deep forest green
-    SECONDARY_GREEN = colors.HexColor("#15803d")
-    TEXT_DARK = colors.HexColor("#1e293b")
+    # Custom Palette Colors
+    PRIMARY_COLOR = colors.HexColor("#1e3a8a")  # Deep Navy
+    SECONDARY_COLOR = colors.HexColor("#047857")  # Forest Green
+    TEXT_DARK = colors.HexColor("#1f2937")
     BG_LIGHT = colors.HexColor("#f8fafc")
     BORDER_COLOR = colors.HexColor("#cbd5e1")
+    ALERT_BG = colors.HexColor("#fef3c7")
     
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
-        fontSize=20,
-        leading=24,
-        textColor=PRIMARY_GREEN,
-        fontName="Helvetica-Bold",
+        fontName='Helvetica-Bold',
+        fontSize=18,
+        leading=22,
+        textColor=PRIMARY_COLOR,
         alignment=TA_LEFT
     )
     
     subtitle_style = ParagraphStyle(
         'DocSubtitle',
         parent=styles['Normal'],
-        fontSize=9,
-        leading=12,
-        textColor=colors.HexColor("#475569"),
-        fontName="Helvetica"
+        fontName='Helvetica',
+        fontSize=10,
+        leading=13,
+        textColor=colors.HexColor("#475569")
     )
     
     section_heading = ParagraphStyle(
         'SectionHeading',
         parent=styles['Heading2'],
+        fontName='Helvetica-Bold',
         fontSize=12,
         leading=16,
-        textColor=PRIMARY_GREEN,
-        fontName="Helvetica-Bold",
+        textColor=SECONDARY_COLOR,
         spaceBefore=10,
-        spaceAfter=6
+        spaceAfter=4
     )
     
     body_style = ParagraphStyle(
         'BodyTextCustom',
         parent=styles['Normal'],
+        fontName='Helvetica',
         fontSize=9,
-        leading=13,
-        textColor=TEXT_DARK,
-        fontName="Helvetica"
+        leading=12,
+        textColor=TEXT_DARK
     )
     
-    story = []
-    
-    # Header Branding
-    story.append(Paragraph("YieldSense AI", title_style))
-    story.append(Paragraph("AI-Based Crop Yield Prediction & Agricultural Recommendation Platform", subtitle_style))
-    story.append(Spacer(1, 8))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY_GREEN, spaceBefore=0, spaceAfter=12))
-    
-    # Report Metadata Table
-    report_id = report.get("report_id", "RPT-LOCAL")
-    created_at = report.get("created_at", datetime.now().strftime("%Y-%m-%d"))
-    field_name = report.get("field_name") or report.get("plot_label") or "Main Field"
-    crop = report.get("crop") or report.get("Crop", "Wheat")
-    region = report.get("region") or report.get("Region", "Region_A")
-    yield_val = report.get("predicted_yield", 0.0)
-    
-    meta_data = [
-        [Paragraph("<b>Report ID:</b>", body_style), Paragraph(report_id, body_style), Paragraph("<b>Date:</b>", body_style), Paragraph(str(created_at)[:10], body_style)],
-        [Paragraph("<b>Farmer:</b>", body_style), Paragraph(farmer_name, body_style), Paragraph("<b>Field / Plot Name:</b>", body_style), Paragraph(field_name, body_style)],
-        [Paragraph("<b>Target Crop:</b>", body_style), Paragraph(crop, body_style), Paragraph("<b>Region:</b>", body_style), Paragraph(region, body_style)]
-    ]
-    
-    meta_table = Table(meta_data, colWidths=[90, 160, 110, 160])
-    meta_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), BG_LIGHT),
-        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    story.append(meta_table)
-    story.append(Spacer(1, 14))
-    
-    # Forecast Summary Box
-    story.append(Paragraph("1. Forecasted Harvest Yield", section_heading))
-    yield_text = f"<font size=18 color='#166534'><b>{yield_val:.2f} ton/ha</b></font>"
-    desc_text = f"Estimated yield for <b>{crop}</b> based on the specified soil, climatic, and farm management parameters."
-    
-    yield_box_data = [[
-        Paragraph(yield_text, ParagraphStyle('YieldBig', parent=body_style, alignment=TA_CENTER)),
-        Paragraph(desc_text, body_style)
-    ]]
-    yield_box_table = Table(yield_box_data, colWidths=[180, 340])
-    yield_box_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f0fdf4")),
-        ('BOX', (0,0), (-1,-1), 1, SECONDARY_GREEN),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-    ]))
-    story.append(yield_box_table)
-    story.append(Spacer(1, 14))
-    
-    # Field Conditions Table
-    story.append(Paragraph("2. Field & Environmental Conditions", section_heading))
-    
-    soil_type = report.get("soil_type", "Loam")
-    soil_ph = report.get("soil_ph", 6.8)
-    temp = report.get("temperature_c", 22.0)
-    humidity = report.get("humidity_pct", 60.0)
-    rainfall = report.get("rainfall_mm", 650.0)
-    fertilizer = report.get("fertilizer_kg", 180.0)
-    irrigation = report.get("irrigation", "Sprinkler")
-    pesticides = report.get("pesticides_kg", 20.0)
-    density = report.get("planting_density", 15.0)
-    prev_crop = report.get("previous_crop", "Maize")
-    
-    cond_data = [
-        [Paragraph("<b>Parameter</b>", body_style), Paragraph("<b>Input Value</b>", body_style), Paragraph("<b>Parameter</b>", body_style), Paragraph("<b>Input Value</b>", body_style)],
-        [Paragraph("Soil Texture", body_style), Paragraph(str(soil_type), body_style), Paragraph("Soil pH", body_style), Paragraph(f"{soil_ph:.2f}", body_style)],
-        [Paragraph("Temperature", body_style), Paragraph(f"{temp:.1f} °C", body_style), Paragraph("Relative Humidity", body_style), Paragraph(f"{humidity:.1f} %", body_style)],
-        [Paragraph("Precipitation (Rainfall)", body_style), Paragraph(f"{rainfall:.1f} mm", body_style), Paragraph("Fertilizer Application", body_style), Paragraph(f"{fertilizer:.1f} kg/cycle", body_style)],
-        [Paragraph("Irrigation Method", body_style), Paragraph(str(irrigation), body_style), Paragraph("Pesticide Application", body_style), Paragraph(f"{pesticides:.1f} kg/cycle", body_style)],
-        [Paragraph("Planting Density", body_style), Paragraph(f"{density:.1f} plants/m²", body_style), Paragraph("Previous Crop", body_style), Paragraph(str(prev_crop), body_style)],
-    ]
-    
-    cond_table = Table(cond_data, colWidths=[130, 130, 130, 130])
-    cond_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#e2e8f0")),
-        ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
-        ('TOPPADDING', (0,0), (-1,-1), 4),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-    ]))
-    story.append(cond_table)
-    story.append(Spacer(1, 14))
-    
-    # Insights Section
-    story.append(Paragraph("3. Agronomic Assessment & Insights", section_heading))
-    insights = report.get("insights") or {}
-    
-    if isinstance(insights, dict):
-        for layer_name in ["model_predictions", "data_driven_insights", "general_guidance"]:
-            items = insights.get(layer_name, [])
-            for item in items:
-                title = item.get("title", "")
-                desc = item.get("description", "")
-                story.append(Paragraph(f"• <b>{title}:</b> {desc}", body_style))
-                story.append(Spacer(1, 3))
-                
-    story.append(Spacer(1, 10))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=BORDER_COLOR, spaceBefore=4, spaceAfter=8))
-    
-    # Footer Notice
-    footer_text = "<b>YieldSense AI</b> — This report is generated based on empirical machine learning models trained on agricultural datasets. Use as a decision-support guide alongside local extension recommendations."
-    story.append(Paragraph(footer_text, ParagraphStyle('FooterNote', parent=body_style, fontSize=8, leading=11, textColor=colors.HexColor("#64748b"))))
-    
-    doc.build(story)
-    pdf_bytes = buffer.getvalue()
-    buffer.close()
-    return pdf_bytes
-
-@router.get("/pdf/{report_id}")
-def download_report_pdf(report_id: str, user_id: Optional[int] = Depends(get_current_user_id)):
-    """
-    Generates and returns an actual downloadable A4 PDF document for a specific prediction report.
-    Enforces user data authorization.
-    """
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Authentication required.")
-        
-    prediction = get_prediction_by_report_id(user_id, report_id)
-    if not prediction:
-        raise HTTPException(status_code=404, detail="Prediction report not found or access denied.")
-        
-    user = get_user_by_id(user_id)
-    farmer_name = user.get("full_name", "Farmer") if user else "Farmer"
-    
-    pdf_bytes = build_pdf_document(prediction, farmer_name)
-    
-    filename = f"YieldSense_AI_Crop_Yield_Report_{report_id}.pdf"
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    bold_body = ParagraphStyle(
+        'BoldBody',
+        parent=body_style,
+        fontName='Helvetica-Bold'
     )
+    
+    elements = []
+    
+    # 1. Header & Branding Banner
+    header_data = [
+        [
+            Paragraph("<b>YieldSense AI</b><br/><font size=8 color='#475569'>Agricultural Productivity & Seasonal Intelligence Platform</font>", title_style),
+            Paragraph(f"<b>Report ID:</b> {record.get('report_id')}<br/><b>Date:</b> {record.get('created_at', datetime.utcnow().strftime('%Y-%m-%d'))}", ParagraphStyle('RightMeta', parent=subtitle_style, alignment=TA_RIGHT))
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[320, 200])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(header_table)
+    elements.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY_COLOR, spaceBefore=4, spaceAfter=8))
+    
+    # 2. Farmer & Plot Summary
+    farmer_name = farmer.get("full_name", "Registered Farmer") if farmer else "Farmer Profile"
+    location = f"{farmer.get('village', '')}, {farmer.get('district', '')}, {farmer.get('state', '')}".strip(" ,") if farmer else "Field Location"
+    field_name = record.get("field_name") or (farm.get("field_name") if farm else "Main Plot")
+    land_area = f"{farm.get('land_size', 4.5)} {farm.get('land_unit', 'Acres')}" if farm else "4.5 Acres"
+    
+    profile_data = [
+        [Paragraph("<b>Farmer Name:</b>", body_style), Paragraph(sanitize_for_reportlab(farmer_name), body_style), Paragraph("<b>Field / Plot:</b>", body_style), Paragraph(sanitize_for_reportlab(field_name), body_style)],
+        [Paragraph("<b>Location:</b>", body_style), Paragraph(sanitize_for_reportlab(location or "Registered Zone"), body_style), Paragraph("<b>Land Area:</b>", body_style), Paragraph(sanitize_for_reportlab(land_area), body_style)],
+    ]
+    profile_table = Table(profile_data, colWidths=[90, 170, 90, 170])
+    profile_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), BG_LIGHT),
+        ('BOX', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(profile_table)
+    elements.append(Spacer(1, 8))
+    
+    # 3. Forecast Result Banner
+    pred_yield = record.get("predicted_yield", 0.0)
+    crop_name = record.get("crop", "Target Crop")
+    
+    result_data = [
+        [
+            Paragraph(f"<font size=11 color='#047857'><b>ML FORECASTED CROP YIELD</b></font><br/><font size=18 color='#1e3a8a'><b>{pred_yield:.2f} ton/ha</b></font><br/><font size=8 color='#64748b'>Target Crop: <b>{sanitize_for_reportlab(crop_name)}</b></font>", ParagraphStyle('YieldBox', alignment=TA_CENTER, leading=16)),
+            Paragraph(f"<b>Key Management Summary</b><br/>• Irrigation: {record.get('irrigation')}<br/>• Fertilizer: {record.get('fertilizer_kg', 0):.0f} kg/ha<br/>• Pesticides: {record.get('pesticides_kg', 0):.0f} kg/ha<br/>• Rotation: Prev. {record.get('previous_crop')}", body_style)
+        ]
+    ]
+    result_table = Table(result_data, colWidths=[240, 280])
+    result_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, 0), colors.HexColor("#ecfdf5")),
+        ('BACKGROUND', (1, 0), (1, 0), BG_LIGHT),
+        ('BOX', (0, 0), (-1, -1), 1, BORDER_COLOR),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(result_table)
+    elements.append(Spacer(1, 8))
+    
+    # 4. Environmental & Soil Input Parameters Table
+    elements.append(Paragraph("<b>Input Environmental & Agronomic Parameters</b>", section_heading))
+    inputs_data = [
+        [Paragraph("<b>Parameter</b>", bold_body), Paragraph("<b>Input Value</b>", bold_body), Paragraph("<b>Parameter</b>", bold_body), Paragraph("<b>Input Value</b>", bold_body)],
+        [Paragraph("Region", body_style), Paragraph(str(record.get("region")), body_style), Paragraph("Soil pH", body_style), Paragraph(f"{record.get('soil_ph', 0):.2f}", body_style)],
+        [Paragraph("Soil Texture", body_style), Paragraph(str(record.get("soil_type")), body_style), Paragraph("Rainfall (mm)", body_style), Paragraph(f"{record.get('rainfall_mm', 0):.1f} mm", body_style)],
+        [Paragraph("Temperature (°C)", body_style), Paragraph(f"{record.get('temperature_c', 0):.1f} °C", body_style), Paragraph("Humidity (%)", body_style), Paragraph(f"{record.get('humidity_pct', 0):.1f} %", body_style)],
+        [Paragraph("Planting Density", body_style), Paragraph(f"{record.get('planting_density', 0):.1f} plants/m²", body_style), Paragraph("Previous Crop", body_style), Paragraph(str(record.get("previous_crop")), body_style)],
+    ]
+    inputs_table = Table(inputs_data, colWidths=[130, 130, 130, 130])
+    inputs_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#e2e8f0")),
+        ('BOX', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    elements.append(inputs_table)
+    elements.append(Spacer(1, 8))
+    
+    # 5. Risk Assessment Section
+    insights = record.get("insights", {})
+    risk_info = insights.get("risk_assessment") or assess_agricultural_risks(
+        crop=crop_name,
+        soil_ph=record.get("soil_ph", 6.5),
+        soil_type=record.get("soil_type", "Loam"),
+        rainfall_mm=record.get("rainfall_mm", 600),
+        temperature_c=record.get("temperature_c", 25),
+        humidity_pct=record.get("humidity_pct", 60),
+        fertilizer_kg=record.get("fertilizer_kg", 150),
+        pesticides_kg=record.get("pesticides_kg", 20),
+        irrigation=record.get("irrigation", "Sprinkler"),
+        previous_crop=record.get("previous_crop", "None"),
+        predicted_yield=pred_yield
+    )
+    
+    elements.append(Paragraph("<b>Agricultural Risk Assessment</b>", section_heading))
+    risk_banner = [
+        [
+            Paragraph(f"<b>Overall Risk Rating: {risk_info.get('overall_risk', 'Moderate').upper()}</b><br/>{sanitize_for_reportlab(risk_info.get('summary', ''))}", body_style)
+        ]
+    ]
+    risk_table = Table(risk_banner, colWidths=[520])
+    risk_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), ALERT_BG if risk_info.get('overall_risk') == 'Moderate' else colors.HexColor("#fee2e2") if risk_info.get('overall_risk') == 'High' else colors.HexColor("#dcfce7")),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#f59e0b") if risk_info.get('overall_risk') == 'Moderate' else colors.HexColor("#ef4444") if risk_info.get('overall_risk') == 'High' else colors.HexColor("#10b981")),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(risk_table)
+    elements.append(Spacer(1, 6))
+    
+    # 6. AI Agronomic Explanation & Actionable Guidance
+    elements.append(Paragraph("<b>Agronomic Analysis & Recommendations</b>", section_heading))
+    llm_info = insights.get("llm_insights") or {}
+    report_content = llm_info.get("content") or "Maintain balanced fertilization, monitor soil moisture during vegetative stages, and execute preventative scouting for optimal crop productivity."
+    
+    # Format markdown lines into readable paragraphs
+    for line in report_content.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("###"):
+            clean_head = sanitize_for_reportlab(line.replace("###", "").strip())
+            elements.append(Paragraph(f"<b>{clean_head}</b>", section_heading))
+        elif line.startswith("-") or line.startswith("•"):
+            clean_text = sanitize_for_reportlab(line.lstrip("-•* ").strip())
+            elements.append(Paragraph(f"• {clean_text}", body_style))
+        elif line.startswith("1.") or line.startswith("2.") or line.startswith("3."):
+            clean_text = sanitize_for_reportlab(line.strip())
+            elements.append(Paragraph(f"{clean_text}", body_style))
+        else:
+            clean_text = sanitize_for_reportlab(line.strip())
+            elements.append(Paragraph(clean_text, body_style))
+        elements.append(Spacer(1, 2))
+        
+    # 7. Disclaimer
+    elements.append(Spacer(1, 10))
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=BORDER_COLOR, spaceBefore=4, spaceAfter=4))
+    disclaimer_text = (
+        "<b>Notice & Decision Support Disclaimer:</b> This report is generated by YieldSense AI utilizing machine learning regression "
+        "and data-driven agronomic intelligence. Predictions and suggestions serve as decision-support guidance. "
+        "Actual crop performance is subject to unpredictable weather fluctuations, local pest outbreaks, and field management practices."
+    )
+    elements.append(Paragraph(disclaimer_text, ParagraphStyle('Disclaimer', parent=body_style, fontSize=7, leading=9, textColor=colors.HexColor("#64748b"))))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer

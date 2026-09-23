@@ -10,6 +10,8 @@ interface HeaderProps {
   onOpenAuth: () => void;
   onLogout: () => void;
   onNavigateProfile: () => void;
+  onNavigateAdmin?: () => void;
+  isAdminView?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   onLogout,
   onNavigateProfile,
+  onNavigateAdmin,
+  isAdminView = false,
 }) => {
   return (
     <header className="no-print sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
@@ -40,11 +44,16 @@ export const Header: React.FC<HeaderProps> = ({
                     apiOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
                   }`}
                 />
-                {apiOnline ? 'API Connected' : 'API Offline'}
+                {apiOnline ? 'System Online' : 'System Offline'}
               </span>
+              {user?.role === 'admin' && (
+                <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-full border border-indigo-200 dark:border-indigo-800 uppercase">
+                  Admin
+                </span>
+              )}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block font-medium">
-              AI-Based Crop Yield Prediction & Agricultural Recommendation Platform
+              Agricultural Productivity & Seasonal Intelligence Platform
             </p>
           </div>
         </div>
@@ -52,6 +61,20 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right Action Controls */}
         <div className="flex items-center gap-3">
           <ThemeToggle isDark={isDark} onToggle={onToggleTheme} />
+
+          {user?.role === 'admin' && onNavigateAdmin && (
+            <button
+              onClick={onNavigateAdmin}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                isAdminView
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100'
+              }`}
+            >
+              <span>⚙️</span>
+              <span className="hidden sm:inline">{isAdminView ? 'Farmer View' : 'Admin Panel'}</span>
+            </button>
+          )}
 
           {user ? (
             <div className="flex items-center gap-2">

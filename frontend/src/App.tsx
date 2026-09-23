@@ -7,26 +7,27 @@ import { YieldForecastTab } from './components/YieldForecastTab';
 import { CropRecommendationTab } from './components/CropRecommendationTab';
 import { WeatherSoilAnalyticsTab } from './components/WeatherSoilAnalyticsTab';
 import { PredictionReportsTab } from './components/PredictionReportsTab';
+import { AIAssistantTab } from './components/AIAssistantTab';
+import { AdminPanel } from './components/AdminPanel';
 import { AuthModal } from './components/AuthModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { YieldInput, FarmerProfile, FarmDetails } from './types';
 import {
   checkApiHealth,
-  fetchFarmerProfile,
+  fetchCurrentUserProfile,
   fetchFarmerFarm,
 } from './services/api';
 
 export const App: React.FC = () => {
   // Navigation & View state
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'myfarm' | 'yield' | 'recommendation' | 'analytics' | 'report' | 'profile'
+    'dashboard' | 'myfarm' | 'yield' | 'recommendation' | 'analytics' | 'report' | 'assistant' | 'admin' | 'profile'
   >('dashboard');
 
-  const [predictSubTab, setPredictSubTab] = useState<'yield' | 'recommendation'>('yield');
   const [apiOnline, setApiOnline] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
 
-  // Authenticated Farmer state
+  // Authenticated Farmer / Admin state
   const [user, setUser] = useState<FarmerProfile | null>(null);
   const [farm, setFarm] = useState<FarmDetails>({
     field_name: 'North Field',
@@ -87,7 +88,7 @@ export const App: React.FC = () => {
       const token = localStorage.getItem('yieldsense_token');
       if (token) {
         try {
-          const profileData = await fetchFarmerProfile();
+          const profileData = await fetchCurrentUserProfile();
           const farmData = await fetchFarmerFarm();
           if (isMounted) {
             setUser(profileData);
@@ -96,7 +97,7 @@ export const App: React.FC = () => {
             setYieldInput((prev) => ({
               ...prev,
               field_name: farmData.field_name || prev.field_name,
-              Soil_Type: farmData.soil_type || prev.Soil_Type,
+              Soil_Type: (farmData.soil_type as any) || prev.Soil_Type,
               Irrigation: farmData.irrigation_method || prev.Irrigation,
             }));
           }
@@ -124,6 +125,9 @@ export const App: React.FC = () => {
       const farmData = await fetchFarmerFarm();
       setFarm(farmData);
     } catch {}
+    if (userData.role === 'admin') {
+      setActiveTab('admin');
+    }
   };
 
   const handleLogout = () => {
@@ -133,15 +137,18 @@ export const App: React.FC = () => {
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Home', icon: '🏠' },
+    { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
     { id: 'myfarm', label: 'My Farm', icon: '🏡' },
-    { id: 'yield', label: 'Predict', icon: '🌾' },
-    { id: 'analytics', label: 'Farm Conditions', icon: '🌦️' },
-    { id: 'report', label: 'My Reports', icon: '📄' },
+    { id: 'yield', label: 'Predict Yield', icon: '🌾' },
+    { id: 'recommendation', label: 'Crop Match', icon: '🌱' },
+    { id: 'assistant', label: 'AI Assistant', icon: '🤖' },
+    { id: 'analytics', label: 'Analytics', icon: '🌦️' },
+    { id: 'report', label: 'Reports', icon: '📄' },
+    ...(user?.role === 'admin' ? [{ id: 'admin', label: 'Admin Panel', icon: '⚙️' }] : []),
     { id: 'profile', label: 'Profile', icon: '👤' },
   ] as const;
 
-  const showOnboarding = user && user.onboarding_completed === 0;
+  const showOnboarding = user && user.role === 'farmer' && user.onboarding_completed === 0;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
@@ -154,6 +161,8 @@ export const App: React.FC = () => {
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogout={handleLogout}
         onNavigateProfile={() => setActiveTab('profile')}
+        onNavigateAdmin={user?.role === 'admin' ? () => setActiveTab(activeTab === 'admin' ? 'dashboard' : 'admin') : undefined}
+        isAdminView={activeTab === 'admin'}
       />
 
       {/* Main Content Area */}
@@ -170,19 +179,21 @@ export const App: React.FC = () => {
         )}
 
         {/* Primary Navigation Bar */}
-        <div className="no-print flex items-center gap-1.5 sm:gap-2 mb-8 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto">
+        <div className="no-print flex items-center gap-1.5 sm:gap-2 mb-8 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto no-scrollbar">
           {navItems.map((item) => {
-            const isActive =
-              activeTab === item.id ||
-              (item.id === 'yield' && (activeTab === 'yield' || activeTab === 'recommendation'));
+            const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveTab(item.id as any)}
+                onClick={() => {
+                  setActiveTab(item.id as any);
+                }}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition whitespace-nowrap border ${
                   isActive
-                    ? 'bg-emerald-700 text-white border-emerald-700 shadow-md'
+                    ? item.id === 'admin'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                      : 'bg-emerald-700 text-white border-emerald-700 shadow-md'
                     : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
@@ -195,15 +206,16 @@ export const App: React.FC = () => {
 
         {/* Tab Views */}
         <div>
-          {/* HOME DASHBOARD */}
+          {/* 1. HOME DASHBOARD */}
           {activeTab === 'dashboard' && (
             <FarmerDashboard
               user={user}
               farm={farm}
               onNavigate={(tab) => {
                 if (tab === 'recommendation') {
-                  setActiveTab('yield');
-                  setPredictSubTab('recommendation');
+                  setActiveTab('recommendation');
+                } else if (tab === 'farm') {
+                  setActiveTab('myfarm');
                 } else {
                   setActiveTab(tab as any);
                 }
@@ -212,7 +224,7 @@ export const App: React.FC = () => {
             />
           )}
 
-          {/* MY FARM SPECIFICATIONS */}
+          {/* 2. MY FARM SPECIFICATIONS */}
           {activeTab === 'myfarm' && (
             <MyFarmTab
               farm={farm}
@@ -228,116 +240,75 @@ export const App: React.FC = () => {
             />
           )}
 
-          {/* PREDICT VIEW (Yield Forecast & Crop Suitability) */}
-          {(activeTab === 'yield' || activeTab === 'recommendation') && (
-            <div className="space-y-6">
-              {/* Sub-navigation Switcher */}
-              <div className="flex gap-2 p-1.5 bg-slate-200/60 dark:bg-slate-800/60 rounded-2xl w-fit">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('yield');
-                    setPredictSubTab('yield');
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                    predictSubTab === 'yield'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  🌾 Yield Forecast
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('recommendation');
-                    setPredictSubTab('recommendation');
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                    predictSubTab === 'recommendation'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  🌱 Crop Suitability
-                </button>
-              </div>
-
-              {predictSubTab === 'yield' ? (
-                <YieldForecastTab
-                  inputState={yieldInput}
-                  setInputState={setYieldInput}
-                  savedFarm={farm}
-                />
-              ) : (
-                <CropRecommendationTab />
-              )}
-            </div>
+          {/* 3. YIELD FORECAST */}
+          {activeTab === 'yield' && (
+            <YieldForecastTab
+              inputState={yieldInput}
+              setInputState={setYieldInput}
+              savedFarm={farm}
+            />
           )}
 
-          {/* FARM CONDITIONS & ANALYTICS */}
-          {activeTab === 'analytics' && <WeatherSoilAnalyticsTab />}
+          {/* 4. CROP SUITABILITY RECOMMENDATION */}
+          {activeTab === 'recommendation' && (
+            <CropRecommendationTab />
+          )}
 
-          {/* MY REPORTS & HISTORY */}
+          {/* 5. AI AGRICULTURAL ASSISTANT CHATBOT */}
+          {activeTab === 'assistant' && (
+            <AIAssistantTab user={user} farm={farm} />
+          )}
+
+          {/* 6. FARM ANALYTICS (WEATHER & SOIL) */}
+          {activeTab === 'analytics' && (
+            <WeatherSoilAnalyticsTab />
+          )}
+
+          {/* 7. PREDICTION & SEASONAL REPORTS */}
           {activeTab === 'report' && (
             <PredictionReportsTab
               inputState={yieldInput}
-              isLoggedIn={!!user}
+              isLoggedIn={Boolean(user)}
               onOpenAuth={() => setIsAuthOpen(true)}
             />
           )}
 
-          {/* FARMER PROFILE */}
+          {/* 8. ADMIN PANEL (SYSTEM METRICS & LLM CONTROLS) */}
+          {activeTab === 'admin' && (
+            <AdminPanel />
+          )}
+
+          {/* 9. FARMER PROFILE */}
           {activeTab === 'profile' && user && (
             <ProfileTab
               user={user}
-              onProfileUpdated={(updated) => setUser(updated)}
+              onProfileUpdated={(updatedUser) => {
+                setUser(updatedUser);
+              }}
               onLogout={handleLogout}
             />
-          )}
-
-          {activeTab === 'profile' && !user && (
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 text-center space-y-4 max-w-md mx-auto">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-3xl mx-auto">
-                👤
-              </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Farmer Profile Access
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Sign in to manage your contact details and location settings.
-              </p>
-              <button
-                onClick={() => setIsAuthOpen(true)}
-                className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow-md"
-              >
-                Sign In / Register
-              </button>
-            </div>
           )}
         </div>
       </main>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onSuccess={handleAuthSuccess}
-      />
-
-      {/* App Footer */}
-      <footer className="no-print border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 py-6 px-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300">
-            <span>🌾 YieldSense AI</span>
-            <span>•</span>
-            <span>Crop Yield Prediction & Agricultural Recommendation Platform</span>
-          </div>
-          <div className="text-[11px]">
-            <span>Agricultural Decision Support</span>
-          </div>
+      {/* Footer */}
+      <footer className="no-print mt-auto py-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 text-center text-xs text-slate-500 dark:text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <span>
+            <b>YieldSense AI</b> — Agricultural Productivity Intelligence Platform
+          </span>
+          <span>Decision Support System • Grounded Agronomic Intelligence</span>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      {isAuthOpen && (
+        <AuthModal
+          isOpen={isAuthOpen}
+          onClose={() => setIsAuthOpen(false)}
+          onSuccess={handleAuthSuccess}
+        />
+      )}
     </div>
   );
 };

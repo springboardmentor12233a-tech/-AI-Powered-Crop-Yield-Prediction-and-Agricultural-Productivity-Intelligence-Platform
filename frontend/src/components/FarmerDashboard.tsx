@@ -1,10 +1,11 @@
-import React from 'react';
-import { FarmerProfile, FarmDetails } from '../types';
+import React, { useState, useEffect } from 'react';
+import { FarmerProfile, FarmDetails, SavedReport, SavedRecommendation } from '../types';
+import { fetchFarmerPredictionHistory, fetchFarmerRecommendationHistory } from '../services/api';
 
 interface FarmerDashboardProps {
   user: FarmerProfile | null;
   farm: FarmDetails;
-  onNavigate: (tab: 'yield' | 'recommendation' | 'analytics' | 'report' | 'farm' | 'profile') => void;
+  onNavigate: (tab: 'yield' | 'recommendation' | 'analytics' | 'report' | 'farm' | 'profile' | 'assistant') => void;
   onOpenAuth: () => void;
 }
 
@@ -14,6 +15,25 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
   onNavigate,
   onOpenAuth,
 }) => {
+  const [recentPrediction, setRecentPrediction] = useState<SavedReport | null>(null);
+  const [recentRecommendation, setRecentRecommendation] = useState<SavedRecommendation | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchFarmerPredictionHistory()
+        .then((history) => {
+          if (history.length > 0) setRecentPrediction(history[0]);
+        })
+        .catch(() => {});
+
+      fetchFarmerRecommendationHistory()
+        .then((history) => {
+          if (history.length > 0) setRecentRecommendation(history[0]);
+        })
+        .catch(() => {});
+    }
+  }, [user]);
+
   return (
     <div className="space-y-6 sm:space-y-8 animate-fade-in">
       {/* Welcome Banner */}
@@ -24,10 +44,10 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
               <span>🌾 YieldSense AI Decision Platform</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Welcome back, {user ? user.full_name : 'Farmer'}!
+              Good day, {user ? user.full_name : 'Farmer'}!
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100 max-w-xl leading-relaxed">
-              Explore custom harvest forecasts, environmental suitability checks, and downloadable field reports tailored to your agricultural conditions.
+              Explore harvest forecasts, environmental suitability checks, actionable risk insights, and get instant guidance from your AI Agricultural Assistant.
             </p>
           </div>
 
@@ -113,90 +133,196 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
         </div>
       </div>
 
-      {/* Main Action Modules */}
+      {/* Quick Action Modules */}
       <div>
         <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <span>⚡ What would you like to do?</span>
+          <span>⚡ Quick Actions</span>
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Action 1: Predict Yield */}
           <button
             onClick={() => onNavigate('yield')}
-            className="flex flex-col text-left p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg transition-all group"
+            className="flex flex-col text-left p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg transition-all group"
           >
-            <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-2xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
               🌾
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 mb-1">
-              Predict My Yield
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 mb-1">
+              Predict Yield
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-              Estimate expected crop harvest (ton/ha) based on your soil, weather, and fertilizer inputs.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Forecast expected harvest (ton/ha) for your crops.
             </p>
             <span className="mt-auto text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
-              Start Forecast →
+              Forecast →
             </span>
           </button>
 
           {/* Action 2: Check Crop Suitability */}
           <button
             onClick={() => onNavigate('recommendation')}
-            className="flex flex-col text-left p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg transition-all group"
+            className="flex flex-col text-left p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-500 hover:shadow-lg transition-all group"
           >
-            <div className="w-12 h-12 bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 rounded-2xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
               🌱
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 mb-1">
-              Check Crop Suitability
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-400 mb-1">
+              Find Suitable Crops
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-              Find crops best suited for your local temperature, humidity, soil pH, and rainfall.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Match soil & weather conditions with optimal crops.
             </p>
             <span className="mt-auto text-xs font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1">
-              Check Crops →
+              Analyze →
             </span>
           </button>
 
-          {/* Action 3: Farm Conditions */}
+          {/* Action 3: AI Assistant */}
+          <button
+            onClick={() => onNavigate('assistant')}
+            className="flex flex-col text-left p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-lg transition-all group"
+          >
+            <div className="w-10 h-10 bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 rounded-2xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+              🤖
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 mb-1">
+              Ask AI Assistant
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Chat with the agronomist assistant for contextual advice.
+            </p>
+            <span className="mt-auto text-xs font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1">
+              Chat Now →
+            </span>
+          </button>
+
+          {/* Action 4: Farm Conditions */}
           <button
             onClick={() => onNavigate('analytics')}
-            className="flex flex-col text-left p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg transition-all group"
+            className="flex flex-col text-left p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 dark:hover:border-sky-500 hover:shadow-lg transition-all group"
           >
-            <div className="w-12 h-12 bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 rounded-2xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
               🌦️
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 mb-1">
-              Farm Conditions
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 mb-1">
+              Farm Analytics
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-              Explore climatic distributions, weather ranges, and soil texture performance metrics.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Weather distributions & soil texture characteristics.
             </p>
             <span className="mt-auto text-xs font-bold text-sky-700 dark:text-sky-400 flex items-center gap-1">
-              View Conditions →
+              View Analytics →
             </span>
           </button>
 
-          {/* Action 4: My Reports */}
+          {/* Action 5: My Reports */}
           <button
             onClick={() => onNavigate('report')}
-            className="flex flex-col text-left p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg transition-all group"
+            className="flex flex-col text-left p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 hover:shadow-lg transition-all group"
           >
-            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 rounded-2xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
               📄
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 mb-1">
-              My Reports
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 mb-1">
+              PDF Reports
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-              Access your saved prediction history, view full assessments, and download A4 PDF files.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+              Inspect past forecasts and download A4 PDF reports.
             </p>
             <span className="mt-auto text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1">
-              Open History →
+              Open Reports →
             </span>
           </button>
         </div>
       </div>
+
+      {/* Recent Results Section */}
+      {user && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Latest Yield Prediction */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>📈</span> Latest Yield Prediction
+              </h3>
+              <button
+                onClick={() => onNavigate('report')}
+                className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+              >
+                All History →
+              </button>
+            </div>
+
+            {recentPrediction ? (
+              <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/40">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
+                      {recentPrediction.crop} ({recentPrediction.region})
+                    </span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                      {recentPrediction.predicted_yield.toFixed(2)} <span className="text-xs font-normal text-slate-500">ton/ha</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">{recentPrediction.report_id}</span>
+                </div>
+                <div className="flex gap-3 text-xs text-slate-600 dark:text-slate-400 mt-3 pt-2 border-t border-emerald-100 dark:border-emerald-900/40">
+                  <span>Soil: <b>{recentPrediction.soil_type}</b></span>
+                  <span>Rain: <b>{recentPrediction.rainfall_mm}mm</b></span>
+                  <span>pH: <b>{recentPrediction.soil_ph}</b></span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
+                No predictions recorded yet. Run your first forecast above!
+              </div>
+            )}
+          </div>
+
+          {/* Latest Crop Recommendation */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>🌱</span> Latest Crop Suitability Match
+              </h3>
+              <button
+                onClick={() => onNavigate('recommendation')}
+                className="text-xs text-teal-600 dark:text-teal-400 font-semibold hover:underline"
+              >
+                Find Crops →
+              </button>
+            </div>
+
+            {recentRecommendation ? (
+              <div className="p-4 bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl border border-teal-100 dark:border-teal-900/40">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wide">
+                      Top Match
+                    </span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                      {recentRecommendation.recommended_crop}
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold px-2 py-0.5 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded-full">
+                    {recentRecommendation.confidence_pct} match
+                  </span>
+                </div>
+                <div className="flex gap-3 text-xs text-slate-600 dark:text-slate-400 mt-3 pt-2 border-t border-teal-100 dark:border-teal-900/40">
+                  <span>Temp: <b>{recentRecommendation.temperature_c}°C</b></span>
+                  <span>Humidity: <b>{recentRecommendation.humidity_pct}%</b></span>
+                  <span>pH: <b>{recentRecommendation.soil_ph}</b></span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
+                No suitability analyses performed yet. Match your soil conditions now!
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

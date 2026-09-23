@@ -14,6 +14,9 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
 }) => {
   if (!report) return null;
 
+  const risk = report.risk_assessment || (report.insights as any)?.risk_assessment;
+  const llmInsights = report.llm_insights || (report.insights as any)?.llm_insights;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col overflow-hidden">
@@ -21,10 +24,10 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
         <div className="p-6 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-              YieldSense AI Agronomic Assessment
+              YieldSense AI Productivity & Seasonal Intelligence
             </span>
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              Crop Yield Assessment Report ({report.report_id})
+              Agronomic Assessment Report ({report.report_id})
             </h3>
           </div>
 
@@ -33,7 +36,7 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
               onClick={onDownloadPdf}
               className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow flex items-center gap-1.5"
             >
-              <span>📥</span> Download PDF
+              <span>📥</span> Download Official PDF
             </button>
             <button
               onClick={onClose}
@@ -62,25 +65,25 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
             </div>
             <div>
               <span className="text-slate-400 block font-semibold">Target Crop</span>
-              <span className="font-bold text-slate-800 dark:text-slate-100">{report.crop}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{report.crop} ({report.region})</span>
             </div>
             <div>
               <span className="text-slate-400 block font-semibold">Field / Plot</span>
               <span className="font-bold text-slate-800 dark:text-slate-100">
-                {report.field_name || 'Main Field'}
+                {report.field_name || 'North Field'}
               </span>
             </div>
           </div>
 
           {/* Section 1: Yield Forecast */}
           <div className="space-y-2">
-            <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-              1. Yield Forecast
+            <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+              1. ML Forecasted Crop Yield
             </h4>
             <div className="p-5 bg-emerald-50 dark:bg-emerald-950/50 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
               <div>
                 <span className="text-xs text-emerald-800 dark:text-emerald-300 font-semibold block">
-                  Forecasted Harvest Yield
+                  Projected Harvest Yield
                 </span>
                 <div className="text-3xl font-extrabold text-emerald-950 dark:text-emerald-100">
                   {report.predicted_yield.toFixed(2)}{' '}
@@ -90,15 +93,68 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
                 </div>
               </div>
               <div className="text-right text-xs text-emerald-800 dark:text-emerald-300 max-w-xs">
-                Estimated yield based on the supplied soil, weather, and management inputs.
+                In-memory machine learning regression estimate evaluated against historical field benchmarks.
               </div>
             </div>
           </div>
 
-          {/* Section 2: Field Conditions */}
+          {/* Section 2: Agricultural Risk Assessment */}
+          {risk && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                2. Agricultural Risk Assessment
+              </h4>
+              <div
+                className={`p-4 rounded-2xl border text-xs ${
+                  risk.overall_risk === 'Low'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 text-emerald-900 dark:text-emerald-200'
+                    : risk.overall_risk === 'High'
+                    ? 'bg-red-50 dark:bg-red-950/40 border-red-200 text-red-900 dark:text-red-200'
+                    : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 text-amber-900 dark:text-amber-200'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-sm">Overall Risk Rating: {risk.overall_risk}</span>
+                  <span className="px-2.5 py-0.5 rounded-full font-bold bg-white/60 dark:bg-black/30">
+                    Score: {risk.risk_score} / 10
+                  </span>
+                </div>
+                <p className="mb-3">{risk.summary}</p>
+                {risk.risk_factors && (
+                  <div className="space-y-1.5 pt-2 border-t border-black/10 dark:border-white/10">
+                    {risk.risk_factors.map((rf: any, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <span className="font-bold shrink-0">• {rf.factor}:</span>
+                        <span>{rf.description}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Section 3: AI Agronomic Explanations & Suggestions */}
+          {llmInsights && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  3. Agronomic Findings & Actionable Advice
+                </h4>
+                <span className="text-[10px] text-slate-400 italic">
+                  Source: {llmInsights.source}
+                </span>
+              </div>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs space-y-2 whitespace-pre-line">
+                {llmInsights.content}
+              </div>
+            </div>
+          )}
+
+          {/* Section 4: Input Parameters Summary */}
           <div className="space-y-2">
-            <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-              2. Field & Environmental Conditions
+            <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+              4. Field Parameters Summary
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -123,7 +179,7 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
                 <span className="text-slate-400 block">Fertilizer</span>
-                <span className="font-bold">{report.fertilizer_kg} kg/cycle</span>
+                <span className="font-bold">{report.fertilizer_kg} kg/ha</span>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
                 <span className="text-slate-400 block">Irrigation</span>
@@ -136,37 +192,13 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Agricultural Insights */}
-          {report.insights && (
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-                3. Soil & Agro-Meteorological Insights
-              </h4>
-              <div className="space-y-2 text-xs">
-                {report.insights.data_driven_insights?.map((ins, i) => (
-                  <div key={i} className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                    <div className="font-bold text-slate-800 dark:text-slate-100">{ins.title}</div>
-                    <div className="text-slate-600 dark:text-slate-400 mt-1">{ins.description}</div>
-                  </div>
-                ))}
-
-                {report.insights.general_guidance?.map((ins, i) => (
-                  <div key={i} className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                    <div className="font-bold text-slate-800 dark:text-slate-100">{ins.title}</div>
-                    <div className="text-slate-600 dark:text-slate-400 mt-1">{ins.description}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Section 4: Notes & Limitations */}
+          {/* Section 5: Disclaimer */}
           <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs text-slate-500 space-y-1">
             <div className="font-semibold text-slate-700 dark:text-slate-300">
-              Important Notes & Limitations
+              Important Decision Support Notice
             </div>
             <p>
-              This assessment report is generated using machine learning predictive models trained on agricultural datasets. Use predictions as an indicative decision-support guide alongside local agronomic advice.
+              This assessment report is generated using machine learning predictive models and verified agronomic telemetry. Recommendations are intended for decision support and planning. Actual crop performance is subject to local weather conditions and agronomic management.
             </p>
           </div>
         </div>

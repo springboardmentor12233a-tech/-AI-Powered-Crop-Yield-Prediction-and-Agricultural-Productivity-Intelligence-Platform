@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { YieldInput, SavedReport } from '../types';
-import { fetchPredictionHistory, downloadReportPdf } from '../services/api';
+import { fetchFarmerPredictionHistory, downloadReportPdfBlob } from '../services/api';
 import { FormattedReportViewer } from './FormattedReportViewer';
 
 interface PredictionReportsTabProps {
@@ -27,7 +27,7 @@ export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const records = await fetchPredictionHistory();
+      const records = await fetchFarmerPredictionHistory();
       setHistory(records);
     } catch {
       setHistory([]);
@@ -39,27 +39,35 @@ export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
   const handleDownloadPdf = async (reportId: string) => {
     setDownloadingId(reportId);
     try {
-      await downloadReportPdf(reportId, `YieldSense_AI_Crop_Yield_Report_${reportId}.pdf`);
+      const blob = await downloadReportPdfBlob(reportId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `YieldSense_Agricultural_Report_${reportId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (err: any) {
-      alert(err.message || 'Failed to download PDF.');
+      alert(err.message || 'Failed to download PDF report.');
     } finally {
       setDownloadingId(null);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
       {/* Title Banner */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded-full text-xs font-semibold mb-2">
-            <span>📄 My Prediction Reports</span>
+            <span>📄 Productivity & Seasonal Reports</span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            Crop Yield Assessment Reports
+            Agricultural Assessment & Yield Reports
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            View your saved yield prediction assessments and download printable A4 PDF documents.
+            Access verified ML predictions, AI agronomic explanations, risk assessments, and download publication-quality A4 PDF documents.
           </p>
         </div>
 
@@ -82,7 +90,7 @@ export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
             Sign In to Access Your Saved Reports
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Authenticated farmers can save predictions, view detailed agronomic assessments, and download PDF reports anytime.
+            Authenticated farmers can save predictions, view detailed agronomic assessments, and download real PDF reports anytime.
           </p>
           <button
             onClick={onOpenAuth}
@@ -102,7 +110,7 @@ export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
             No Saved Reports Yet
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-            When you run a yield forecast, your reports will be saved here automatically.
+            When you run a yield forecast, your full agricultural report will be saved here automatically.
           </p>
         </div>
       ) : (
@@ -124,23 +132,36 @@ export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
 
                 <div>
                   <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    {rpt.crop} Forecast
+                    {rpt.crop} Assessment
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {rpt.field_name || 'Main Field'} ({rpt.region})
+                    {rpt.field_name || 'North Field'} ({rpt.region})
                   </p>
                 </div>
 
-                <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-100 dark:border-emerald-900/60">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
-                    Estimated Yield
-                  </span>
-                  <span className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-200">
-                    {rpt.predicted_yield.toFixed(2)}{' '}
-                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                      ton/ha
+                <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-100 dark:border-emerald-900/60 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
+                      Estimated Yield
                     </span>
-                  </span>
+                    <span className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-200">
+                      {rpt.predicted_yield.toFixed(2)}{' '}
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        ton/ha
+                      </span>
+                    </span>
+                  </div>
+                  {rpt.risk_assessment && (
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                      rpt.risk_assessment.overall_risk === 'Low'
+                        ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
+                        : rpt.risk_assessment.overall_risk === 'High'
+                        ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+                        : 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
+                    }`}>
+                      {rpt.risk_assessment.overall_risk} Risk
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -156,7 +177,7 @@ export const PredictionReportsTab: React.FC<PredictionReportsTabProps> = ({
                   disabled={downloadingId === rpt.report_id}
                   className="py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition text-center disabled:opacity-50"
                 >
-                  {downloadingId === rpt.report_id ? 'Downloading...' : '📥 PDF Download'}
+                  {downloadingId === rpt.report_id ? 'Generating...' : '📥 PDF Download'}
                 </button>
               </div>
             </div>
