@@ -1,5 +1,7 @@
 import React from 'react';
 import { SavedReport } from '../types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface FormattedReportViewerProps {
   report: SavedReport;
@@ -145,8 +147,10 @@ export const FormattedReportViewer: React.FC<FormattedReportViewerProps> = ({
                   Source: {llmInsights.source}
                 </span>
               </div>
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs space-y-2 whitespace-pre-line">
-                {llmInsights.content}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs space-y-2 overflow-x-auto prose prose-sm dark:prose-invert prose-emerald max-w-none prose-p:leading-relaxed prose-table:w-full prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-td:border-slate-200 dark:prose-td:border-slate-700">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {llmInsights.content}
+                </ReactMarkdown>
               </div>
             </div>
           )}

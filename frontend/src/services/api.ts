@@ -103,7 +103,7 @@ export async function updateFarmerProfile(data: {
     throw new Error(err.detail || 'Failed to update farmer profile.');
   }
   const result = await res.json();
-  return result.user;
+  return result.profile;
 }
 
 export async function updateFarmerFarm(data: {
@@ -362,6 +362,15 @@ export async function toggleFarmerStatus(userId: number, isActive: number) {
     body: JSON.stringify({ user_id: userId, is_active: isActive }),
   });
   if (!res.ok) throw new Error('Failed to update status.');
+  return res.json();
+}
+
+export async function deleteFarmerAccount(userId: number) {
+  const res = await fetch(`${API_BASE_URL}/api/admin/farmers/${userId}`, {
+    method: 'DELETE',
+    headers: { ...getAuthHeader() },
+  });
+  if (!res.ok) throw new Error('Failed to delete farmer account.');
   return res.json();
 }
 

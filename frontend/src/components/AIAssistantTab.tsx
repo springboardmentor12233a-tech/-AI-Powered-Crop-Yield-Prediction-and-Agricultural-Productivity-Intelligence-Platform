@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage, FarmerProfile, FarmDetails } from '../types';
 import { sendChatMessage, fetchChatHistory, clearChatHistory } from '../services/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface AIAssistantTabProps {
   user: FarmerProfile | null;
@@ -145,38 +147,15 @@ export const AIAssistantTab: React.FC<AIAssistantTabProps> = ({ user, farm }) =>
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
+                className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm overflow-x-auto prose prose-sm dark:prose-invert prose-emerald max-w-none prose-p:leading-relaxed prose-table:w-full prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-td:border-slate-200 dark:prose-td:border-slate-700 ${
                   m.role === 'user'
                     ? 'bg-blue-600 text-white rounded-br-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-sm'
                 }`}
               >
-                {/* Format markdown bullet points and bold lines */}
-                {m.content.split('\n').map((line, lIdx) => {
-                  const trimmed = line.trim();
-                  if (!trimmed) return <div key={lIdx} className="h-2"></div>;
-                  
-                  // Render headers
-                  if (trimmed.startsWith('###') || trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length < 50) {
-                    return (
-                      <div key={lIdx} className="font-bold text-emerald-700 dark:text-emerald-400 mt-1 mb-0.5">
-                        {trimmed.replace(/^###|\*\*/g, '')}
-                      </div>
-                    );
-                  }
-                  
-                  // Render bullet items
-                  if (trimmed.startsWith('-') || trimmed.startsWith('•') || /^\d+\./.test(trimmed)) {
-                    return (
-                      <div key={lIdx} className="pl-2 flex items-start space-x-1.5 my-0.5">
-                        <span className="text-emerald-500 font-bold">•</span>
-                        <span>{trimmed.replace(/^[-•\d.]\s*/, '')}</span>
-                      </div>
-                    );
-                  }
-                  
-                  return <p key={lIdx} className="my-0.5">{trimmed}</p>;
-                })}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {m.content}
+                </ReactMarkdown>
               </div>
             </div>
           ))}

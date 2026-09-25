@@ -12,14 +12,15 @@ from src.db.database import (
     get_user_prediction_history,
     get_user_recommendation_history,
     get_llm_configs,
-    update_llm_config
+    update_llm_config,
+    delete_user
 )
 from src.analytics.llm_provider import verify_llm_provider_connection
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Management & LLM Control"])
 
 class LLMConfigRequest(BaseModel):
-    provider: str = Field(..., description="gemini | openai | xai")
+    provider: str = Field(..., description="gemini | openai | xai | groq")
     model_name: str = Field(..., description="Model identifier (e.g. gemini-1.5-flash, gpt-4o-mini)")
     api_key: Optional[str] = Field("", description="Provider API key (leave blank to retain existing key)")
     is_active: bool = Field(True, description="Whether to activate this provider")
@@ -69,6 +70,12 @@ def toggle_farmer_status(req: ToggleStatusRequest, admin: Dict[str, Any] = Depen
     """Enables or disables a farmer account."""
     success = set_user_active_status(req.user_id, req.is_active)
     return {"status": "Success", "message": f"Farmer account status set to {req.is_active}."}
+
+@router.delete("/farmers/{farmer_id}")
+def delete_farmer_account(farmer_id: int, admin: Dict[str, Any] = Depends(get_current_admin_user)):
+    """Permanently deletes a farmer account and all associated data."""
+    success = delete_user(farmer_id)
+    return {"status": "Success", "message": f"Farmer account {farmer_id} permanently deleted."}
 
 # ----------------------------------------------------------------------------
 # LLM Provider Management Endpoints

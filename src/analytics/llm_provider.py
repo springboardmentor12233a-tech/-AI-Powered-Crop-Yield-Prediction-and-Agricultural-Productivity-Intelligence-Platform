@@ -26,6 +26,7 @@ Environmental factors (Rainfall: {rainfall_mm}mm, Temperature: {temperature_c}°
 def verify_llm_provider_connection(provider: str, model_name: str, api_key: str) -> Dict[str, Any]:
     """
     Tests direct connectivity to the selected LLM provider without saving.
+    Supports: Google Gemini, Groq, OpenAI, xAI.
     Returns status: 'success' | 'error' and diagnostic message.
     """
     if not api_key or not api_key.strip():
@@ -42,7 +43,7 @@ def verify_llm_provider_connection(provider: str, model_name: str, api_key: str)
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json", "User-Agent": "YieldSenseBot/1.0"},
                 method="POST"
             )
             with urllib.request.urlopen(req, timeout=10) as resp:
@@ -50,6 +51,29 @@ def verify_llm_provider_connection(provider: str, model_name: str, api_key: str)
                 text = data["candidates"][0]["content"]["parts"][0]["text"]
                 return {"status": "success", "message": f"Successfully connected to Google Gemini ({model_name}). Response: {text.strip()}"}
                 
+        elif prov == "groq":
+            # Test Groq OpenAI-compatible Chat Completion API (Fast & Cost-Effective)
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            payload = {
+                "model": model_name,
+                "messages": [{"role": "user", "content": "Hello, respond with 'YieldSense AI Connected' only."}],
+                "max_tokens": 15
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key.strip()}",
+                    "User-Agent": "YieldSenseBot/1.0"
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                text = data["choices"][0]["message"]["content"]
+                return {"status": "success", "message": f"Successfully connected to Groq ({model_name}). Response: {text.strip()}"}
+
         elif prov == "openai":
             # Test OpenAI chat completion API
             url = "https://api.openai.com/v1/chat/completions"
@@ -63,7 +87,8 @@ def verify_llm_provider_connection(provider: str, model_name: str, api_key: str)
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key.strip()}"
+                    "Authorization": f"Bearer {api_key.strip()}",
+                    "User-Agent": "YieldSenseBot/1.0"
                 },
                 method="POST"
             )
@@ -85,7 +110,8 @@ def verify_llm_provider_connection(provider: str, model_name: str, api_key: str)
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key.strip()}"
+                    "Authorization": f"Bearer {api_key.strip()}",
+                    "User-Agent": "YieldSenseBot/1.0"
                 },
                 method="POST"
             )
@@ -126,15 +152,21 @@ def call_llm(prompt: str, system_instruction: Optional[str] = None) -> Optional[
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json", "User-Agent": "YieldSenseBot/1.0"},
                 method="POST"
             )
             with urllib.request.urlopen(req, timeout=12) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data["candidates"][0]["content"]["parts"][0]["text"]
                 
-        elif provider in ["openai", "xai"]:
-            url = "https://api.openai.com/v1/chat/completions" if provider == "openai" else "https://api.x.ai/v1/chat/completions"
+        elif provider in ["openai", "xai", "groq"]:
+            if provider == "groq":
+                url = "https://api.groq.com/openai/v1/chat/completions"
+            elif provider == "openai":
+                url = "https://api.openai.com/v1/chat/completions"
+            else:
+                url = "https://api.x.ai/v1/chat/completions"
+                
             messages = []
             if system_instruction:
                 messages.append({"role": "system", "content": system_instruction})
@@ -150,7 +182,8 @@ def call_llm(prompt: str, system_instruction: Optional[str] = None) -> Optional[
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}"
+                    "Authorization": f"Bearer {api_key}",
+                    "User-Agent": "YieldSenseBot/1.0"
                 },
                 method="POST"
             )

@@ -169,6 +169,11 @@ def init_db():
         cursor.execute(
             "INSERT INTO llm_configurations (provider, model_name, api_key, is_active) VALUES ('xai', 'grok-beta', '', 0);"
         )
+    cursor.execute("SELECT id FROM llm_configurations WHERE provider = 'groq';")
+    if not cursor.fetchone():
+        cursor.execute(
+            "INSERT INTO llm_configurations (provider, model_name, api_key, is_active) VALUES ('groq', 'llama-3.3-70b-versatile', '', 0);"
+        )
         
     conn.commit()
     conn.close()
@@ -405,6 +410,15 @@ def set_user_active_status(user_id: int, is_active: int) -> bool:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET is_active = ? WHERE id = ?;", (is_active, user_id))
+    conn.commit()
+    conn.close()
+    return True
+
+def delete_user(user_id: int) -> bool:
+    """Deletes a farmer account and all associated data permanently (admin only)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id = ?;", (user_id,))
     conn.commit()
     conn.close()
     return True

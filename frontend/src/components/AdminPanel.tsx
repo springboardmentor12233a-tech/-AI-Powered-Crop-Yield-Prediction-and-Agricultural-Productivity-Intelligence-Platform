@@ -14,7 +14,8 @@ import {
   toggleFarmerStatus,
   fetchLLMConfigs,
   saveLLMConfig,
-  testLLMConnection
+  testLLMConnection,
+  deleteFarmerAccount
 } from '../services/api';
 
 export const AdminPanel: React.FC = () => {
@@ -98,6 +99,23 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async (farmerId: number) => {
+    if (!window.confirm(`Are you sure you want to PERMANENTLY delete farmer #${farmerId} and all associated data? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await deleteFarmerAccount(farmerId);
+      setFarmers(prev => prev.filter(f => f.id !== farmerId));
+      if (farmerDetails && farmerDetails.farmer.id === farmerId) {
+        setSelectedFarmerId(null);
+        setFarmerDetails(null);
+      }
+      alert(`Farmer #${farmerId} deleted successfully.`);
+    } catch (err: any) {
+      alert('Failed to delete account: ' + err.message);
+    }
+  };
+
   const handleProviderChange = (prov: string) => {
     setSelectedProvider(prov);
     setApiKeyInput('');
@@ -109,6 +127,9 @@ export const AdminPanel: React.FC = () => {
       setModelName('gpt-4o-mini');
     } else if (prov === 'xai') {
       setModelName('grok-beta');
+    }
+    else if (prov === 'groq') {
+      setModelName('llama-3.3-70b-versatile');
     }
     const existing = llmConfigs.find(c => c.provider === prov);
     if (existing) {
@@ -463,14 +484,20 @@ export const AdminPanel: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleToggleStatus(farmerDetails.farmer.id, farmerDetails.farmer.is_active || 1)}
+                      onClick={() => handleToggleStatus(farmerDetails.farmer.id, farmerDetails.farmer.is_active ?? 1)}
                       className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${
                         farmerDetails.farmer.is_active === 1
-                          ? 'border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950'
+                          ? 'border-amber-300 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950'
                           : 'border-emerald-300 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
                       }`}
                     >
                       {farmerDetails.farmer.is_active === 1 ? 'Disable Account' : 'Activate Account'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAccount(farmerDetails.farmer.id)}
+                      className="px-3 py-1.5 text-xs font-bold rounded-lg border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition"
+                    >
+                      Delete Account
                     </button>
                   </div>
                 </div>
@@ -572,11 +599,12 @@ export const AdminPanel: React.FC = () => {
                 <label className="block text-xs font-bold uppercase text-slate-600 dark:text-slate-300 mb-1">
                   Select AI Provider
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { id: 'gemini', name: 'Google Gemini', desc: 'Free Tier Available' },
                     { id: 'openai', name: 'OpenAI GPT', desc: 'Standard API' },
-                    { id: 'xai', name: 'xAI Grok', desc: 'Enterprise Beta' }
+                    { id: 'xai', name: 'xAI Grok', desc: 'Enterprise Beta' },
+                     { id: 'groq', name: 'Groq', desc: 'Cheaper high-throughput LLMs' }
                   ].map((p) => (
                     <button
                       type="button"

@@ -57,6 +57,11 @@ You can use **Google Gemini**, **OpenAI**, or **xAI Grok**. Follow the steps bel
 2. Sign in and navigate to the **API Keys** tab.
 3. Click **"Create API Key"** and copy the secret key.
 
+#### Option D: Groq (Cheaper LLM)
+1. Navigate to the [Groq Console](https://console.groq.com/).
+2. Sign in (or create an account) and go to **API Keys**.
+3. Click **"Create API Key"**, name it, and copy the secret key.
+
 ---
 
 ### Step 3: Apply the API Key in YieldSense AI Admin Panel
