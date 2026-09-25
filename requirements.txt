@@ -4,3 +4,8 @@ matplotlib
 seaborn
 jupyter
 openpyxl
+fastapi
+uvicorn
+catboost
+psycopg2-binary
+pydantic

@@ -14,4 +14,3 @@ export async function generateRecommendations(context) {
   return response.json();
 }
 
-export const recommendationPreview = { isPreview: true };
