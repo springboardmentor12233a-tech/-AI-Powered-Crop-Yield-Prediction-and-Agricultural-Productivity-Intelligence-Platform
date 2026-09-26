@@ -10,22 +10,28 @@ if str(PROJECT_ROOT) not in sys.path:
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional, Dict, Any
 import pandas as pd
 
 from backend.app.db.config import Base, engine, get_db
-from backend.app.db.models import User, Farm, Crop, WeatherData, SoilData, Prediction
+from backend.app.db.models import User, Farm, Crop, WeatherData, SoilData, Prediction, ChatMessage
 from backend.app.db.schemas import (
     UserRegister, UserLogin, UserOut, Token,
     FarmCreate, FarmOut, CropCreate, CropOut,
     YieldPredictionInput, YieldPredictionResponse, MLModelInfoResponse,
-    PredictionRecordCreate, PredictionRecordOut
+    PredictionRecordCreate, PredictionRecordOut,
+    AdminStatsOut, AdminUserSummaryOut, AdminActivityItem,
+    AgriculturalAnalyticsOut, FarmerAnalyticsOut,
+    RiskAnalysisInput, RiskAnalysisOut,
+    ChatRequest, ChatResponse, ChatMessageOut
 )
 from backend.app.auth.security import (
     get_password_hash, verify_password, create_access_token,
-    get_current_user, get_admin_user
+    get_current_user, get_admin_user, get_optional_current_user
 )
 from backend.app.services.prediction_service import PredictionService
+from backend.app.services.analytics_service import AnalyticsService
+from backend.app.services.chatbot_service import ChatbotService
 
 # Automatically create database tables if they do not exist
 Base.metadata.create_all(bind=engine)
@@ -391,3 +397,258 @@ def delete_prediction(
     db.delete(pred)
     db.commit()
     return {"status": "success", "message": f"Prediction record #{id} deleted successfully."}
+
+
+# =====================================================================
+# MILESTONE 3: AGRICULTURAL ANALYTICS & RISK ANALYSIS ROUTES
+# =====================================================================
+analytics_service = AnalyticsService()
+chatbot_service = ChatbotService()
+
+@app.get("/api/analytics/system", response_model=AgriculturalAnalyticsOut, tags=["Analytics"])
+def get_system_analytics(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns comprehensive agricultural yield distributions, crop productivity rankings,
+    soil health profiles, weather impacts, and agronomic insights.
+    """
+    try:
+        return analytics_service.get_system_analytics(db=db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Analytics calculation error: {str(e)}"
+        )
+
+@app.get("/api/analytics/farmer", response_model=FarmerAnalyticsOut, tags=["Analytics"])
+def get_farmer_analytics(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns individualized analytics for the authenticated farmer,
+    including farm summaries, crop logs, prediction history stats, and tailored recommendations.
+    """
+    try:
+        return analytics_service.get_farmer_analytics(user_id=current_user.id, db=db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Farmer analytics calculation error: {str(e)}"
+        )
+
+@app.post("/api/insights/analyze", response_model=RiskAnalysisOut, tags=["Analytics"])
+def analyze_crop_risks(input_data: RiskAnalysisInput):
+    """
+    Evaluates field conditions (Crop, Soil, Nutrients, Rainfall, Temp, pH)
+    to calculate agricultural risk scores, identify hazard factors, and provide agronomic advice.
+    """
+    try:
+        payload = input_data.model_dump()
+        return analytics_service.analyze_risks_and_insights(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Risk analysis error: {str(e)}"
+        )
+
+
+# =====================================================================
+# MILESTONE 3: ADMINISTRATOR DASHBOARD & USER MANAGEMENT ROUTES
+# =====================================================================
+@app.get("/api/admin/stats", response_model=AdminStatsOut, tags=["Admin"])
+def get_admin_stats(
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Provides administrator dashboard KPI summary metrics, role breakdown,
+    state-wise farm distributions, and real-time activity stream.
+    """
+    try:
+        total_users = db.query(User).count()
+        total_farmers = db.query(User).filter(User.role == "Farmer").count()
+        total_admins = db.query(User).filter(User.role == "Administrator").count()
+        total_farms = db.query(Farm).count()
+        total_crops = db.query(Crop).count()
+        total_preds = db.query(Prediction).count()
+
+        preds = db.query(Prediction).all()
+        avg_pred = round(float(sum(p.predicted_yield_kg for p in preds) / len(preds)), 2) if preds else 0.0
+
+        model_meta = prediction_service.get_metadata()
+
+        # State distribution of farms
+        farms = db.query(Farm).all()
+        state_counts = {}
+        for f in farms:
+            loc = f.location.split(",")[-1].strip() if "," in f.location else f.location.strip()
+            state_counts[loc] = state_counts.get(loc, 0) + 1
+        state_dist = [{"state": k, "count": v} for k, v in state_counts.items()]
+
+        # Crop distribution
+        crops = db.query(Crop).all()
+        crop_counts = {}
+        for c in crops:
+            crop_counts[c.crop_name] = crop_counts.get(c.crop_name, 0) + 1
+        crop_dist = [{"crop": k, "count": v} for k, v in crop_counts.items()]
+
+        # Recent activity stream
+        recent_preds = db.query(Prediction).order_by(Prediction.created_at.desc()).limit(5).all()
+        recent_users = db.query(User).order_by(User.created_at.desc()).limit(5).all()
+
+        activity_items = []
+        for p in recent_preds:
+            activity_items.append(AdminActivityItem(
+                id=f"pred-{p.id}",
+                type="prediction",
+                title=f"Yield Forecast: {p.crop}",
+                description=f"Predicted {p.predicted_yield_kg:,.1f} kg/ac ({p.state}) for User #{p.user_id}",
+                timestamp=p.created_at
+            ))
+        for u in recent_users:
+            activity_items.append(AdminActivityItem(
+                id=f"user-{u.id}",
+                type="user_registered",
+                title=f"User Joined: {u.name}",
+                description=f"{u.role} ({u.email}) created an account",
+                timestamp=u.created_at,
+                user_name=u.name,
+                user_email=u.email
+            ))
+
+        activity_items.sort(key=lambda x: x.timestamp, reverse=True)
+
+        return AdminStatsOut(
+            total_users=total_users,
+            total_farmers=total_farmers,
+            total_administrators=total_admins,
+            total_farms=total_farms,
+            total_crops=total_crops,
+            total_predictions=total_preds,
+            avg_system_predicted_yield_kg=avg_pred,
+            model_info=model_meta,
+            state_distribution=state_dist,
+            crop_distribution=crop_dist,
+            recent_activity=activity_items[:10]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Admin stats calculation error: {str(e)}"
+        )
+
+@app.get("/api/admin/users", response_model=List[AdminUserSummaryOut], tags=["Admin"])
+def list_admin_users(
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Returns summary list of all registered platform users with associated resource counts."""
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    out = []
+    for u in users:
+        out.append(AdminUserSummaryOut(
+            id=u.id,
+            name=u.name,
+            email=u.email,
+            role=u.role,
+            created_at=u.created_at,
+            farms_count=len(u.farms),
+            crops_count=sum(len(f.crops) for f in u.farms),
+            predictions_count=len(u.predictions)
+        ))
+    return out
+
+
+# =====================================================================
+# MILESTONE 3: AGRICULTURAL AI CHATBOT ROUTES
+# =====================================================================
+@app.post("/api/chat", response_model=ChatResponse, tags=["Chatbot"])
+def chat_with_assistant(
+    req: ChatRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Interactive AgriSense AI Chatbot answering questions on crops, soil,
+    nutrients, weather, yield forecasting, and agronomic management.
+    """
+    try:
+        import json
+        resp = chatbot_service.generate_response(
+            query=req.message,
+            context=req.context,
+            history=[h.model_dump() for h in req.history] if req.history else None
+        )
+
+        # Persist conversation if authenticated
+        if current_user:
+            user_msg = ChatMessage(
+                user_id=current_user.id,
+                role="user",
+                message=req.message
+            )
+            bot_msg = ChatMessage(
+                user_id=current_user.id,
+                role="assistant",
+                message=resp["reply"],
+                category=resp.get("category"),
+                suggestions=json.dumps(resp.get("suggestions", []))
+            )
+            db.add(user_msg)
+            db.add(bot_msg)
+            db.commit()
+
+        return ChatResponse(
+            reply=resp["reply"],
+            category=resp.get("category", "general_farming"),
+            suggestions=resp.get("suggestions", []),
+            timestamp=resp["timestamp"]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Chatbot execution error: {str(e)}"
+        )
+
+@app.get("/api/chat/history", response_model=List[ChatMessageOut], tags=["Chatbot"])
+def get_user_chat_history(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Retrieves chat message history for the authenticated farmer/admin."""
+    import json
+    messages = db.query(ChatMessage).filter(
+        ChatMessage.user_id == current_user.id
+    ).order_by(ChatMessage.created_at.asc()).limit(50).all()
+
+    out = []
+    for m in messages:
+        suggs = []
+        if m.suggestions:
+            try:
+                suggs = json.loads(m.suggestions)
+            except Exception:
+                suggs = []
+        out.append(ChatMessageOut(
+            id=m.id,
+            role=m.role,
+            message=m.message,
+            category=m.category,
+            suggestions=suggs,
+            created_at=m.created_at
+        ))
+    return out
+
+@app.delete("/api/chat/history", tags=["Chatbot"])
+def clear_user_chat_history(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Clears all saved chat history for the authenticated user."""
+    db.query(ChatMessage).filter(ChatMessage.user_id == current_user.id).delete()
+    db.commit()
+    return {"status": "success", "message": "Chat history cleared successfully."}
+

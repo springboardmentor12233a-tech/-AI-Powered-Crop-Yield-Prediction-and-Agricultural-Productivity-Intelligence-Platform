@@ -25,6 +25,7 @@ class User(Base):
     # Relationships
     farms = relationship("Farm", back_populates="owner", cascade="all, delete-orphan")
     predictions = relationship("Prediction", back_populates="user", cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
 
 class Farm(Base):
     __tablename__ = "farms"
@@ -116,3 +117,19 @@ class Prediction(Base):
     user = relationship("User", back_populates="predictions")
     farm = relationship("Farm")
     crop_rel = relationship("Crop")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    role = Column(String(20), nullable=False)  # "user" or "assistant"
+    message = Column(String(4000), nullable=False)
+    category = Column(String(50), nullable=True)
+    suggestions = Column(String(1000), nullable=True)  # JSON or comma-separated suggestions
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="chat_messages")
+

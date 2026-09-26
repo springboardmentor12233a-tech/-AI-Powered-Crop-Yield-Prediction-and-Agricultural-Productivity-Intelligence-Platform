@@ -1,21 +1,100 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Trees, Landmark, LogOut, User, Menu, X, ShieldCheck, Database, BrainCircuit } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Trees,
+  Landmark,
+  LogOut,
+  User,
+  Menu,
+  X,
+  ShieldCheck,
+  Database,
+  BrainCircuit,
+  TrendingUp,
+  Bot,
+  Users,
+  RefreshCw,
+  Sparkles
+} from 'lucide-react';
 
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AnalyticsPage from './pages/Analytics';
+import ChatbotPage from './pages/Chatbot';
 import FarmManagement from './pages/FarmManagement';
 import CropManagement from './pages/CropManagement';
 import DatasetPage from './pages/Dataset';
 import YieldPrediction from './pages/YieldPrediction';
+import ChatbotDrawer from './components/ChatbotDrawer';
 
-// Protected Route wrapper component
+// Durable Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  if (!token) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7faf4] flex flex-col items-center justify-center space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center">
+          <RefreshCw className="animate-spin text-brand-600" size={24} />
+        </div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          Verifying YieldSense AI Session...
+        </p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  return children;
+};
+
+// Admin-Only Route wrapper component
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, role, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7faf4] flex flex-col items-center justify-center space-y-3">
+        <RefreshCw className="animate-spin text-brand-600" size={24} />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role !== 'Administrator') {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// Public/Auth Gatekeeper Route: redirects logged-in users away from /login or /register
+const AuthGate = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7faf4] flex flex-col items-center justify-center">
+        <RefreshCw className="animate-spin text-brand-600" size={24} />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 };
 
@@ -23,21 +102,37 @@ const ProtectedRoute = ({ children }) => {
 const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, role, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  
-  const userName = localStorage.getItem('name') || 'Farmer User';
-  const userRole = localStorage.getItem('role') || 'Farmer';
 
-  const menuItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Predict Yield', path: '/predict', icon: BrainCircuit },
-    { name: 'Farms', path: '/farms', icon: Landmark },
-    { name: 'Crops', path: '/crops', icon: Trees },
-    { name: 'Dataset', path: '/dataset', icon: Database },
-  ];
+  const userName = user?.name || 'Farmer User';
+  const userRole = role || 'Farmer';
+  const isAdmin = userRole === 'Administrator';
+
+  // Role-specific navigation items
+  const menuItems = isAdmin
+    ? [
+        { name: 'Admin Dashboard', path: '/admin', icon: LayoutDashboard },
+        { name: 'User Management', path: '/admin/users', icon: Users },
+        { name: 'Agricultural Analytics', path: '/analytics', icon: TrendingUp },
+        { name: 'Predict Yield', path: '/predict', icon: BrainCircuit },
+        { name: 'All Farms', path: '/farms', icon: Landmark },
+        { name: 'All Crops', path: '/crops', icon: Trees },
+        { name: 'AI Chatbot', path: '/chatbot', icon: Bot },
+        { name: 'Dataset', path: '/dataset', icon: Database },
+      ]
+    : [
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'Predict Yield', path: '/predict', icon: BrainCircuit },
+        { name: 'Analytics', path: '/analytics', icon: TrendingUp },
+        { name: 'My Farms', path: '/farms', icon: Landmark },
+        { name: 'My Crops', path: '/crops', icon: Trees },
+        { name: 'AI Assistant', path: '/chatbot', icon: Bot },
+        { name: 'Dataset', path: '/dataset', icon: Database },
+      ];
 
   const handleLogout = () => {
-    localStorage.clear();
+    logout();
     navigate('/login');
   };
 
@@ -52,12 +147,15 @@ const Layout = ({ children }) => {
             <span className="text-xs text-slate-500 font-medium">Agricultural Forecasting</span>
           </div>
         </div>
-        
+
         {/* Navigation links */}
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === '/admin' && location.pathname === '/' && isAdmin);
+
             return (
               <Link
                 key={item.name}
@@ -69,33 +167,33 @@ const Layout = ({ children }) => {
                 }`}
               >
                 <Icon size={18} />
-                {item.name}
+                <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
-        
+
         {/* User profile section */}
         <div className="p-4 border-t border-[#e3ecd9] bg-slate-50/50">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-full bg-brand-100 text-brand-600">
+            <div className={`p-2 rounded-full ${isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-brand-100 text-brand-600'}`}>
               <User size={20} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-slate-800 truncate">{userName}</p>
               <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500 font-medium">
-                {userRole === 'Administrator' && <ShieldCheck size={12} className="text-brand-500" />}
-                <span>{userRole}</span>
+                <ShieldCheck size={12} className={isAdmin ? 'text-purple-600' : 'text-brand-500'} />
+                <span className={isAdmin ? 'text-purple-700 font-semibold' : ''}>{userRole}</span>
               </div>
             </div>
           </div>
-          
+
           <button
             onClick={handleLogout}
             className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-medium transition-all duration-200"
           >
             <LogOut size={16} />
-            Sign Out
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -143,7 +241,7 @@ const Layout = ({ children }) => {
                       }`}
                     >
                       <Icon size={18} />
-                      {item.name}
+                      <span>{item.name}</span>
                     </Link>
                   );
                 })}
@@ -163,7 +261,7 @@ const Layout = ({ children }) => {
                   className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-medium transition-all"
                 >
                   <LogOut size={16} />
-                  Sign Out
+                  <span>Sign Out</span>
                 </button>
               </div>
             </aside>
@@ -171,8 +269,10 @@ const Layout = ({ children }) => {
         )}
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#f7faf4]">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#f7faf4] relative">
           {children}
+          {/* Floating Chatbot Assistant Component */}
+          <ChatbotDrawer />
         </main>
       </div>
     </div>
@@ -181,48 +281,129 @@ const Layout = ({ children }) => {
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dataset" element={
-          <Layout>
-            <DatasetPage />
-          </Layout>
-        } />
-        
-        {/* Protected routes wrapped in Layout */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Layout>
-              <Dashboard />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/predict" element={
-          <ProtectedRoute>
-            <Layout>
-              <YieldPrediction />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/farms" element={
-          <ProtectedRoute>
-            <Layout>
-              <FarmManagement />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/crops" element={
-          <ProtectedRoute>
-            <Layout>
-              <CropManagement />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <AuthGate>
+                <Login />
+              </AuthGate>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <AuthGate>
+                <Register />
+              </AuthGate>
+            }
+          />
+
+          <Route
+            path="/dataset"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DatasetPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <Layout>
+                  <AdminDashboard />
+                </Layout>
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <Layout>
+                  <AdminUsers />
+                </Layout>
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AnalyticsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/chatbot"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ChatbotPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/predict"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <YieldPrediction />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/farms"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FarmManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/crops"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CropManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

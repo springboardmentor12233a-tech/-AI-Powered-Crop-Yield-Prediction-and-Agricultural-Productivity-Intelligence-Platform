@@ -68,3 +68,16 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
             detail="This operation is restricted to Administrators only."
         )
     return current_user
+
+def get_optional_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+        return db.query(User).filter(User.email == email).first()
+    except Exception:
+        return None
+

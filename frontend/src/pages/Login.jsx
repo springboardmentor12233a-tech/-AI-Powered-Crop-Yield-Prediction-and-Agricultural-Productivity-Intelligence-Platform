@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { KeyRound, Mail, AlertCircle, RefreshCw } from 'lucide-react';
-import api from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,14 +17,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
-      const { access_token, role, name } = response.data;
-      
-      localStorage.setItem('token', access_token);
-      localStorage.setItem('role', role);
-      localStorage.setItem('name', name);
-      
-      navigate('/');
+      const data = await login(email, password);
+      if (data.role === 'Administrator') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(
         err.response?.data?.detail || 

@@ -15,52 +15,87 @@ import {
   TrendingUp,
   Calendar,
   Sprout,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  Bot,
+  FlaskConical,
+  Droplets
 } from 'lucide-react';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
+import AdminDashboard from './AdminDashboard';
+import { RiskScoreGauge, NutrientRadarMeter } from '../components/Charts';
 
 export default function Dashboard() {
+  const { user, role } = useAuth();
+
+  // If active user is Administrator, display dedicated Admin Dashboard
+  if (role === 'Administrator') {
+    return <AdminDashboard />;
+  }
+
+  // Otherwise, render rich Farmer Dashboard
   const [farms, setFarms] = useState([]);
   const [crops, setCrops] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [modelInfo, setModelInfo] = useState(null);
+  const [riskAssessment, setRiskAssessment] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const userName = localStorage.getItem('name') || 'Farmer';
-  const userRole = localStorage.getItem('role') || 'Farmer';
+  const userName = user?.name || 'Farmer';
+  const userRole = role || 'Farmer';
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const [farmsRes, cropsRes, predRes, modelRes] = await Promise.all([
-          api.get('/farms').catch(() => ({ data: [] })),
-          api.get('/crops').catch(() => ({ data: [] })),
-          api.get('/predictions').catch(() => ({ data: [] })),
-          api.get('/ml/model-info').catch(() => ({ data: null }))
-        ]);
-
-        setFarms(farmsRes.data || []);
-        setCrops(cropsRes.data || []);
-        setPredictions(predRes.data || []);
-        setModelInfo(modelRes.data);
-      } catch (err) {
-        console.error('Error loading dashboard metrics:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
-  const latestPrediction = predictions.length > 0 ? predictions[0] : null;
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [farmsRes, cropsRes, predRes, modelRes] = await Promise.all([
+        api.get('/farms').catch(() => ({ data: [] })),
+        api.get('/crops').catch(() => ({ data: [] })),
+        api.get('/predictions').catch(() => ({ data: [] })),
+        api.get('/ml/model-info').catch(() => ({ data: null })),
+      ]);
 
-  const getFarmName = (farmId) => {
-    if (!farmId) return null;
-    const farm = farms.find((f) => f.id === farmId);
-    return farm ? farm.farm_name : `Farm #${farmId}`;
+      const farmList = farmsRes.data || [];
+      const cropList = cropsRes.data || [];
+      const predList = predRes.data || [];
+
+      setFarms(farmList);
+      setCrops(cropList);
+      setPredictions(predList);
+      setModelInfo(modelRes.data);
+
+      // Evaluate latest prediction risks if available
+      if (predList.length > 0) {
+        const latest = predList[0];
+        try {
+          const riskRes = await api.post('/insights/analyze', {
+            Crop: latest.crop,
+            Soil_Type: latest.soil_type,
+            Fertilizer: latest.fertilizer,
+            N: latest.n,
+            P: latest.p,
+            K: latest.k,
+            Rainfall_mm: latest.rainfall_mm,
+            Temperature_C: latest.temperature_c,
+            Soil_pH: latest.soil_ph,
+          });
+          setRiskAssessment(riskRes.data);
+        } catch {
+          // Silent fallback
+        }
+      }
+    } catch (err) {
+      console.error('Error loading dashboard metrics:', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const latestPrediction = predictions.length > 0 ? predictions[0] : null;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -70,7 +105,7 @@ export default function Dashboard() {
         <div className="relative">
           <div className="flex items-center gap-2 text-brand-600 font-semibold text-xs uppercase tracking-wider mb-1">
             <Sparkles size={16} />
-            <span>YieldSense AI Dashboard</span>
+            <span>YieldSense AI Farmer Portal</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-slate-800">Welcome back, {userName}! 👋</h2>
           <p className="text-slate-500 text-sm mt-1">
@@ -101,278 +136,244 @@ export default function Dashboard() {
                   <TrendingUp size={20} />
                 </div>
               </div>
-              <div>
-                {latestPrediction ? (
-                  <>
-                    <div className="text-2xl font-extrabold text-slate-800 tracking-tight">
-                      {latestPrediction.predicted_yield_kg.toLocaleString()}{' '}
-                      <span className="text-xs font-bold text-brand-600">kg/ac</span>
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium block mt-1 truncate">
-                      {latestPrediction.crop} ({latestPrediction.state})
+
+              {latestPrediction ? (
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold text-slate-800">
+                      {latestPrediction.predicted_yield_kg.toLocaleString()}
                     </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-lg font-bold text-slate-400 block">No Forecasts Yet</span>
-                    <Link to="/predict" className="text-xs text-brand-600 font-semibold hover:underline">
-                      Run first prediction →
-                    </Link>
-                  </>
-                )}
+                    <span className="text-xs text-slate-400 font-semibold">kg / acre</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                    <span className="font-semibold text-brand-700">{latestPrediction.crop}</span>
+                    <span>•</span>
+                    <span>{latestPrediction.predicted_yield_tons.toFixed(2)} tons/ac</span>
+                  </p>
+                </div>
+              ) : (
+                <div className="py-2">
+                  <span className="text-sm text-slate-400 font-medium">No forecast yet</span>
+                  <p className="text-xs text-slate-400 mt-0.5">Run your first prediction below</p>
+                </div>
+              )}
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400">
+                  {latestPrediction ? `${latestPrediction.state}` : 'AI Ready'}
+                </span>
+                <Link to="/predict" className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  <span>Predict</span>
+                  <ArrowRight size={12} />
+                </Link>
               </div>
             </div>
 
-            {/* 2. Total Farms */}
+            {/* 2. Registered Farms Card */}
             <div className="bg-white p-6 rounded-3xl border border-[#e3ecd9] hover:border-brand-300 transition-all duration-300 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">
-                  Registered Farms
+                  My Farms
                 </span>
-                <div className="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
                   <Landmark size={20} />
                 </div>
               </div>
               <div>
-                <span className="text-2xl font-extrabold text-slate-800">{farms.length}</span>
-                <span className="text-xs text-slate-500 font-medium block mt-1">
-                  Active field layouts
-                </span>
+                <span className="text-3xl font-extrabold text-slate-800">{farms.length}</span>
+                <p className="text-xs text-slate-400 mt-1">
+                  Total Area: <strong className="text-slate-600">{farms.reduce((acc, f) => acc + (f.area || 0), 0).toFixed(1)} acres</strong>
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400">Managed plots</span>
+                <Link to="/farms" className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  <span>Manage</span>
+                  <ArrowRight size={12} />
+                </Link>
               </div>
             </div>
 
-            {/* 3. Active Crops */}
+            {/* 3. Crop Varieties Card */}
             <div className="bg-white p-6 rounded-3xl border border-[#e3ecd9] hover:border-brand-300 transition-all duration-300 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">
-                  Crop Logs
+                  Active Crops
                 </span>
-                <div className="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
                   <Trees size={20} />
                 </div>
               </div>
               <div>
-                <span className="text-2xl font-extrabold text-slate-800">{crops.length}</span>
-                <span className="text-xs text-slate-500 font-medium block mt-1">
-                  Recorded plantings &amp; yields
-                </span>
+                <span className="text-3xl font-extrabold text-slate-800">{crops.length}</span>
+                <p className="text-xs text-slate-400 mt-1">
+                  Logged in Farm Management
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400">Current seasons</span>
+                <Link to="/crops" className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  <span>View Crops</span>
+                  <ArrowRight size={12} />
+                </Link>
               </div>
             </div>
 
-            {/* 4. ML Model Status */}
+            {/* 4. Total Predictions Logged Card */}
             <div className="bg-white p-6 rounded-3xl border border-[#e3ecd9] hover:border-brand-300 transition-all duration-300 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">
-                  Active ML Engine
+                  Total Predictions
                 </span>
-                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
                   <BrainCircuit size={20} />
                 </div>
               </div>
               <div>
-                <span className="text-sm font-bold text-slate-800 block truncate">
-                  {modelInfo?.best_model_name || 'LinearRegression'}
-                </span>
-                <span className="text-xs text-blue-600 font-semibold block mt-1">
-                  v{modelInfo?.model_version || '2.0.0'} • Model Live
-                </span>
+                <span className="text-3xl font-extrabold text-slate-800">{predictions.length}</span>
+                <p className="text-xs text-slate-400 mt-1">
+                  Forecast history records
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400">LinearRegression v2.0.0</span>
+                <Link to="/analytics" className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                  <span>Analytics</span>
+                  <ArrowRight size={12} />
+                </Link>
               </div>
             </div>
           </div>
 
-          {/* Latest Prediction Spotlight & Forecast Launch Hero */}
-          {latestPrediction ? (
-            <div className="bg-white p-6 md:p-8 rounded-3xl border border-[#e3ecd9] shadow-sm relative overflow-hidden space-y-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[#f0f5eb]">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-brand-50 text-brand-600 rounded-2xl">
-                    <Sprout size={24} />
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">
-                      Latest Field Forecast Spotlight
-                    </span>
-                    <h3 className="text-xl font-bold text-slate-800">
-                      {latestPrediction.crop} • {latestPrediction.state}
-                    </h3>
-                  </div>
+          {/* Quick Actions & AI Assistant Banner */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Quick Prediction Banner (2 Cols) */}
+            <div className="lg:col-span-2 bg-gradient-to-r from-brand-700 via-emerald-800 to-slate-900 text-white p-6 md:p-8 rounded-3xl shadow-md flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                  <Sparkles size={16} />
+                  <span>AI Crop Yield Forecaster</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Calendar size={14} />
-                    {new Date(latestPrediction.created_at).toLocaleDateString()}
-                  </span>
-                  <Link
-                    to="/predict"
-                    className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 transition-all"
-                  >
-                    <Sparkles size={14} />
-                    <span>New Forecast</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
+                <h3 className="text-2xl font-bold">Predict Next Season's Harvest</h3>
+                <p className="text-sm text-emerald-100/90 max-w-xl leading-relaxed">
+                  Enter your farm's soil pH, N-P-K nutrients, and anticipated weather to estimate harvest yield with our trained ML regression pipeline.
+                </p>
               </div>
 
-              {/* Spotlight Metric Details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[#f7faf4] p-5 rounded-2xl border border-[#e3ecd9] text-center">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Predicted Crop Yield
-                  </span>
-                  <div className="text-3xl font-extrabold text-slate-800">
-                    {latestPrediction.predicted_yield_kg.toLocaleString()}{' '}
-                    <span className="text-sm font-bold text-brand-600">kg/acre</span>
-                  </div>
-                  <span className="text-xs font-semibold text-slate-600 mt-1 block">
-                    ≈ {latestPrediction.predicted_yield_tons} metric tons/acre
-                  </span>
-                </div>
-
-                <div className="bg-[#f7faf4] p-5 rounded-2xl border border-[#e3ecd9] flex flex-col justify-center space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">Productivity Category:</span>
-                    <span
-                      className={`font-bold px-2.5 py-0.5 rounded-full text-[11px] ${
-                        latestPrediction.productivity_category?.includes('High')
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : latestPrediction.productivity_category?.includes('Optimal')
-                          ? 'bg-brand-100 text-brand-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      {latestPrediction.productivity_category || 'Optimal Yield'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">Soil &amp; pH:</span>
-                    <span className="font-semibold text-slate-700">
-                      {latestPrediction.soil_type} (pH {latestPrediction.soil_ph})
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">Nutrient Profile:</span>
-                    <span className="font-semibold text-slate-700">
-                      N:{latestPrediction.n} P:{latestPrediction.p} K:{latestPrediction.k}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-[#f7faf4] p-5 rounded-2xl border border-[#e3ecd9] flex flex-col justify-center space-y-1 text-xs">
-                  <span className="font-bold text-slate-700 flex items-center gap-1">
-                    <Info size={14} className="text-brand-600" />
-                    Agronomic Advisory:
-                  </span>
-                  <p className="text-slate-600 line-clamp-3 leading-relaxed">
-                    {latestPrediction.recommendation_summary || 'Nutrient and weather parameters in optimal range.'}
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Link
+                  to="/predict"
+                  className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-emerald-50 text-brand-850 rounded-2xl font-bold text-sm shadow-md transition-all"
+                >
+                  <BrainCircuit size={18} />
+                  <span>Launch Prediction Tool</span>
+                </Link>
+                <Link
+                  to="/analytics"
+                  className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-semibold text-sm backdrop-blur-sm transition-all"
+                >
+                  <TrendingUp size={16} />
+                  <span>View Agricultural Analytics</span>
+                </Link>
               </div>
             </div>
-          ) : (
-            <div className="bg-white p-8 rounded-3xl border border-[#e3ecd9] flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-brand-50 text-brand-600 rounded-2xl">
-                  <BrainCircuit size={32} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-lg text-slate-800">Predictive Yield Forecasts</h3>
-                    <span className="px-2 py-0.5 bg-brand-100 text-brand-700 text-[10px] font-bold rounded-full">
-                      Model Live
-                    </span>
-                  </div>
-                  <p className="text-slate-500 text-sm mt-0.5">
-                    Forecast your localized crop productivity using machine learning and soil analytics.
-                  </p>
-                </div>
-              </div>
-              <Link
-                to="/predict"
-                className="flex items-center gap-2 px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold rounded-2xl shadow-md shadow-brand-600/20 transition-all whitespace-nowrap"
-              >
-                <Sparkles size={16} />
-                <span>Forecast Yield</span>
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-          )}
 
-          {/* Recent Prediction History Section */}
-          <div className="bg-white rounded-3xl border border-[#e3ecd9] p-6 md:p-8 shadow-sm space-y-4">
+            {/* AI Assistant Quick Launcher (1 Col) */}
+            <div className="bg-white p-6 rounded-3xl border border-[#e3ecd9] shadow-sm flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-brand-600 text-xs font-bold uppercase tracking-wider">
+                  <Bot size={16} />
+                  <span>AgriSense AI Assistant</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">Ask Farming & Soil Questions</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Get instant agronomic guidance on fertilizer dosing, soil acidity remediation, and weather risk management.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Link
+                  to="/chatbot"
+                  className="flex items-center justify-between w-full p-3 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-2xl text-xs font-semibold text-slate-700 hover:text-brand-800 transition-all"
+                >
+                  <span>🌾 Best fertilizer for Soybean?</span>
+                  <ArrowRight size={14} />
+                </Link>
+                <Link
+                  to="/chatbot"
+                  className="flex items-center justify-between w-full p-3 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-2xl text-xs font-semibold text-slate-700 hover:text-brand-800 transition-all"
+                >
+                  <span>🧪 How to correct acidic soil?</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Prediction History Table */}
+          <div className="bg-white rounded-3xl border border-[#e3ecd9] shadow-sm overflow-hidden space-y-4 p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
-                  <History size={20} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-lg">Recent Prediction History</h3>
-                  <p className="text-xs text-slate-500">
-                    Latest yield calculations saved to your farm account.
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-800">Recent Yield Predictions</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Your most recent crop harvest forecasts.</p>
               </div>
-              <Link
-                to="/predict"
-                className="text-xs text-brand-600 font-bold hover:underline flex items-center gap-1"
-              >
-                <span>View Full Calculator</span>
-                <ArrowRight size={14} />
+              <Link to="/analytics" className="text-xs font-semibold text-brand-600 hover:underline flex items-center gap-1">
+                <span>View all in Analytics</span>
+                <ArrowRight size={12} />
               </Link>
             </div>
 
             {predictions.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-xs border border-dashed border-[#e3ecd9] rounded-2xl">
-                No predictions recorded yet. Launch your first prediction using the ML Yield Predictor.
+              <div className="text-center py-12 text-slate-400 text-sm">
+                No predictions recorded yet. Run your first prediction using the tool above!
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-[#e3ecd9] text-slate-500 font-bold uppercase tracking-wider">
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Crop</th>
-                      <th className="px-4 py-3">State</th>
-                      <th className="px-4 py-3">Associated Farm</th>
-                      <th className="px-4 py-3">Soil / pH</th>
-                      <th className="px-4 py-3">NPK</th>
-                      <th className="px-4 py-3">Predicted Yield</th>
-                      <th className="px-4 py-3">Category</th>
+                <table className="w-full text-left text-sm text-slate-600">
+                  <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider font-bold text-slate-400 border-b border-slate-100">
+                    <tr>
+                      <th className="py-3.5 px-4">Crop & Location</th>
+                      <th className="py-3.5 px-4">Soil & Fertilizer</th>
+                      <th className="py-3.5 px-4">N-P-K (kg/ha)</th>
+                      <th className="py-3.5 px-4">Rainfall & Temp</th>
+                      <th className="py-3.5 px-4">Soil pH</th>
+                      <th className="py-3.5 px-4">Predicted Yield</th>
+                      <th className="py-3.5 px-4">Rating</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#f4f8f2] text-slate-700">
-                    {predictions.slice(0, 5).map((item) => (
-                      <tr key={item.id} className="hover:bg-brand-50/20 transition-all">
-                        <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
-                          {new Date(item.created_at).toLocaleDateString()}
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {predictions.slice(0, 5).map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <span className="font-bold text-slate-800 block">{p.crop}</span>
+                          <span className="text-slate-400 text-[11px]">{p.state} ({p.year})</span>
                         </td>
-                        <td className="px-4 py-3 font-semibold text-slate-800">{item.crop}</td>
-                        <td className="px-4 py-3">{item.state}</td>
-                        <td className="px-4 py-3 text-slate-600">
-                          {getFarmName(item.farm_id) || '—'}
+                        <td className="py-3.5 px-4">
+                          <span className="text-slate-700 block">{p.soil_type}</span>
+                          <span className="text-slate-400 text-[11px]">{p.fertilizer}</span>
                         </td>
-                        <td className="px-4 py-3">
-                          {item.soil_type} (pH {item.soil_ph})
+                        <td className="py-3.5 px-4 font-mono text-slate-700">
+                          {p.n} - {p.p} - {p.k}
                         </td>
-                        <td className="px-4 py-3 font-mono text-[11px]">
-                          {item.n}-{item.p}-{item.k}
+                        <td className="py-3.5 px-4 text-slate-700">
+                          {p.rainfall_mm}mm / {p.temperature_c}°C
                         </td>
-                        <td className="px-4 py-3 font-bold text-slate-800 whitespace-nowrap">
-                          {item.predicted_yield_kg.toLocaleString()} kg/ac
-                          <span className="text-slate-400 font-normal block text-[10px]">
-                            ({item.predicted_yield_tons} t/ac)
-                          </span>
+                        <td className="py-3.5 px-4 font-semibold text-slate-800">{p.soil_ph.toFixed(2)}</td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-bold text-slate-800 block">{p.predicted_yield_kg.toLocaleString()} kg/ac</span>
+                          <span className="text-slate-400 text-[11px]">{p.predicted_yield_tons.toFixed(2)} tons/ac</span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="py-3.5 px-4">
                           <span
-                            className={`font-semibold px-2 py-0.5 rounded-full text-[10px] inline-block ${
-                              item.productivity_category?.includes('High')
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : item.productivity_category?.includes('Optimal')
-                                ? 'bg-brand-100 text-brand-800'
-                                : 'bg-amber-100 text-amber-800'
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                              p.productivity_category === 'High Yield'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : p.productivity_category === 'Moderate Yield'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
                             }`}
                           >
-                            {item.productivity_category || 'Optimal Yield'}
+                            {p.productivity_category || 'Standard'}
                           </span>
                         </td>
                       </tr>

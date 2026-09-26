@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, KeyRound, AlertCircle, RefreshCw, Briefcase } from 'lucide-react';
-import api from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,11 +26,11 @@ export default function Register() {
     }
 
     try {
-      await api.post('/auth/register', { name, email, password, role });
+      await register(name, email, password, role);
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError(
         err.response?.data?.detail || 
