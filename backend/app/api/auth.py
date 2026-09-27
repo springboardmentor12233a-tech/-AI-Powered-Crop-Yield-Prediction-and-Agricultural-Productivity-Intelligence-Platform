@@ -13,6 +13,7 @@ from ..schemas import (
     UserCreate,
     UserResponse,
     Token,
+    UserUpdate,
 )
 from ..services import AuthService
 from ..core.security import (
@@ -177,10 +178,10 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Create JWT token with user ID as subject
+    # Create JWT token with user ID and role
     access_token_expires = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": str(user.id)},
+        data={"sub": str(user.id), "role": user.role.role_name},
         expires_delta=access_token_expires
     )
     
@@ -206,6 +207,31 @@ def get_current_user_info(
         HTTPException 401: If token missing or invalid
         HTTPException 403: If user inactive
     """
+    return UserResponse.model_validate(current_user)
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_current_user_info(
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> UserResponse:
+    """
+    Update current authenticated user information.
+    
+    Protected endpoint. Allows user to edit non-sensitive details like name.
+    
+    Args:
+        user_data: The update schema containing the new name.
+        current_user: Authenticated user from token
+        db: Database session
+        
+    Returns:
+        UserResponse with updated user details
+    """
+    current_user.name = user_data.name
+    db.commit()
+    db.refresh(current_user)
     return UserResponse.model_validate(current_user)
 
 
@@ -263,3 +289,22 @@ def admin_test_endpoint(
         "user_email": current_user.email,
         "role": current_user.role.role_name
     }
+
+
+@router.get("/admin/users", response_model=list[UserResponse])
+def get_all_users(
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+) -> list[UserResponse]:
+    """
+    Get all users (Admin only).
+    
+    Args:
+        current_user: Admin user from token
+        db: Database session
+        
+    Returns:
+        List of UserResponse
+    """
+    return AuthService.get_all_users(db)
+

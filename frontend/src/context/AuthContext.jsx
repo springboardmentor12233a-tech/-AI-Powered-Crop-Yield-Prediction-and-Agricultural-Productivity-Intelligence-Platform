@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, useEffect, useContext } from 'react';
 import { loginUser, getCurrentUser } from '../services/api';
 
 const AuthContext = createContext();
@@ -33,18 +34,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const { access_token } = await loginUser(email, password);
-      localStorage.setItem('token', access_token);
-      
-      // Fetch user details immediately after login
-      const userData = await getCurrentUser();
-      setUser(userData);
-      setIsAuthenticated(true);
-      return true;
-    } catch (error) {
-      throw error;
-    }
+    const { access_token } = await loginUser(email, password);
+    localStorage.setItem('token', access_token);
+    
+    // Fetch user details immediately after login
+    const userData = await getCurrentUser();
+    setUser(userData);
+    setIsAuthenticated(true);
+    return true;
   };
 
   const logout = () => {
@@ -53,8 +50,12 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  const userRole = user?.role?.role_name || user?.role;
+  const isAdmin = userRole === 'admin';
+  const isFarmer = userRole === 'user' || userRole === 'farmer';
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser, isAuthenticated, isLoading, login, logout, isAdmin, isFarmer }}>
       {children}
     </AuthContext.Provider>
   );

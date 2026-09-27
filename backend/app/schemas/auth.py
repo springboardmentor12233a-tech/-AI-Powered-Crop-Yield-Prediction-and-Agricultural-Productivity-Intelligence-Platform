@@ -26,6 +26,11 @@ class UserBase(BaseModel):
     email: EmailStr
 
 
+class UserUpdate(BaseModel):
+    """Schema for updating user details"""
+    name: str
+
+
 class UserCreate(UserBase):
     """Schema for user registration"""
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")

@@ -140,3 +140,16 @@ class AuthService:
             User object or None if not found
         """
         return db.query(User).filter(User.id == user_id).first()
+
+    @staticmethod
+    def get_all_users(db: Session):
+        """
+        Get all users in the system.
+        
+        Args:
+            db: Database session
+            
+        Returns:
+            List of User objects
+        """
+        return db.query(User).all()

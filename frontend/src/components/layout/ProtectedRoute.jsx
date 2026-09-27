@@ -1,10 +1,9 @@
-import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
-export const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const ProtectedRoute = ({ allowedRoles }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -21,6 +20,14 @@ export const ProtectedRoute = () => {
   if (!isAuthenticated) {
     // Redirect to login while saving the attempted URL
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (allowedRoles && user) {
+    const userRole = user.role?.role_name || user.role; // Handle object or string
+    if (!allowedRoles.includes(userRole)) {
+      // Redirect to root if user doesn't have permission
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <Outlet />;

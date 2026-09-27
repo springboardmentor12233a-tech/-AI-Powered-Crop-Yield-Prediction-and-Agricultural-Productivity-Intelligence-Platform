@@ -62,6 +62,16 @@ export const getCurrentUser = async () => {
   return response.data;
 };
 
+export const updateCurrentUser = async (userData) => {
+  const response = await api.patch('/auth/me', userData);
+  return response.data;
+};
+
+export const getAllUsers = async () => {
+  const response = await api.get('/auth/admin/users');
+  return response.data;
+};
+
 // ==========================================
 // Milestone 2 Core Endpoints
 // ==========================================
@@ -93,6 +103,16 @@ export const getAgriculturalReport = async (data) => {
 
 export const getLLMInsights = async (data) => {
   const response = await api.post('/ml/llm-insights', data);
+  return response.data;
+};
+
+export const getPredictionHistory = async () => {
+  const response = await api.get('/ml/history');
+  return response.data;
+};
+
+export const chatMessage = async (data) => {
+  const response = await api.post('/ml/chat', data);
   return response.data;
 };
 

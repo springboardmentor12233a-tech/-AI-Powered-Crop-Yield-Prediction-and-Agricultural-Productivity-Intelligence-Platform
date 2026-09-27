@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2, AlertCircle, FileQuestion } from 'lucide-react';
 import { Button } from './Button';
 import { cn } from '../../utils/cn';

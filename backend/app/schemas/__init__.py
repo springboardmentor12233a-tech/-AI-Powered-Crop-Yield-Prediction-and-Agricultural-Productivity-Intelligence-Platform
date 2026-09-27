@@ -8,6 +8,7 @@ from .auth import (
     UserLogin,
     Token,
     TokenData,
+    UserUpdate,
 )
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "UserLogin",
     "Token",
     "TokenData",
+    "UserUpdate",
 ]

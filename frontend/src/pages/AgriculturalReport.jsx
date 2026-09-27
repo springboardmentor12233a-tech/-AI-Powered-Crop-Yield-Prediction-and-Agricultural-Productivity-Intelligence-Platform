@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
+import { Card, CardHeader, CardContent } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
 import { EmptyState, LoadingState, ErrorState } from '../components/common/StateComponents';
-import { getAgriculturalReport } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { FileText, Download, Printer } from 'lucide-react';
 
@@ -82,12 +80,6 @@ export default function AgriculturalReport() {
           <section>
             <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Weather Impact Assessment</h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-slate-700">Overall Weather Risk</span>
-                <Badge variant="neutral">
-                  Not available yet
-                </Badge>
-              </div>
               <ul className="list-disc pl-5 space-y-2">
                 {recentReport.historical_weather_context?.weather_assessment ? (
                   Object.entries(recentReport.historical_weather_context.weather_assessment).map(([key, data], idx) => (
@@ -111,12 +103,6 @@ export default function AgriculturalReport() {
           <section>
             <h3 className="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2 mb-4">3. Soil Suitability Assessment</h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-slate-700">Suitability Status</span>
-                <Badge variant="neutral">
-                  Not available yet
-                </Badge>
-              </div>
               <ul className="list-disc pl-5 space-y-2">
                 {recentReport.historical_soil_context?.soil_suitability_assessment ? (
                   Object.entries(recentReport.historical_soil_context.soil_suitability_assessment).map(([key, data], idx) => (

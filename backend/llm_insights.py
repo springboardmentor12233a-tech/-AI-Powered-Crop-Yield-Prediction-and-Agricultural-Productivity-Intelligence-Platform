@@ -141,3 +141,41 @@ You MUST output valid JSON exactly matching this structure (and nothing else):
     except Exception as e:
         logger.error(f"Unexpected error during LLM insight generation: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred while generating insights.")
+
+def chat_with_llm(prompt: str) -> str:
+    """
+    Generic LLM chat interaction using the existing provider configuration.
+    """
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        logger.error("GROQ_API_KEY environment variable is not set.")
+        raise HTTPException(status_code=503, detail="LLM service is not configured.")
+
+    model_name = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+    base_url = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
+    url = f"{base_url}/chat/completions"
+
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "YieldSenseAI/1.0"
+    }
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            response_body = response.read().decode("utf-8")
+            response_data = json.loads(response_body)
+            return response_data.get("choices", [{}])[0].get("message", {}).get("content", "Sorry, I couldn't generate a response.")
+    except Exception as e:
+        logger.error(f"Error communicating with LLM for chat: {e}")
+        return "I am currently experiencing connection issues with my AI provider. Please try again later."

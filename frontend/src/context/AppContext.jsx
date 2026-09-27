@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useRef, useCallback } from 'react';
 import { getWeatherAnalysis, getSoilAnalysis, getLLMInsights, getAgriculturalReport } from '../services/api';
 
 const AppContext = createContext();
@@ -77,7 +78,7 @@ export function AppProvider({ children }) {
       let llmError = false;
       try {
         insights = await getLLMInsights(input);
-      } catch (e) {
+      } catch {
         llmError = true;
       }
 
@@ -89,7 +90,7 @@ export function AppProvider({ children }) {
         insightsData: insights,
         llmError
       });
-    } catch (e) {
+    } catch {
       setAnalysisState(prev => ({
         ...prev,
         status: 'error',
@@ -105,7 +106,7 @@ export function AppProvider({ children }) {
     try {
       const insights = await getLLMInsights(recentPrediction.input);
       setAnalysisState(prev => ({ ...prev, status: 'success', insightsData: insights, llmError: false }));
-    } catch (e) {
+    } catch {
       setAnalysisState(prev => ({ ...prev, status: 'success', llmError: true }));
     }
   }, [recentPrediction]);

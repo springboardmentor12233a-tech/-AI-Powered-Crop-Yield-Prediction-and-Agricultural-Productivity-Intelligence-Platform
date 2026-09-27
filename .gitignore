@@ -80,3 +80,15 @@ playwright/.cache/
 test_duplicate.*
 weather_plots/
 soil_plots/
+
+# ---------- Linting / Code Analysis ----------
+lint_results.*
+frontend/lint_results.*
+
+# ---------- Scratch / Temporary Scripts ----------
+reset_password.py
+setup_db.py
+test_db.py
+test_full_auth.py
+test_login.py
+test_predict_auth.py

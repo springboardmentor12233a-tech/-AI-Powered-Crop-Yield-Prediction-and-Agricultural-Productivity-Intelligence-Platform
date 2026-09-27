@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -13,8 +12,9 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
+import { Shield } from 'lucide-react';
 
-const navigation = [
+const farmerNavigation = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Yield Prediction', to: '/predict', icon: Sprout },
   { name: 'Weather Analysis', to: '/weather', icon: CloudRain },
@@ -24,9 +24,16 @@ const navigation = [
   { name: 'Reports', to: '/reports', icon: FileText },
 ];
 
+const adminNavigation = [
+  { name: 'Admin Dashboard', to: '/admin', icon: Shield },
+];
+
 export function Sidebar() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
+
+  const userRole = user?.role?.role_name || user?.role;
+  const isAdmin = userRole === 'admin';
 
   const handleLogout = () => {
     logout();
@@ -42,31 +49,62 @@ export function Sidebar() {
         <span className="text-xl font-bold text-slate-800 tracking-tight">YieldSense AI</span>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.to}
-            className={({ isActive }) => cn(
-              "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group",
-              isActive 
-                ? "bg-primary-50 text-primary-700" 
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-            )}
-          >
-            {({ isActive }) => (
-              <>
-                <item.icon 
-                  className={cn(
-                    "flex-shrink-0 w-5 h-5 mr-3 transition-colors",
-                    isActive ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
-                  )} 
-                />
-                {item.name}
-              </>
-            )}
-          </NavLink>
-        ))}
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto pt-4">
+        {isAdmin ? (
+          <>
+            {adminNavigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.to}
+                className={({ isActive }) => cn(
+                  "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group",
+                  isActive 
+                    ? "bg-indigo-50 text-indigo-700" 
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon 
+                      className={cn(
+                        "flex-shrink-0 w-5 h-5 mr-3 transition-colors",
+                        isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                      )} 
+                    />
+                    {item.name}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </>
+        ) : (
+          <>
+            {farmerNavigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.to}
+                className={({ isActive }) => cn(
+                  "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group",
+                  isActive 
+                    ? "bg-primary-50 text-primary-700" 
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon 
+                      className={cn(
+                        "flex-shrink-0 w-5 h-5 mr-3 transition-colors",
+                        isActive ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
+                      )} 
+                    />
+                    {item.name}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-slate-200 space-y-1">

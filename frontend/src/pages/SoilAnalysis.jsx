@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
-import { Badge } from '../components/common/Badge';
 import { EmptyState, LoadingState, ErrorState } from '../components/common/StateComponents';
 import { getSoilAnalysis } from '../services/api';
 import { useAppContext } from '../context/AppContext';
@@ -13,12 +12,6 @@ export default function SoilAnalysis() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (recentPrediction) {
-      fetchAnalysis();
-    }
-  }, [recentPrediction]);
 
   const fetchAnalysis = async () => {
     setLoading(true);
@@ -38,6 +31,14 @@ export default function SoilAnalysis() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (recentPrediction) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchAnalysis();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentPrediction]);
 
   if (!recentPrediction) {
     return (
@@ -98,15 +99,6 @@ export default function SoilAnalysis() {
               </div>
             </div>
             
-            <div className="p-4 bg-slate-50 rounded-lg mt-4 flex justify-between items-center">
-                <span className="font-medium text-slate-700">Suitability Index</span>
-                <Badge variant={
-                  data.suitability_status === 'Optimal' ? 'success' : 
-                  data.suitability_status === 'Poor' ? 'error' : 'warning'
-                }>
-                  {data.suitability_status || 'Unknown'}
-                </Badge>
-            </div>
           </CardContent>
         </Card>
 
@@ -116,7 +108,7 @@ export default function SoilAnalysis() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-              {data.insights?.map((insight, idx) => (
+              {[data.overall_assessment, data.historical_yield_context, data.agricultural_insight].filter(Boolean).map((insight, idx) => (
                 <li key={idx} className="flex items-start">
                   <div className="w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
                     <ArrowRight className="w-3 h-3 text-primary-600" />
@@ -124,7 +116,7 @@ export default function SoilAnalysis() {
                   <span className="text-sm text-slate-700 leading-relaxed">{insight}</span>
                 </li>
               ))}
-              {!data.insights?.length && (
+              {![data.overall_assessment, data.historical_yield_context, data.agricultural_insight].filter(Boolean).length && (
                 <p className="text-sm text-slate-500">No specific soil insights available.</p>
               )}
             </ul>
