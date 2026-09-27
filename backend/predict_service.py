@@ -16,6 +16,7 @@ By: Shivani
 """
 
 import os
+import json
 import pandas as pd
 import joblib
 import requests
@@ -38,6 +39,49 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
+
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+OPENWEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
+
+# Our dataset's regions are abstract labels, not real coordinates, so each
+# one is mapped to a representative real city for live weather lookup.
+REGION_TO_CITY = {
+    "North": "Delhi,IN",
+    "South": "Bengaluru,IN",
+    "East": "Kolkata,IN",
+    "West": "Mumbai,IN",
+    "Central": "Nagpur,IN",
+}
+
+
+def get_live_temperature(region: str) -> dict:
+    """
+    Fetches the current real-world temperature for the city that
+    represents this dataset region. Returns None values if the region
+    is unmapped or the API call fails, so the frontend can fall back
+    to manual entry gracefully.
+    """
+    city = REGION_TO_CITY.get(region)
+    if not city or not OPENWEATHER_API_KEY:
+        return {"live_temperature": None, "city_used": city, "error": "Unavailable"}
+
+    try:
+        response = requests.get(
+            OPENWEATHER_URL,
+            params={"q": city, "appid": OPENWEATHER_API_KEY, "units": "metric"},
+            timeout=5,
+        )
+        if response.status_code != 200:
+            return {"live_temperature": None, "city_used": city, "error": response.text}
+
+        data = response.json()
+        return {
+            "live_temperature": round(data["main"]["temp"], 1),
+            "city_used": city,
+            "error": None,
+        }
+    except requests.RequestException as e:
+        return {"live_temperature": None, "city_used": city, "error": str(e)}
 
 # ---------------------------------------------------------------
 # Loaded once at import time, reused for every prediction
@@ -84,6 +128,44 @@ def flag_soil(field: dict) -> dict:
     return flags
 
 
+def get_soil_ranges(field: dict) -> dict:
+    """
+    Returns the numeric healthy-range low/high for each soil parameter,
+    for this field's crop type. Used by the frontend to draw the
+    actual-vs-healthy-range chart (Milestone 3).
+    """
+    crop = field["crop_type"]
+    ranges = {}
+    for col in SOIL_COLS:
+        ranges[col] = {
+            "low": float(_soil_ranges.loc[crop, f"{col}_low"]),
+            "high": float(_soil_ranges.loc[crop, f"{col}_high"]),
+        }
+    return ranges
+
+
+def get_all_soil_ranges() -> list:
+    """
+    Returns healthy soil ranges for every crop type, for the frontend's
+    standalone Soil Reference page (independent of any single prediction).
+    """
+    result = []
+    for crop in _soil_ranges.index:
+        row = _soil_ranges.loc[crop]
+        result.append({
+            "crop_type": crop,
+            "avg_yield": float(row["avg_yield"]),
+            "ranges": {
+                col: {
+                    "low": float(row[f"{col}_low"]),
+                    "high": float(row[f"{col}_high"]),
+                }
+                for col in SOIL_COLS
+            },
+        })
+    return result
+
+
 def calculate_risk_level(soil_flags: dict) -> str:
     """
     Milestone 3 - Risk Assessment.
@@ -118,19 +200,37 @@ def get_weather_context(field: dict) -> dict:
     }
 
 
-def get_llm_insight(field: dict, predicted_yield: float, soil_flags: dict, weather_context: dict) -> str:
-    if not GROQ_API_KEY:
-        return "LLM insight unavailable: GROQ_API_KEY not configured."
+def get_llm_insight(field: dict, predicted_yield: float, soil_flags: dict, weather_context: dict, typical_yield: float) -> dict:
+    """
+    Returns a structured recommendation instead of one paragraph:
+    { summary, strengths: [...], concerns: [...], actions: [...] }
+    Falls back to a summary-only shape if the model doesn't return valid
+    JSON, so the frontend never breaks.
+    """
+    fallback = lambda text: {"summary": text, "strengths": [], "concerns": [], "actions": []}
 
-    prompt = f"""You are an agricultural assistant. Based on the data below, give a short,
-practical insight (3-4 sentences) for a farmer. Mention whether the predicted yield
-looks typical, and call out any soil condition that stands out as a concern or strength.
-Avoid technical jargon.
+    if not GROQ_API_KEY:
+        return fallback("LLM insight unavailable: GROQ_API_KEY not configured.")
+
+    prompt = f"""You are an agricultural assistant. Based on the data below, respond with
+ONLY a valid JSON object (no markdown, no code fences, no extra text) with exactly these keys:
+
+- "summary": one sentence stating whether the predicted yield is above, below, or in line
+  with the typical average for this crop (use the exact numbers given - do not guess).
+- "strengths": an array of short strings (each under 15 words) naming what looks healthy
+  or favorable. Empty array if none.
+- "concerns": an array of short strings naming soil or weather conditions that stand out
+  as a problem. Empty array if none.
+- "actions": an array of short, practical, concrete recommendations for the farmer.
+  Empty array if none needed.
+
+Avoid technical jargon. Keep every string plain and farmer-friendly.
 
 Crop type: {field['crop_type']}
 Region: {field['region']}
 Season: {field['season']}
 Predicted yield: {round(predicted_yield, 2)} t/ha
+Typical average yield for {field['crop_type']}: {round(typical_yield, 2)} t/ha
 
 Soil conditions:
 - Soil pH: {field['soil_ph']} ({soil_flags['soil_ph']})
@@ -147,14 +247,30 @@ Weather:
     response = requests.post(
         GROQ_API_URL,
         headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-        # Raised from 300 -> 500: gpt-oss-20b spends some of its token budget
-        # on internal reasoning before the visible answer, so a tight cap
-        # can cut the response off mid-sentence.
-        json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}], "max_tokens": 500},
+        json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}], "max_tokens": 600},
     )
     if response.status_code != 200:
-        return f"LLM insight unavailable: {response.text}"
-    return response.json()["choices"][0]["message"]["content"].strip()
+        return fallback(f"LLM insight unavailable: {response.text}")
+
+    raw = response.json()["choices"][0]["message"]["content"].strip()
+
+    # Models sometimes wrap JSON in ```json fences despite instructions -
+    # strip those before parsing.
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.startswith("json"):
+            raw = raw[4:].strip()
+
+    try:
+        parsed = json.loads(raw)
+        return {
+            "summary": parsed.get("summary", ""),
+            "strengths": parsed.get("strengths", []),
+            "concerns": parsed.get("concerns", []),
+            "actions": parsed.get("actions", []),
+        }
+    except (json.JSONDecodeError, AttributeError):
+        return fallback(raw)
 
 
 def predict_and_generate_insight(field: dict) -> dict:
@@ -164,13 +280,22 @@ def predict_and_generate_insight(field: dict) -> dict:
     predicted_yield = float(_model.predict(X)[0])
 
     soil_flags = flag_soil(field)
+    soil_ranges = get_soil_ranges(field)
     risk_level = calculate_risk_level(soil_flags)
     weather_context = get_weather_context(field)
-    insight = get_llm_insight(field, predicted_yield, soil_flags, weather_context)
+
+    # Milestone 3: typical yield for this crop, from soil_healthy_ranges.csv's
+    # avg_yield column (Step 6) - used by both the LLM prompt and the
+    # frontend's yield comparison chart
+    typical_yield_for_crop = float(_soil_ranges.loc[field["crop_type"], "avg_yield"])
+
+    insight = get_llm_insight(field, predicted_yield, soil_flags, weather_context, typical_yield_for_crop)
 
     return {
         "predicted_yield": round(predicted_yield, 2),
+        "typical_yield_for_crop": round(typical_yield_for_crop, 2),
         "soil_flags": soil_flags,
+        "soil_ranges": soil_ranges,
         "risk_level": risk_level,
         "weather_context": weather_context,
         "llm_insight": insight,

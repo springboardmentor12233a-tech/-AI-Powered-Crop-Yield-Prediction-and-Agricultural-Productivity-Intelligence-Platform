@@ -4,6 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const FEATURES = [
+  { icon: "🌾", text: "AI-powered yield predictions from field-level data" },
+  { icon: "🧪", text: "Soil health analysis against crop-specific benchmarks" },
+  { icon: "🌦️", text: "Live weather context for every prediction" },
+  { icon: "⚠️", text: "Automated risk assessment and recommendations" },
+];
+
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
@@ -30,7 +37,12 @@ export default function Login() {
 
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/");
+
+      if (data.user?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,61 +51,112 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-zinc-900 mb-1">
-          Welcome Back
-        </h1>
-        <p className="text-zinc-600 text-sm mb-6">
-          Log in to access your yield predictions.
-        </p>
+    <div className="min-h-screen flex">
+      {/* Left branded panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-earth-900 via-earth-900 to-brand-800 overflow-hidden">
+        {/* decorative glow blobs */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-brand-400/10 rounded-full blur-3xl" />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-            />
+            <h1 className="font-heading text-3xl font-bold text-brand-200">
+              AgriVantage
+            </h1>
+            <p className="text-earth-200/60 text-sm mt-1">
+              Agricultural Intelligence Platform
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-            />
+            <h2 className="font-heading text-3xl font-semibold text-white leading-snug mb-8">
+              Turn field data into<br />confident harvest decisions.
+            </h2>
+            <div className="space-y-4">
+              {FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center text-lg shrink-0">
+                    {f.icon}
+                  </div>
+                  <p className="text-earth-100/80 text-sm">{f.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          <p className="text-earth-200/40 text-xs">
+            Built for farmers, cooperatives, and agricultural analysts.
+          </p>
+        </div>
+      </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-green-700 text-white font-medium py-2.5 hover:bg-green-800 transition-colors disabled:opacity-60"
-          >
-            {loading ? "Logging in..." : "Log In"}
-          </button>
-        </form>
+      {/* Right form panel */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-stone-50 px-6 py-12">
+        <div className="w-full max-w-sm">
+          <div className="lg:hidden text-center mb-8">
+            <h1 className="font-heading text-2xl font-semibold text-brand-700">
+              AgriVantage
+            </h1>
+          </div>
 
-        <p className="text-sm text-zinc-600 mt-4 text-center">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-green-700 font-medium">
-            Register
-          </Link>
-        </p>
+          <h2 className="font-heading text-2xl font-semibold text-earth-900 mb-1">
+            Welcome back
+          </h2>
+          <p className="text-earth-900/60 text-sm mb-8">
+            Log in to access your yield predictions.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-earth-200 bg-white px-3 py-2.5 text-sm text-earth-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition-shadow"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-earth-200 bg-white px-3 py-2.5 text-sm text-earth-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition-shadow"
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-gradient-to-r from-brand-700 to-brand-600 text-white font-medium py-2.5 shadow-md shadow-brand-700/30 hover:shadow-lg hover:shadow-brand-700/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:hover:translate-y-0"
+            >
+              {loading ? "Logging in..." : "Log In"}
+            </button>
+          </form>
+
+          <p className="text-sm text-earth-900/60 mt-6 text-center">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="text-brand-700 font-semibold hover:text-brand-800">
+              Register
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
