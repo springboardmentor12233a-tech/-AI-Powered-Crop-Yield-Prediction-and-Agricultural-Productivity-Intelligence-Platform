@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YieldSense AI — Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #F5F2E8;
+            --panel: #FFFDF7;
+            --green: #1F3D2B;
+            --green-dark: #16301F;
+            --gold: #C89B3C;
+            --gold-soft: #F1E4C3;
+            --soil: #5B3A29;
+            --soil-soft: #EFE3D8;
+            --sky: #3A6B7A;
+            --sky-soft: #DCEAEC;
+            --ink: #22271F;
+            --line: #DDD5C2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        header {
+            background: var(--green);
+            color: #FBF8EF;
+            padding: 24px 32px;
+            border-bottom: 6px solid var(--gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        header .who {
+            font-size: 13px;
+            color: #D9E4DA;
+        }
+
+        button.logout {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold-soft);
+            padding: 8px 14px;
+            border-radius: 3px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: 14px;
+        }
+
+        button.logout:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .num {
+            font-family: 'Fraunces', serif;
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--green-dark);
+        }
+
+        .stat-card .label {
+            font-size: 12.5px;
+            color: var(--soil);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 4px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 880px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 20px;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card canvas {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .chart-card h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 16px;
+            margin: 0 0 14px;
+            color: var(--green-dark);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #8C8875;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>YieldSense AI — Admin Dashboard</h1>
+        <div>
+            <span class="who" id="whoLabel"></span>
+            <button class="logout" onclick="doLogout()">Log out</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="loading" class="loading">Loading analytics…</div>
+
+        <div id="dashboardContent" style="display:none;">
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="num" id="totalRecords">-</div>
+                    <div class="label">Total records</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="totalCrops">-</div>
+                    <div class="label">Crops tracked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="totalStates">-</div>
+                    <div class="label">States covered</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>Top 10 crops by average yield</h3>
+                    <canvas id="topCropsChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Average yield by year</h3>
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Top 10 states by record count</h3>
+                    <canvas id="stateChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Records by season</h3>
+                    <canvas id="seasonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = "http://127.0.0.1:5000";
+
+        async function checkAuthAndLoad() {
+            const meRes = await fetch(`${API}/api/me`, { credentials: 'include' });
+            const me = await meRes.json();
+
+            if (!me.logged_in || me.role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('whoLabel').innerText = `Signed in as ${me.username} (admin)`;
+
+            const res = await fetch(`${API}/api/admin/analytics`, { credentials: 'include' });
+            if (!res.ok) {
+                document.getElementById('loading').innerText = 'Failed to load analytics.';
+                return;
+            }
+            const data = await res.json();
+
+            document.getElementById('totalRecords').innerText = data.total_records.toLocaleString();
+            document.getElementById('totalCrops').innerText = data.total_crops;
+            document.getElementById('totalStates').innerText = data.total_states;
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+
+            const palette = ['#1F3D2B', '#C89B3C', '#5B3A29', '#3A6B7A', '#8A6A1F'];
+
+            new Chart(document.getElementById('topCropsChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.top_crops_by_yield.labels,
+                    datasets: [{ label: 'Avg yield (t/ha)', data: data.top_crops_by_yield.values, backgroundColor: '#1F3D2B' }]
+                },
+                options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('yearlyChart'), {
+                type: 'line',
+                data: {
+                    labels: data.yearly_avg_yield.labels,
+                    datasets: [{ label: 'Avg yield (t/ha)', data: data.yearly_avg_yield.values, borderColor: '#C89B3C', backgroundColor: '#F1E4C3', fill: true, tension: 0.3 }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('stateChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.records_by_state.labels,
+                    datasets: [{ label: 'Records', data: data.records_by_state.values, backgroundColor: '#3A6B7A' }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('seasonChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.season_distribution.labels,
+                    datasets: [{ data: data.season_distribution.values, backgroundColor: palette }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        async function doLogout() {
+            await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
+            window.location.href = 'login.html';
+        }
+
+        checkAuthAndLoad();
+    </script>
+
+</body>
+
+</html>

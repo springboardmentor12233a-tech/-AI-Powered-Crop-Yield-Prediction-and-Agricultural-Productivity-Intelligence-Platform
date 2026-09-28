@@ -1,10 +1,14 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 import joblib
 import pandas as pd
 import os
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 from google import genai
 from dotenv import load_dotenv
+
 load_dotenv()
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -13,19 +17,13 @@ if not GEMINI_API_KEY:
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = "yieldsense-dev-secret-change-later"
+CORS(app, supports_credentials=True, origins=["http://127.0.0.1:5500", "http://localhost:5500"])
 
-# ---------------------------------------------------------------------------
-# Resolve paths relative to this file, not the CWD — fixes Bug 2
-# ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, '..', 'models')
 DATASET_DIR = os.path.join(BASE_DIR, '..', 'dataset')
 
-# ---------------------------------------------------------------------------
-# Load model + encoders lazily so the server starts even without trained
-# artefacts — fixes Bug 1
-# ---------------------------------------------------------------------------
 model        = None
 encoders     = None
 feature_cols = None
@@ -42,13 +40,44 @@ if os.path.exists(_model_path) and os.path.exists(_encoders_path) and os.path.ex
 else:
     print("[YieldSense] WARNING: Model artefacts not found. /api/predict will return 503.")
 
-# Load weather + soil data for the report endpoint
 weather = pd.read_csv(os.path.join(DATASET_DIR, 'state_weather_data_1997_2020.csv'))
 soil    = pd.read_csv(os.path.join(DATASET_DIR, 'state_soil_data.csv'))
 
-# Normalise state column to lowercase for case-insensitive matching — fixes Bug 3 (partial)
 weather['state_key'] = weather['state'].str.strip().str.lower()
 soil['state_key']    = soil['state'].str.strip().str.lower()
+
+# ---------------------------------------------------------------------------
+# Authentication: SQLite users table (farmer / admin roles)
+# ---------------------------------------------------------------------------
+DB_PATH = os.path.join(BASE_DIR, '..', 'users.db')
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('farmer', 'admin'))
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
+def login_required(role=None):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if "user_id" not in session:
+                return jsonify({"error": "Not logged in"}), 401
+            if role and session.get("role") != role:
+                return jsonify({"error": f"Requires {role} role"}), 403
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
 
 
 @app.route("/")
@@ -68,13 +97,137 @@ def status():
     })
 
 
+@app.route("/api/register", methods=["POST"])
+def register():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    role = data.get("role", "").strip()
+
+    if not username or not password or role not in ("farmer", "admin"):
+        return jsonify({"error": "username, password, and role ('farmer' or 'admin') are required"}), 400
+
+    password_hash = generate_password_hash(password)
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
+            "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+            (username, password_hash, role)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Registered successfully"}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Username already exists"}), 409
+
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+
+    if not user or not check_password_hash(user["password_hash"], password):
+        return jsonify({"error": "Invalid username or password"}), 401
+
+    session["user_id"] = user["id"]
+    session["username"] = user["username"]
+    session["role"] = user["role"]
+
+    return jsonify({"message": "Logged in", "username": user["username"], "role": user["role"]})
+
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logged out"})
+
+
+@app.route("/api/me")
+def me():
+    if "user_id" not in session:
+        return jsonify({"logged_in": False})
+    return jsonify({
+        "logged_in": True,
+        "username": session.get("username"),
+        "role": session.get("role")
+    })
+
+
+# ---------------------------------------------------------------------------
+# Admin analytics route
+# ---------------------------------------------------------------------------
+
+crop_df = pd.read_csv(os.path.join(DATASET_DIR, 'crop_yield.csv'))
+crop_df['season'] = crop_df['season'].str.strip()
+
+
+@app.route("/api/admin/analytics")
+@login_required(role="admin")
+def admin_analytics():
+    top_crops = (
+        crop_df.groupby('crop')['yield']
+        .mean()
+        .sort_values(ascending=False)
+    )
+    top_crops = top_crops[top_crops < 100]  # exclude extreme outlier-scale crops for readability
+    top_crops = top_crops.head(10)
+
+    yearly_trend = (
+        crop_df.groupby('year')['yield']
+        .mean()
+        .sort_index()
+    )
+
+    records_by_state = (
+        crop_df.groupby('state')['crop']
+        .count()
+        .sort_values(ascending=False)
+        .head(10)
+    )
+
+    season_distribution = crop_df['season'].value_counts()
+
+    return jsonify({
+        "total_records": int(len(crop_df)),
+        "total_crops": int(crop_df['crop'].nunique()),
+        "total_states": int(crop_df['state'].nunique()),
+        "top_crops_by_yield": {
+            "labels": top_crops.index.tolist(),
+            "values": [round(float(v), 2) for v in top_crops.values]
+        },
+        "yearly_avg_yield": {
+            "labels": [str(y) for y in yearly_trend.index.tolist()],
+            "values": [round(float(v), 2) for v in yearly_trend.values]
+        },
+        "records_by_state": {
+            "labels": records_by_state.index.tolist(),
+            "values": [int(v) for v in records_by_state.values]
+        },
+        "season_distribution": {
+            "labels": season_distribution.index.tolist(),
+            "values": [int(v) for v in season_distribution.values]
+        }
+    })
+
+
 @app.route("/api/predict", methods=["POST"])
 def predict():
-    # Bug 1 guard: model not yet trained
     if model is None:
         return jsonify({"error": "Model not loaded. Train and save the model first."}), 503
 
-    # Bug 4: validate required fields upfront with a clear message
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Request body must be valid JSON."}), 400
@@ -115,7 +268,7 @@ def predict():
 
 @app.route("/api/report", methods=["POST"])
 def report():
-    # Bug 4: validate required fields
+
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Request body must be valid JSON."}), 400
@@ -123,19 +276,17 @@ def report():
         return jsonify({"error": "Missing required field: 'state'"}), 400
 
     try:
-        state_key = str(data['state']).strip().lower()   # normalise for matching
+        state_key = str(data['state']).strip().lower()
 
         state_weather = weather[weather['state_key'] == state_key]
         state_soil    = soil[soil['state_key'] == state_key]
 
-        # Bug 3: guard against NaN when state has no weather data
         if state_weather.empty:
             return jsonify({"error": f"No weather data found for state: {data['state']}"}), 404
 
         avg_rainfall = float(state_weather['total_rainfall_mm'].mean())
         avg_temp     = float(state_weather['avg_temp_c'].mean())
 
-        # Bug 5: convert numpy types → native Python so jsonify doesn't crash
         soil_info = {}
         if not state_soil.empty:
             raw = state_soil.drop(columns=['state', 'state_key']).iloc[0].to_dict()

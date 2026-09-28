@@ -7,3 +7,4 @@ models/*.pkl
 models/*.joblib
 .ipynb_checkpoints/
 .env
+users.db
