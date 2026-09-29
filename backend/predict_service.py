@@ -16,6 +16,7 @@ By: Shivani
 """
 
 import os
+import re
 import json
 import pandas as pd
 import joblib
@@ -200,6 +201,24 @@ def get_weather_context(field: dict) -> dict:
     }
 
 
+def _extract_json(raw: str):
+    """Pulls the first JSON object out of the model's reply. Returns None
+    if it is missing, cut off, or malformed."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.startswith("json"):
+            raw = raw[4:]
+    start, end = raw.find("{"), raw.rfind("}")
+    if start == -1 or end <= start:
+        return None
+    try:
+        parsed = json.loads(raw[start:end + 1])
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        return None
+
+
 def get_llm_insight(field: dict, predicted_yield: float, soil_flags: dict, weather_context: dict, typical_yield: float) -> dict:
     """
     Returns a structured recommendation instead of one paragraph:
@@ -247,30 +266,34 @@ Weather:
     response = requests.post(
         GROQ_API_URL,
         headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-        json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}], "max_tokens": 600},
+        json={
+            "model": GROQ_MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            # gpt-oss-20b is a reasoning model: reasoning tokens count toward
+            # max_tokens, so 600 was cutting the JSON off mid-way.
+            "reasoning_effort": "low",
+            "max_tokens": 2000,
+        },
+        timeout=30,
     )
     if response.status_code != 200:
         return fallback(f"LLM insight unavailable: {response.text}")
 
     raw = response.json()["choices"][0]["message"]["content"].strip()
 
-    # Models sometimes wrap JSON in ```json fences despite instructions -
-    # strip those before parsing.
-    if raw.startswith("```"):
-        raw = raw.strip("`")
-        if raw.startswith("json"):
-            raw = raw[4:].strip()
+    parsed = _extract_json(raw)
+    if parsed is None:
+        # Reply was cut off or malformed: salvage the summary instead of
+        # showing raw JSON to the farmer.
+        m = re.search(r'"summary"\s*:\s*"(.*?)"', raw, re.DOTALL)
+        return fallback(m.group(1) if m else "Insight could not be generated. Please try again.")
 
-    try:
-        parsed = json.loads(raw)
-        return {
-            "summary": parsed.get("summary", ""),
-            "strengths": parsed.get("strengths", []),
-            "concerns": parsed.get("concerns", []),
-            "actions": parsed.get("actions", []),
-        }
-    except (json.JSONDecodeError, AttributeError):
-        return fallback(raw)
+    return {
+        "summary": parsed.get("summary", ""),
+        "strengths": parsed.get("strengths", []),
+        "concerns": parsed.get("concerns", []),
+        "actions": parsed.get("actions", []),
+    }
 
 
 def predict_and_generate_insight(field: dict) -> dict:

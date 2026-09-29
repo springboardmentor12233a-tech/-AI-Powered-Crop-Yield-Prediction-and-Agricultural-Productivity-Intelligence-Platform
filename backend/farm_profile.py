@@ -7,6 +7,7 @@ farm_profile_bp = Blueprint("farm_profile", __name__)
 EDITABLE_FIELDS = [
     "field_name", "crop_type", "region", "soil_ph",
     "nitrogen_content", "phosphorus_content", "potassium_content",
+    "field_size_hectares",
 ]
 
 

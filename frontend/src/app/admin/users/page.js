@@ -6,8 +6,8 @@ import Sidebar from "../../components/Sidebar";
 import { getToken, getRole } from "@/lib/auth";
 
 const ROLE_STYLES = {
-  admin: "bg-brand-100 text-brand-800 border-brand-300",
-  farmer: "bg-earth-100 text-earth-900 border-earth-200",
+  admin: "bg-lime-300/40 text-olive-800 border-lime-500",
+  farmer: "bg-cream-100 text-charcoal-900 border-cream-200",
 };
 
 export default function AdminUsersPage() {
@@ -37,18 +37,18 @@ export default function AdminUsersPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen bg-cream-50 flex">
       <Sidebar />
       <div className="flex-1 py-12 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="font-heading text-3xl font-semibold text-earth-900 mb-1">
+        <h1 className="font-heading text-3xl font-semibold text-charcoal-900 mb-1">
           Users
         </h1>
-        <p className="text-earth-900/60 mb-8">
+        <p className="text-charcoal-900/60 mb-8">
           Everyone registered on AgriVantage.
         </p>
 
-        {loading && <p className="text-earth-900/50 text-sm">Loading...</p>}
+        {loading && <p className="text-charcoal-900/50 text-sm">Loading...</p>}
         {error && (
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
             {error}
@@ -56,10 +56,10 @@ export default function AdminUsersPage() {
         )}
 
         {users.length > 0 && (
-          <div className="bg-white rounded-2xl border border-earth-100 shadow-lg shadow-earth-900/5 overflow-hidden overflow-x-auto">
+          <div className="bg-white rounded-2xl border border-cream-200 shadow-lg shadow-charcoal-900/5 overflow-hidden overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-earth-900 text-earth-50">
+                <tr className="bg-olive-700 text-lime-400">
                   <th className="text-left font-heading font-semibold px-5 py-3.5">ID</th>
                   <th className="text-left font-heading font-semibold px-5 py-3.5">Name</th>
                   <th className="text-left font-heading font-semibold px-5 py-3.5">Email</th>
@@ -70,13 +70,13 @@ export default function AdminUsersPage() {
                 {users.map((u, i) => (
                   <tr
                     key={u.id}
-                    className={`border-t border-earth-50 hover:bg-brand-50/50 transition-colors ${
-                      i % 2 === 0 ? "bg-white" : "bg-earth-50/30"
+                    className={`border-t border-cream-100 hover:bg-lime-300/20 transition-colors ${
+                      i % 2 === 0 ? "bg-white" : "bg-cream-100/30"
                     }`}
                   >
-                    <td className="px-5 py-3.5 text-earth-900/60">{u.id}</td>
-                    <td className="px-5 py-3.5 font-medium text-earth-900">{u.name}</td>
-                    <td className="px-5 py-3.5 text-earth-900/80">{u.email}</td>
+                    <td className="px-5 py-3.5 text-charcoal-900/60">{u.id}</td>
+                    <td className="px-5 py-3.5 font-medium text-charcoal-900">{u.name}</td>
+                    <td className="px-5 py-3.5 text-charcoal-900/80">{u.email}</td>
                     <td className="px-5 py-3.5">
                       <span
                         className={`inline-block rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${

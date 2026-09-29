@@ -16,10 +16,11 @@ const emptyForm = {
   nitrogen_content: "",
   phosphorus_content: "",
   potassium_content: "",
+  field_size_hectares: "",
 };
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-earth-200 bg-white px-3 py-2.5 text-sm text-earth-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition-shadow";
+  "w-full rounded-lg border border-cream-200 bg-white px-3 py-2.5 text-sm text-charcoal-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-500 transition-shadow";
 
 export default function FarmProfilePage() {
   const [profiles, setProfiles] = useState([]);
@@ -71,6 +72,7 @@ export default function FarmProfilePage() {
       nitrogen_content: profile.nitrogen_content ?? "",
       phosphorus_content: profile.phosphorus_content ?? "",
       potassium_content: profile.potassium_content ?? "",
+      field_size_hectares: profile.field_size_hectares ?? "",
     });
     setEditingId(profile.id);
     setShowForm(true);
@@ -101,6 +103,7 @@ export default function FarmProfilePage() {
       nitrogen_content: parseFloat(form.nitrogen_content),
       phosphorus_content: parseFloat(form.phosphorus_content),
       potassium_content: parseFloat(form.potassium_content),
+      field_size_hectares: form.field_size_hectares === "" ? null : parseFloat(form.field_size_hectares),
     };
 
     const token = getToken();
@@ -129,38 +132,38 @@ export default function FarmProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen bg-cream-50 flex">
       <Sidebar />
       <div className="flex-1 py-12 px-6">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="font-heading text-3xl font-semibold text-earth-900">
+          <h1 className="font-heading text-3xl font-semibold text-charcoal-900">
             Farm Profile
           </h1>
           {!showForm && (
             <button
               onClick={startNew}
-              className="rounded-lg bg-gradient-to-r from-brand-700 to-brand-600 text-white text-sm font-medium px-4 py-2 shadow-md shadow-brand-700/30 hover:shadow-lg transition-all"
+              className="rounded-full bg-lime-400 text-charcoal-900 text-sm font-medium px-4 py-2 shadow-md hover:bg-lime-500 transition-all"
             >
               + Add Field
             </button>
           )}
         </div>
-        <p className="text-earth-900/60 mb-8">
+        <p className="text-charcoal-900/60 text-lg mb-10">
           Save details for each field you farm - crop type, region, and
           soil test results. Pick one on the predict page to pre-fill it.
         </p>
 
-        {loading && <p className="text-earth-900/50 text-sm">Loading...</p>}
+        {loading && <p className="text-charcoal-900/50 text-sm">Loading...</p>}
 
         {!loading && !showForm && profiles.length === 0 && (
-          <div className="bg-white rounded-2xl border border-earth-100 p-8 text-center shadow-lg shadow-earth-900/5">
-            <p className="text-earth-900/60 text-sm mb-4">
+          <div className="bg-white rounded-2xl border border-cream-200 p-8 text-center shadow-lg shadow-charcoal-900/5">
+            <p className="text-charcoal-900/60 text-sm mb-4">
               You haven&apos;t saved any fields yet.
             </p>
             <button
               onClick={startNew}
-              className="rounded-lg bg-brand-700 text-white text-sm font-medium px-4 py-2 hover:bg-brand-800 transition-colors"
+              className="rounded-lg bg-lime-400 text-white text-sm font-medium px-4 py-2 hover:bg-lime-500 transition-colors"
             >
               Add your first field
             </button>
@@ -172,26 +175,29 @@ export default function FarmProfilePage() {
             {profiles.map((p) => (
               <div
                 key={p.id}
-                className="bg-white rounded-2xl border border-earth-100 p-5 shadow-lg shadow-earth-900/5"
+                className="bg-white rounded-2xl border border-cream-200 p-5 shadow-lg shadow-charcoal-900/5"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-heading font-semibold text-earth-900">
+                  <h3 className="font-heading font-semibold text-charcoal-900">
                     {p.field_name}
                   </h3>
-                  <span className="text-xs text-brand-700 bg-brand-50 border border-brand-200 rounded-full px-2.5 py-1">
+                  <span className="text-xs text-olive-700 bg-lime-300/30 border border-lime-400 rounded-full px-2.5 py-1">
                     {p.region}
                   </span>
                 </div>
-                <p className="text-sm text-earth-900/70 mb-1">
+                <p className="text-sm text-charcoal-900/70 mb-1">
                   Crop: <span className="font-medium">{p.crop_type}</span>
+                  {p.field_size_hectares != null && (
+                    <span className="text-charcoal-900/50"> · {p.field_size_hectares} ha</span>
+                  )}
                 </p>
-                <p className="text-xs text-earth-900/50 mb-4">
+                <p className="text-xs text-charcoal-900/50 mb-4">
                   pH {p.soil_ph} · N {p.nitrogen_content} · P {p.phosphorus_content} · K {p.potassium_content}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => startEdit(p)}
-                    className="text-xs font-medium text-brand-700 hover:text-brand-800"
+                    className="text-xs font-medium text-olive-700 hover:text-olive-800"
                   >
                     Edit
                   </button>
@@ -210,15 +216,15 @@ export default function FarmProfilePage() {
         {showForm && (
           <form
             onSubmit={handleSubmit}
-            className="bg-white rounded-2xl border border-earth-100 p-6 shadow-lg shadow-earth-900/5"
+            className="bg-white rounded-2xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5"
           >
-            <h2 className="font-heading font-semibold text-earth-900 mb-4">
+            <h2 className="font-heading font-semibold text-charcoal-900 mb-4">
               {editingId ? "Edit Field" : "New Field"}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Field Name
                 </label>
                 <input
@@ -233,7 +239,7 @@ export default function FarmProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Crop Type
                 </label>
                 <select name="crop_type" value={form.crop_type} onChange={handleChange} className={INPUT_CLASS}>
@@ -242,7 +248,7 @@ export default function FarmProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Region
                 </label>
                 <select name="region" value={form.region} onChange={handleChange} className={INPUT_CLASS}>
@@ -250,29 +256,44 @@ export default function FarmProfilePage() {
                 </select>
               </div>
 
+              <div className="sm:col-span-2">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
+                  Field Size (hectares) <span className="text-charcoal-900/40 font-normal">- optional</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="field_size_hectares"
+                  placeholder="e.g. 12.5"
+                  value={form.field_size_hectares}
+                  onChange={handleChange}
+                  className={INPUT_CLASS}
+                />
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Soil pH
                 </label>
                 <input type="number" step="0.01" name="soil_ph" value={form.soil_ph} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Nitrogen Content
                 </label>
                 <input type="number" step="0.01" name="nitrogen_content" value={form.nitrogen_content} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Phosphorus Content
                 </label>
                 <input type="number" step="0.01" name="phosphorus_content" value={form.phosphorus_content} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-earth-900/80 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   Potassium Content
                 </label>
                 <input type="number" step="0.01" name="potassium_content" value={form.potassium_content} onChange={handleChange} required className={INPUT_CLASS} />
@@ -289,14 +310,14 @@ export default function FarmProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 rounded-lg bg-gradient-to-r from-brand-700 to-brand-600 text-white font-medium py-2.5 shadow-md shadow-brand-700/30 hover:shadow-lg transition-all disabled:opacity-60"
+                className="flex-1 rounded-full bg-lime-400 text-charcoal-900 font-medium py-2.5 shadow-md hover:bg-lime-500 transition-all disabled:opacity-60"
               >
                 {saving ? "Saving..." : editingId ? "Save Changes" : "Add Field"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-lg border border-earth-200 text-earth-900/70 font-medium px-5 py-2.5 hover:bg-earth-50 transition-colors"
+                className="rounded-lg border border-cream-200 text-charcoal-900/70 font-medium px-5 py-2.5 hover:bg-cream-100 transition-colors"
               >
                 Cancel
               </button>

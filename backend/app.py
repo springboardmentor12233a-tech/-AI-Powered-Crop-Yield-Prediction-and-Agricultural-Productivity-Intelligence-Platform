@@ -3,10 +3,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from dotenv import load_dotenv
+from sqlalchemy import text
 from predict_service import predict_and_generate_insight, get_live_temperature, get_all_soil_ranges
 from models import db, PredictionHistory, User
 from auth import auth_bp, role_required
 from farm_profile import farm_profile_bp
+from chat import chat_bp
+from reports import reports_bp
 
 load_dotenv()
 
@@ -21,9 +24,23 @@ jwt = JWTManager(app)
 
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(farm_profile_bp)
+app.register_blueprint(chat_bp)
+app.register_blueprint(reports_bp)
 
 with app.app_context():
     db.create_all()
+    # create_all() doesn't add columns to tables that already exist, so add the
+    # newer columns here. Safe to run every time (IF NOT EXISTS). For a larger
+    # project, use Flask-Migrate instead.
+    for stmt in [
+        "ALTER TABLE farm_profile ADD COLUMN IF NOT EXISTS field_size_hectares FLOAT",
+        "ALTER TABLE prediction_history ADD COLUMN IF NOT EXISTS details JSON",
+    ]:
+        try:
+            db.session.execute(text(stmt))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
 
 @app.route("/")
@@ -53,6 +70,12 @@ def predict():
                 predicted_yield=result.get("predicted_yield"),
                 typical_yield_for_crop=result.get("typical_yield_for_crop"),
                 risk_level=result.get("risk_level"),
+                details={
+                    "inputs": field,
+                    "soil_flags": result.get("soil_flags"),
+                    "weather_context": result.get("weather_context"),
+                    "llm_insight": result.get("llm_insight"),
+                },
             )
             db.session.add(history_entry)
             db.session.commit()
@@ -168,6 +191,30 @@ def admin_seasonal_report():
     from predict_service import _weather_summary
     records = _weather_summary.to_dict(orient="records")
     return jsonify(records), 200
+
+
+@app.route("/admin/seasonal-yield", methods=["GET"])
+@jwt_required()
+@role_required("admin")
+def admin_seasonal_yield():
+    """
+    Average predicted yield by season and crop, from real predictions made
+    on the platform (unlike /admin/seasonal-report, which is dataset weather).
+    """
+    rows = (
+        db.session.query(
+            PredictionHistory.season,
+            PredictionHistory.crop_type,
+            db.func.avg(PredictionHistory.predicted_yield),
+            db.func.count(PredictionHistory.id),
+        )
+        .group_by(PredictionHistory.season, PredictionHistory.crop_type)
+        .all()
+    )
+    return jsonify([
+        {"season": s, "crop_type": c, "avg_yield": round(avg, 2), "predictions": n}
+        for s, c, avg, n in rows if s and c and avg is not None
+    ]), 200
 
 
 @app.route("/soil-ranges", methods=["GET"])

@@ -31,8 +31,8 @@ export default function SoilChart({ field, soilRanges }) {
   }));
 
   return (
-    <div className="w-full h-72 bg-white rounded-2xl border border-earth-100 p-5 shadow-lg shadow-earth-900/5 hover:shadow-xl transition-shadow duration-300">
-      <h3 className="font-heading text-sm font-semibold text-earth-900 mb-2">
+    <div className="w-full h-72 bg-white rounded-2xl border border-cream-200 p-5 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300">
+      <h3 className="font-heading text-sm font-semibold text-charcoal-900 mb-2">
         Soil conditions vs healthy range
       </h3>
       <ResponsiveContainer width="100%" height="90%">

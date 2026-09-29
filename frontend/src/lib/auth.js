@@ -29,4 +29,6 @@ export function isAdmin() {
 export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+  localStorage.removeItem("last_prediction");
+  sessionStorage.removeItem("chat_messages");
 }

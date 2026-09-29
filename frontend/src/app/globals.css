@@ -4,22 +4,29 @@
   --font-heading: var(--font-heading);
   --font-body: var(--font-body);
 
-  --color-brand-50: #f2f7f1;
-  --color-brand-100: #dfead9;
-  --color-brand-200: #bdd5b3;
-  --color-brand-300: #98bb8c;
-  --color-brand-600: #3f6b3a;
-  --color-brand-700: #2f522c;
-  --color-brand-800: #26421f;
+  /* Cream/neutral base - sidebar, page backgrounds, cards */
+  --color-cream-50: #f7f5ee;
+  --color-cream-100: #efece0;
+  --color-cream-200: #e3dfcd;
 
-  --color-earth-50: #faf8f5;
-  --color-earth-100: #f0ebe3;
-  --color-earth-200: #e2d9cb;
-  --color-earth-900: #2b2620;
+  /* Lime accent - primary buttons, active nav, highlights */
+  --color-lime-300: #e3f97a;
+  --color-lime-400: #d4f547;
+  --color-lime-500: #c2e02f;
+
+  /* Olive - secondary accent, muted green text/icons */
+  --color-olive-600: #5c6b45;
+  --color-olive-700: #4a5936;
+  --color-olive-800: #3a4529;
+
+  /* Charcoal - headings, primary text */
+  --color-charcoal-900: #1f2317;
+  --color-charcoal-800: #2b3021;
 }
 
 body {
   font-family: var(--font-body), system-ui, sans-serif;
+  background-color: var(--color-cream-50);
 }
 
 h1, h2, h3, .font-heading {

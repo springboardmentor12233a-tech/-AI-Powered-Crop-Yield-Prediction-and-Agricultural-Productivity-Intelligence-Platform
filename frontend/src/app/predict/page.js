@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import SoilChart from "../components/SoilChart";
 import YieldChart from "../components/YieldChart";
 import Sidebar from "../components/Sidebar";
+import { CROP_IMAGES } from "@/lib/cropImages";
 
 const CROP_TYPES = ["Wheat", "Corn", "Rice", "Soybean", "Barley"];
 const REGIONS = ["North", "South", "East", "West", "Central"];
@@ -26,6 +28,7 @@ const initialForm = {
   phosphorus_content: "",
   potassium_content: "",
   irrigation_frequency: "",
+  field_size_hectares: "",
 };
 
 const NUMBER_FIELDS = [
@@ -55,7 +58,7 @@ const RISK_STYLES = {
 };
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400";
+  "w-full rounded-lg border border-cream-200 bg-white px-4 py-3 text-base text-charcoal-900 placeholder:text-charcoal-900/30 shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-500 transition-shadow";
 
 export default function Home() {
   const [form, setForm] = useState(initialForm);
@@ -100,6 +103,7 @@ export default function Home() {
       nitrogen_content: profile.nitrogen_content ?? prev.nitrogen_content,
       phosphorus_content: profile.phosphorus_content ?? prev.phosphorus_content,
       potassium_content: profile.potassium_content ?? prev.potassium_content,
+      field_size_hectares: profile.field_size_hectares ?? prev.field_size_hectares,
     }));
   }
 
@@ -147,6 +151,9 @@ export default function Home() {
     for (const { name } of NUMBER_FIELDS) {
       payload[name] = parseFloat(payload[name]);
     }
+    // Field size isn't a model input - it's only used below to turn the
+    // per-hectare prediction into an estimated total.
+    delete payload.field_size_hectares;
 
     try {
       const token = localStorage.getItem("token");
@@ -163,6 +170,8 @@ export default function Home() {
         throw new Error(data.error || "Something went wrong");
       }
       setResult(data);
+      // Saved so the chatbot (ChatWidget) can discuss the prediction just made.
+      localStorage.setItem("last_prediction", JSON.stringify({ inputs: payload, result: data }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -171,25 +180,62 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen bg-cream-50 flex">
       <Sidebar />
       <div className="flex-1 py-12 px-6">
       <div className="max-w-3xl mx-auto">
-        <h1 className="font-heading text-3xl font-semibold text-earth-900 mb-1">
+        <h1 className="font-heading text-4xl font-bold text-charcoal-900 mb-2">
           Predict Yield
         </h1>
-        <p className="text-earth-900/60 mb-8">
+        <p className="text-charcoal-900/60 text-lg mb-10">
           Enter your field&apos;s conditions to get a yield prediction and
           farming insight.
         </p>
 
+        <div className="mb-6">
+          <p className="text-base font-medium text-charcoal-900/80 mb-3">
+            Select Crop
+          </p>
+          <div className="grid grid-cols-5 gap-3">
+            {CROP_TYPES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, crop_type: c }))}
+                className={`rounded-2xl overflow-hidden border-2 transition-all ${
+                  form.crop_type === c
+                    ? "border-lime-500 shadow-md"
+                    : "border-cream-200 hover:border-cream-200/80"
+                }`}
+              >
+                <div className="h-20 bg-cream-100 overflow-hidden">
+                  <img
+                    src={CROP_IMAGES[c] || ""}
+                    alt={c}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <p
+                  className={`text-sm font-medium text-center py-1.5 ${
+                    form.crop_type === c
+                      ? "bg-lime-400 text-charcoal-900"
+                      : "bg-white text-charcoal-900/70"
+                  }`}
+                >
+                  {c}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl border border-earth-100 p-6 shadow-lg shadow-earth-900/5 hover:shadow-xl transition-shadow duration-300"
+          className="bg-white rounded-3xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300"
         >
           {savedProfiles.length > 0 && (
             <div className="mb-5">
-              <label className="block text-sm font-medium text-earth-900/80 mb-1">
+              <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                 Apply Saved Field
               </label>
               <select
@@ -209,25 +255,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
-                Crop Type
-              </label>
-              <select
-                name="crop_type"
-                value={form.crop_type}
-                onChange={handleChange}
-                className={INPUT_CLASS}
-              >
-                {CROP_TYPES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+              <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                 Region
               </label>
               <select
@@ -245,7 +273,7 @@ export default function Home() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+              <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                 Season
               </label>
               <select
@@ -263,7 +291,7 @@ export default function Home() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+              <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                 Harvest Date
               </label>
               <input
@@ -277,7 +305,7 @@ export default function Home() {
 
             {NUMBER_FIELDS.map(({ name, label, step }) => (
               <div key={name}>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
                   {label}
                 </label>
                 <input
@@ -291,6 +319,21 @@ export default function Home() {
                 />
               </div>
             ))}
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
+              Field Size (hectares) <span className="text-charcoal-900/40 font-normal">- optional, for total production estimate</span>
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              name="field_size_hectares"
+              placeholder="e.g. 12.5"
+              value={form.field_size_hectares}
+              onChange={handleChange}
+              className={INPUT_CLASS}
+            />
           </div>
 
           <div className="mt-4">
@@ -312,7 +355,7 @@ export default function Home() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 w-full rounded-lg bg-gradient-to-r from-brand-700 to-brand-600 text-white font-medium py-2.5 shadow-md shadow-brand-700/30 hover:shadow-lg hover:shadow-brand-700/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:hover:translate-y-0"
+            className="mt-6 w-full rounded-full bg-lime-400 text-charcoal-900 font-semibold py-3 shadow-md hover:bg-lime-500 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:hover:translate-y-0"
           >
             {loading ? "Predicting..." : "Predict Yield"}
           </button>
@@ -326,15 +369,24 @@ export default function Home() {
 
         {result && (
           <div className="mt-8 space-y-6">
-            <div className="relative bg-gradient-to-br from-white to-brand-50 rounded-2xl border border-earth-100 p-8 shadow-xl shadow-brand-900/10 text-center overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-400 via-brand-600 to-brand-800" />
-              <p className="text-sm text-earth-900/50 mb-1 tracking-wide uppercase text-xs font-medium">
+            <div className="relative bg-white rounded-3xl border border-cream-200 p-8 shadow-xl shadow-charcoal-900/5 text-center overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-lime-400" />
+              <p className="text-charcoal-900/40 mb-1 tracking-wide uppercase text-xs font-medium">
                 Predicted Yield
               </p>
-              <p className="text-5xl font-heading font-bold text-brand-700 drop-shadow-sm">
+              <p className="text-5xl font-heading font-bold text-charcoal-900">
                 {result.predicted_yield}
-                <span className="text-2xl text-brand-700/60 font-normal ml-1">t/ha</span>
+                <span className="text-2xl text-charcoal-900/40 font-normal ml-1">t/ha</span>
               </p>
+              {parseFloat(form.field_size_hectares) > 0 && (
+                <p className="mt-3 text-base text-charcoal-900/70">
+                  Estimated total production:{" "}
+                  <span className="font-semibold text-charcoal-900">
+                    {(result.predicted_yield * parseFloat(form.field_size_hectares)).toFixed(1)} tonnes
+                  </span>{" "}
+                  over {parseFloat(form.field_size_hectares)} ha
+                </p>
+              )}
               {result.risk_level && (
                 <span
                   className={`inline-block mt-4 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-sm ${
@@ -359,15 +411,15 @@ export default function Home() {
               <SoilChart field={form} soilRanges={result.soil_ranges} />
             )}
 
-            <div className="bg-white rounded-2xl border border-earth-100 p-6 shadow-lg shadow-earth-900/5 hover:shadow-xl transition-shadow duration-300">
-              <h2 className="font-heading text-lg font-semibold text-earth-900 mb-4">
+            <div className="bg-white rounded-2xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300">
+              <h2 className="font-heading text-xl font-bold text-charcoal-900 mb-4">
                 Soil Health
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {Object.entries(result.soil_flags).map(([key, value]) => (
                   <div
                     key={key}
-                    className={`rounded-lg border px-3 py-2 text-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
+                    className={`rounded-lg border px-3 py-2 text-base shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
                       FLAG_STYLES[value] || "bg-zinc-100 text-zinc-800 border-zinc-300"
                     }`}
                   >
@@ -380,11 +432,11 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-earth-100 p-6 shadow-lg shadow-earth-900/5 hover:shadow-xl transition-shadow duration-300">
-              <h2 className="font-heading text-lg font-semibold text-earth-900 mb-4">
+            <div className="bg-white rounded-2xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300">
+              <h2 className="font-heading text-xl font-bold text-charcoal-900 mb-4">
                 Weather Context
               </h2>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-base">
                 <div>
                   <p className="text-zinc-500">Your Temperature</p>
                   <p className="font-medium text-zinc-900">
@@ -406,19 +458,19 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-earth-900 to-brand-800 rounded-2xl p-6 shadow-xl shadow-earth-900/20">
-              <h2 className="font-heading text-lg font-semibold text-brand-200 mb-3 flex items-center gap-2">
+            <div className="bg-olive-700 rounded-3xl p-6 shadow-xl shadow-charcoal-900/10">
+              <h2 className="font-heading text-lg font-semibold text-lime-400 mb-3 flex items-center gap-2">
                 <span>✨</span> AI Insight
               </h2>
 
               {typeof result.llm_insight === "string" ? (
-                <p className="text-earth-50/90 leading-relaxed text-sm">
+                <p className="text-cream-50/90 leading-relaxed text-sm">
                   {result.llm_insight}
                 </p>
               ) : (
                 <div className="space-y-4">
                   {result.llm_insight.summary && (
-                    <p className="text-earth-50/90 leading-relaxed text-sm">
+                    <p className="text-cream-50/90 leading-relaxed text-sm">
                       {result.llm_insight.summary}
                     </p>
                   )}
@@ -430,7 +482,7 @@ export default function Home() {
                       </p>
                       <ul className="space-y-1">
                         {result.llm_insight.strengths.map((s, i) => (
-                          <li key={i} className="text-earth-50/80 text-sm flex gap-2">
+                          <li key={i} className="text-cream-50/80 text-sm flex gap-2">
                             <span className="text-green-400">✓</span> {s}
                           </li>
                         ))}
@@ -445,7 +497,7 @@ export default function Home() {
                       </p>
                       <ul className="space-y-1">
                         {result.llm_insight.concerns.map((c, i) => (
-                          <li key={i} className="text-earth-50/80 text-sm flex gap-2">
+                          <li key={i} className="text-cream-50/80 text-sm flex gap-2">
                             <span className="text-orange-400">⚠</span> {c}
                           </li>
                         ))}
@@ -455,13 +507,13 @@ export default function Home() {
 
                   {result.llm_insight.actions?.length > 0 && (
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-brand-200 mb-1.5 font-semibold">
+                      <p className="text-xs uppercase tracking-wide text-lime-400 mb-1.5 font-semibold">
                         Recommended Actions
                       </p>
                       <ul className="space-y-1">
                         {result.llm_insight.actions.map((a, i) => (
-                          <li key={i} className="text-earth-50/80 text-sm flex gap-2">
-                            <span className="text-brand-300">→</span> {a}
+                          <li key={i} className="text-cream-50/80 text-sm flex gap-2">
+                            <span className="text-lime-500">→</span> {a}
                           </li>
                         ))}
                       </ul>
@@ -470,6 +522,13 @@ export default function Home() {
                 </div>
               )}
             </div>
+
+            <Link
+              href="/assistant"
+              className="block rounded-2xl border border-lime-500 bg-lime-300/30 px-5 py-4 text-center text-base font-medium text-olive-800 hover:bg-lime-300/60 transition-colors"
+            >
+              💬 Ask the assistant about this result
+            </Link>
           </div>
         )}
       </div>

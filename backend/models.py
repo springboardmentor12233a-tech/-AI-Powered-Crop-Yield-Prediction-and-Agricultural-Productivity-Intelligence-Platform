@@ -33,6 +33,7 @@ class FarmProfile(db.Model):
     nitrogen_content = db.Column(db.Float)
     phosphorus_content = db.Column(db.Float)
     potassium_content = db.Column(db.Float)
+    field_size_hectares = db.Column(db.Float)
 
     def to_dict(self):
         return {
@@ -44,6 +45,7 @@ class FarmProfile(db.Model):
             "nitrogen_content": self.nitrogen_content,
             "phosphorus_content": self.phosphorus_content,
             "potassium_content": self.potassium_content,
+            "field_size_hectares": self.field_size_hectares,
         }
 
 
@@ -63,6 +65,9 @@ class PredictionHistory(db.Model):
     predicted_yield = db.Column(db.Float)
     typical_yield_for_crop = db.Column(db.Float)
     risk_level = db.Column(db.String(20))
+    # Full record of the prediction: the inputs entered, soil flags, weather
+    # context and AI insight. Null for predictions made before this existed.
+    details = db.Column(db.JSON)
 
     def to_dict(self):
         return {
@@ -74,4 +79,5 @@ class PredictionHistory(db.Model):
             "predicted_yield": self.predicted_yield,
             "typical_yield_for_crop": self.typical_yield_for_crop,
             "risk_level": self.risk_level,
+            "details": self.details,
         }
