@@ -27,24 +27,70 @@ if MONGODB_URL and not MONGODB_URL.startswith("mongodb+srv://YOUR_USERNAME"):
         print("[Database] Connected successfully to MongoDB.")
     except Exception as e:
         print(f"[Database] MongoDB unavailable ({e}). Falling back to persistent SQLite.")
-        use_mongo = False
-else:
-    print("[Database] Using persistent SQLite database (instant local zero-config).")
+POSTGRES_URL = os.getenv("POSTGRES_URL", os.getenv("DATABASE_URL", ""))
+use_postgres = False
+
+if POSTGRES_URL and POSTGRES_URL.startswith("postgresql"):
+    try:
+        import psycopg2
+        pg_conn = psycopg2.connect(POSTGRES_URL, connect_timeout=2)
+        pg_conn.close()
+        use_postgres = True
+        print("[Database] Connected successfully to PostgreSQL DB Engine.")
+    except Exception as e:
+        print(f"[Database] PostgreSQL unavailable ({e}). Defaulting to persistent relational SQLite engine.")
+        use_postgres = False
 
 
 def init_sqlite_db():
     conn = sqlite3.connect(SQLITE_DB_FILE)
     cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON;")
+    
+    # Core Users Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
             email TEXT UNIQUE NOT NULL,
+            username TEXT UNIQUE,
             full_name TEXT NOT NULL,
             hashed_password TEXT NOT NULL,
-            role TEXT DEFAULT 'farmer',
+            role TEXT DEFAULT 'Farmer',
             created_at TEXT NOT NULL
         )
     """)
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN username TEXT")
+    except Exception:
+        pass
+
+    # Farmer Linked Profile Table (Linked to users.id via Foreign Key)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS farmer_profiles (
+            user_id TEXT PRIMARY KEY,
+            farm_name TEXT,
+            region TEXT,
+            soil_type TEXT,
+            crop_preferences TEXT,
+            farm_size_hectares REAL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
+    # Consultant Linked Profile Table (Linked to users.id via Foreign Key)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS consultant_profiles (
+            user_id TEXT PRIMARY KEY,
+            expertise TEXT,
+            regions_served TEXT,
+            organization_name TEXT,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
+    # Agricultural Records Table (Linked to user_id)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS agricultural_records (
             id TEXT PRIMARY KEY,
@@ -62,7 +108,8 @@ def init_sqlite_db():
             total_production REAL NOT NULL,
             risk_level TEXT,
             notes TEXT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
     conn.commit()
@@ -90,9 +137,18 @@ def check_database_connection():
 
 # User DB operations
 def get_user_by_email(email: str):
-    email = email.strip().lower()
+    return get_user_by_identifier(email)
+
+
+def get_user_by_identifier(identifier: str):
+    identifier = identifier.strip().lower()
     if use_mongo:
-        user = mongo_db["users"].find_one({"email": email})
+        user = mongo_db["users"].find_one({
+            "$or": [
+                {"email": identifier},
+                {"username": identifier}
+            ]
+        })
         if user:
             user["id"] = str(user.get("_id", user.get("id")))
             return user
@@ -101,7 +157,10 @@ def get_user_by_email(email: str):
         conn = sqlite3.connect(SQLITE_DB_FILE)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,))
+        cursor.execute("""
+            SELECT * FROM users 
+            WHERE LOWER(email) = ? OR LOWER(username) = ?
+        """, (identifier, identifier))
         row = cursor.fetchone()
         conn.close()
         if row:
@@ -128,8 +187,24 @@ def get_user_by_id(user_id: str):
         return None
 
 
-def create_user(email: str, full_name: str, hashed_password: str, role: str = "farmer"):
+def update_user_password(user_id: str, new_hashed_password: str):
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET hashed_password = ? WHERE id = ?", (new_hashed_password, user_id))
+    updated = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
+
+
+def create_user(email: str, full_name: str, hashed_password: str, role: str = "Farmer", username: str = None):
     email = email.strip().lower()
+    if not username:
+        username = email.split("@")[0].lower()
+    else:
+        username = username.strip().lower()
     user_id = str(uuid.uuid4())
     created_at = datetime.utcnow().isoformat()
 
@@ -137,6 +212,7 @@ def create_user(email: str, full_name: str, hashed_password: str, role: str = "f
         mongo_db["users"].insert_one({
             "id": user_id,
             "email": email,
+            "username": username,
             "full_name": full_name,
             "hashed_password": hashed_password,
             "role": role,
@@ -146,15 +222,16 @@ def create_user(email: str, full_name: str, hashed_password: str, role: str = "f
         conn = sqlite3.connect(SQLITE_DB_FILE)
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO users (id, email, full_name, hashed_password, role, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (user_id, email, full_name, hashed_password, role, created_at))
+            INSERT INTO users (id, email, username, full_name, hashed_password, role, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, email, username, full_name, hashed_password, role, created_at))
         conn.commit()
         conn.close()
 
     return {
         "id": user_id,
         "email": email,
+        "username": username,
         "full_name": full_name,
         "role": role,
         "created_at": created_at
@@ -244,3 +321,134 @@ def delete_agricultural_record(record_id: str, user_id: str = None):
         conn.commit()
         conn.close()
         return deleted
+
+
+# Profile Management Operations (Linked via Foreign Key user_id)
+def get_farmer_profile(user_id: str):
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM farmer_profiles WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return {
+        "user_id": user_id,
+        "farm_name": "Green Valley Agriculture",
+        "region": "Punjab",
+        "soil_type": "Alluvial / Loamy",
+        "crop_preferences": "Wheat, Rice, Maize",
+        "farm_size_hectares": 50.0,
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+
+def save_farmer_profile(user_id: str, profile_data: dict):
+    updated_at = datetime.utcnow().isoformat()
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO farmer_profiles (user_id, farm_name, region, soil_type, crop_preferences, farm_size_hectares, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+            farm_name=excluded.farm_name,
+            region=excluded.region,
+            soil_type=excluded.soil_type,
+            crop_preferences=excluded.crop_preferences,
+            farm_size_hectares=excluded.farm_size_hectares,
+            updated_at=excluded.updated_at
+    """, (
+        user_id,
+        profile_data.get("farm_name", "Green Valley Agriculture"),
+        profile_data.get("region", "Punjab"),
+        profile_data.get("soil_type", "Alluvial / Loamy"),
+        profile_data.get("crop_preferences", "Wheat, Rice"),
+        float(profile_data.get("farm_size_hectares") or 50.0),
+        updated_at
+    ))
+    conn.commit()
+    conn.close()
+    return get_farmer_profile(user_id)
+
+
+def get_consultant_profile(user_id: str):
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM consultant_profiles WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return {
+        "user_id": user_id,
+        "expertise": "Agronomy, Soil Chemistry, Micro-Irrigation & Yield Optimization",
+        "regions_served": "Punjab, Haryana, Uttar Pradesh",
+        "organization_name": "CropCast AgTech Advisory Lead",
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+
+def save_consultant_profile(user_id: str, profile_data: dict):
+    updated_at = datetime.utcnow().isoformat()
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO consultant_profiles (user_id, expertise, regions_served, organization_name, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+            expertise=excluded.expertise,
+            regions_served=excluded.regions_served,
+            organization_name=excluded.organization_name,
+            updated_at=excluded.updated_at
+    """, (
+        user_id,
+        profile_data.get("expertise", "Agronomy & Soil Chemistry"),
+        profile_data.get("regions_served", "Punjab, Haryana"),
+        profile_data.get("organization_name", "AgTech Advisory"),
+        updated_at
+    ))
+    conn.commit()
+    conn.close()
+    return get_consultant_profile(user_id)
+
+
+# Admin User Governance
+def get_all_users_with_profiles():
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT u.id, u.email, u.username, u.full_name, u.role, u.created_at,
+               fp.farm_name, fp.region as farmer_region, fp.soil_type, fp.crop_preferences, fp.farm_size_hectares,
+               cp.expertise, cp.regions_served as consultant_regions, cp.organization_name
+        FROM users u
+        LEFT JOIN farmer_profiles fp ON u.id = fp.user_id
+        LEFT JOIN consultant_profiles cp ON u.id = cp.user_id
+        ORDER BY u.created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def update_user_role(user_id: str, new_role: str):
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+    updated = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
+def delete_user_account(user_id: str):
+    conn = sqlite3.connect(SQLITE_DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON;")
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    deleted = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted

@@ -34,24 +34,51 @@ class PredictionResponse(BaseModel):
 # Auth Schemas
 class UserRegisterRequest(BaseModel):
     email: EmailStr
+    username: Optional[str] = None
     full_name: str
     password: str = Field(..., min_length=6)
-    role: Optional[str] = "farmer"
+    role: str = Field("Farmer", description="Role-based access: Farmer, Consultant, Admin, Researcher")
 
 class UserLoginRequest(BaseModel):
-    email: EmailStr
+    email_or_username: str = Field(..., description="Email or Username")
     password: str
+    remember_me: Optional[bool] = Field(False, description="Extend JWT token expiry for 7 days if True")
+
+class PasswordResetRequest(BaseModel):
+    email_or_username: str = Field(..., description="Email or Username to request password reset")
+
+class PasswordResetConfirm(BaseModel):
+    email_or_username: str = Field(..., description="Email or Username")
+    reset_code: str = Field(..., description="6-digit verification code")
+    new_password: str = Field(..., min_length=6, description="New password")
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
+    username: Optional[str] = None
     farm_name: Optional[str] = None
     state: Optional[str] = None
     primary_crop: Optional[str] = None
     farm_size_hectares: Optional[float] = None
 
+class FarmerProfileRequest(BaseModel):
+    farm_name: Optional[str] = "Green Valley Agriculture"
+    region: str = Field(..., example="Punjab", description="Agricultural region or state")
+    soil_type: str = Field(..., example="Alluvial / Loamy", description="Soil type classification")
+    crop_preferences: str = Field(..., example="Wheat, Rice, Maize", description="Primary crops grown")
+    farm_size_hectares: float = Field(50.0, example=50.0, description="Total farm land in hectares")
+
+class ConsultantProfileRequest(BaseModel):
+    expertise: str = Field(..., example="Agronomy, Soil Chemistry & Irrigation", description="Consultant expertise areas")
+    regions_served: str = Field(..., example="Punjab, Haryana, UP West", description="Regions served")
+    organization_name: Optional[str] = Field("AgTech Advisory Corp", description="Firm or organization name")
+
+class RoleUpdateRequest(BaseModel):
+    role: str = Field(..., description="Target role: Farmer, Consultant, Researcher, Admin")
+
 class UserResponse(BaseModel):
     id: str
     email: str
+    username: Optional[str] = None
     full_name: str
     role: str
     farm_name: Optional[str] = None
@@ -63,7 +90,10 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    role: str
     user: UserResponse
+
+
 
 # Agricultural Data Management Schemas
 class AgriculturalRecordCreate(BaseModel):
@@ -113,19 +143,21 @@ class SoilAnalysisRequest(BaseModel):
 class YieldReportRequest(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
-    report_title: str
+    report_title: Optional[str] = "CropCast Precision Intelligence Report"
     farmer_name: Optional[str] = "Registered Farmer"
-    state: str
-    crop: str
-    season: str
-    area: float
-    rainfall: float
-    temperature: float
-    yield_per_hectare: float
-    total_production: float
-    confidence: float
-    risk_level: str
-    model_used: str
-    advisory: str
-    soil_ph: Optional[float] = 6.8
-    soil_moisture: Optional[float] = 35.0
+    consultant_name: Optional[str] = "Dr. Agronomist (CropCast Lead)"
+    state: str = Field("Punjab", example="Punjab")
+    crop: str = Field("Wheat", example="Wheat")
+    season: str = Field("Rabi", example="Rabi")
+    area: float = Field(50.0, example=50.0)
+    rainfall: float = Field(650.0, example=650.0)
+    temperature: float = Field(22.0, example=22.0)
+    fertilizer: Optional[float] = Field(120.0, example=120.0)
+    pesticide: Optional[float] = Field(1.5, example=1.5)
+    yield_per_hectare: Optional[float] = Field(4.85, example=4.85)
+    total_production: Optional[float] = Field(242.5, example=242.5)
+    confidence: Optional[float] = Field(94.8, example=94.8)
+    risk_level: Optional[str] = Field("Low", example="Low")
+    model_used: Optional[str] = Field("XGBoost Regressor v2.4", example="XGBoost Regressor v2.4")
+    advisory: Optional[str] = Field("Apply Nitrogen top-dressing at tillering stage and maintain scheduled micro-irrigation.", example="Advisory text")
+
