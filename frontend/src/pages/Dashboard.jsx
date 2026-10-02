@@ -124,9 +124,9 @@ export default function Dashboard() {
               <p className="text-sm font-medium text-slate-500">Yield Performance</p>
               <LineChartIcon className="w-4 h-4 text-blue-500" />
             </div>
-            {hasData && history.length > 1 ? (
+            {hasData && Array.isArray(history) && history.length > 1 ? (
               <h3 className="text-2xl font-bold text-slate-800">
-                {result.predicted_yield_kg_per_hectare >= history[history.length - 2].predicted_yield ? 'Improving' : 'Declining'}
+                {result?.predicted_yield_kg_per_hectare >= history[history.length - 2]?.predicted_yield ? 'Improving' : 'Declining'}
               </h3>
             ) : (
               <div>
@@ -207,16 +207,16 @@ export default function Dashboard() {
             ) : (
               <div className="h-[300px] w-full flex flex-col">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={history.length > 1 ? history.map(item => ({
-                    date: new Date(item.input_data.observation_date || item.created_at).toLocaleDateString(),
+                  <AreaChart data={Array.isArray(history) && history.length > 1 ? history.map(item => ({
+                    date: new Date(item.input_data?.observation_date || item.created_at).toLocaleDateString(),
                     yield: Math.round(item.predicted_yield),
-                    crop: item.input_data.crop_type || item.crop_type,
-                    region: item.input_data.region || item.region
+                    crop: item.input_data?.crop_type || item.crop_type,
+                    region: item.input_data?.region || item.region
                   })) : [{ 
                     date: 'Current', 
-                    yield: result.predicted_yield_kg_per_hectare,
-                    crop: input.crop_type,
-                    region: input.region
+                    yield: result?.predicted_yield_kg_per_hectare || 0,
+                    crop: input?.crop_type,
+                    region: input?.region
                   }]}>
                     <defs>
                       <linearGradient id="colorYield" x1="0" y1="0" x2="0" y2="1">
@@ -259,18 +259,18 @@ export default function Dashboard() {
                 <div className="text-center p-6 bg-primary-50 rounded-xl border border-primary-100">
                   <Badge variant="success" className="mb-3">Prediction Active</Badge>
                   <p className="text-sm text-primary-600 font-medium mb-1">Estimated Production</p>
-                  <h4 className="text-3xl font-bold text-primary-700">{result.predicted_yield_kg_per_hectare.toLocaleString()}</h4>
+                  <h4 className="text-3xl font-bold text-primary-700">{result?.predicted_yield_kg_per_hectare?.toLocaleString() || 0}</h4>
                   <p className="text-xs text-primary-500 mt-1">kg per hectare</p>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-sm text-slate-500">Region</span>
-                    <span className="text-sm font-medium text-slate-800">{input.region}</span>
+                    <span className="text-sm font-medium text-slate-800">{input?.region || '-'}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-sm text-slate-500">Crop Type</span>
-                    <span className="text-sm font-medium text-slate-800">{input.crop_type}</span>
+                    <span className="text-sm font-medium text-slate-800">{input?.crop_type || '-'}</span>
                   </div>
                 </div>
               </div>
@@ -299,21 +299,21 @@ export default function Dashboard() {
                       <Thermometer className="w-4 h-4 mr-1" />
                       <span className="text-xs font-medium uppercase tracking-wider">Temp</span>
                     </div>
-                    <p className="text-lg font-bold text-slate-800">{input.temperature_C}°C</p>
+                    <p className="text-lg font-bold text-slate-800">{input?.temperature_C ?? '-'}°C</p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <div className="flex items-center text-blue-600 mb-1">
                       <CloudRain className="w-4 h-4 mr-1" />
                       <span className="text-xs font-medium uppercase tracking-wider">Rain</span>
                     </div>
-                    <p className="text-lg font-bold text-slate-800">{input.rainfall_mm}mm</p>
+                    <p className="text-lg font-bold text-slate-800">{input?.rainfall_mm ?? '-'}mm</p>
                   </div>
                   <div className="p-3 bg-cyan-50 rounded-lg">
                     <div className="flex items-center text-cyan-600 mb-1">
                       <Droplets className="w-4 h-4 mr-1" />
                       <span className="text-xs font-medium uppercase tracking-wider">Humidity</span>
                     </div>
-                    <p className="text-lg font-bold text-slate-800">{input["humidity_%"]}%</p>
+                    <p className="text-lg font-bold text-slate-800">{input?.["humidity_%"] ?? '-'}%</p>
                   </div>
                 </div>
                 {weatherData && weatherData.agricultural_insight && (
@@ -341,19 +341,19 @@ export default function Dashboard() {
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-medium text-slate-700">Soil Moisture</span>
-                    <span className="text-slate-600">{input["soil_moisture_%"]}%</span>
+                    <span className="text-slate-600">{input?.["soil_moisture_%"] ?? '-'}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${input["soil_moisture_%"]}%` }}></div>
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${input?.["soil_moisture_%"] || 0}%` }}></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-medium text-slate-700">Soil pH</span>
-                    <span className="text-slate-600">{input.soil_pH}</span>
+                    <span className="text-slate-600">{input?.soil_pH ?? '-'}</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${(input.soil_pH / 14) * 100}%` }}></div>
+                    <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${((input?.soil_pH || 0) / 14) * 100}%` }}></div>
                   </div>
                 </div>
                 {soilData && soilData.agricultural_insight && (
@@ -393,8 +393,14 @@ export default function Dashboard() {
                       <span className="text-sm font-bold">Warnings & Attention Points</span>
                     </div>
                     <ul className="list-disc pl-5 space-y-1">
-                      {insightsData.attention_points.map((pt, idx) => (
-                        <li key={idx} className="text-sm text-red-700">{pt}</li>
+                      {Array.isArray(insightsData.attention_points) && insightsData.attention_points.map((pt, idx) => (
+                        <li key={idx} className="text-sm text-red-700">
+                          {typeof pt === 'string' ? pt : (
+                            <span>
+                              <strong>{pt.title}</strong>: {pt.reason} <em>({pt.action})</em>
+                            </span>
+                          )}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -447,8 +453,15 @@ export default function Dashboard() {
                       <div>
                         <h5 className="text-sm font-semibold text-cyan-800">Weather Observations</h5>
                         <ul className="list-disc pl-4 space-y-1 mt-1">
-                          {insightsData.weather_insights.map((pt, idx) => (
-                            <li key={idx} className="text-sm text-slate-700">{pt}</li>
+                          {Array.isArray(insightsData.weather_insights) && insightsData.weather_insights.map((pt, idx) => (
+                            <li key={idx} className="text-sm text-slate-700">
+                              {typeof pt === 'string' ? pt : (
+                                <span>
+                                  <strong>{pt.condition} ({pt.value})</strong>: {pt.interpretation} <br/>
+                                  <span className="text-xs text-slate-500">Recommendation: {pt.recommendation}</span>
+                                </span>
+                              )}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -458,8 +471,15 @@ export default function Dashboard() {
                       <div>
                         <h5 className="text-sm font-semibold text-amber-800">Soil Observations</h5>
                         <ul className="list-disc pl-4 space-y-1 mt-1">
-                          {insightsData.soil_insights.map((pt, idx) => (
-                            <li key={idx} className="text-sm text-slate-700">{pt}</li>
+                          {Array.isArray(insightsData.soil_insights) && insightsData.soil_insights.map((pt, idx) => (
+                            <li key={idx} className="text-sm text-slate-700">
+                              {typeof pt === 'string' ? pt : (
+                                <span>
+                                  <strong>{pt.condition} ({pt.value})</strong>: {pt.interpretation} <br/>
+                                  <span className="text-xs text-slate-500">Recommendation: {pt.recommendation}</span>
+                                </span>
+                              )}
+                            </li>
                           ))}
                         </ul>
                       </div>

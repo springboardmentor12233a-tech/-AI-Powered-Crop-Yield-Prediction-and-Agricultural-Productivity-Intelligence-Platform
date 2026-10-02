@@ -92,6 +92,8 @@ test_db.py
 test_full_auth.py
 test_login.py
 test_predict_auth.py
+test_llm.py
+test_llm_out.txt
 frontend/capture_error.cjs
 frontend/recovered.json
 frontend/test_imports.js

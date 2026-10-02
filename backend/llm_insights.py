@@ -190,7 +190,7 @@ You MUST output valid JSON exactly matching the provided schema.
         logger.error(f"Unexpected error during LLM insight generation: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred while generating insights.")
 
-def chat_with_llm(prompt: str) -> str:
+def chat_with_llm(system_prompt: str, history: list, current_message: str) -> str:
     """
     Generic LLM chat interaction using the existing provider configuration.
     """
@@ -203,11 +203,19 @@ def chat_with_llm(prompt: str) -> str:
     base_url = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
     url = f"{base_url}/chat/completions"
 
+    messages_payload = [{"role": "system", "content": system_prompt}]
+    
+    if history:
+        for msg in history:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            messages_payload.append({"role": role, "content": content})
+            
+    messages_payload.append({"role": "user", "content": current_message})
+
     payload = {
         "model": model_name,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
+        "messages": messages_payload,
         "temperature": 0.7
     }
 
@@ -220,10 +228,18 @@ def chat_with_llm(prompt: str) -> str:
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
 
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
+        with urllib.request.urlopen(req, timeout=60) as response:
             response_body = response.read().decode("utf-8")
             response_data = json.loads(response_body)
             return response_data.get("choices", [{}])[0].get("message", {}).get("content", "Sorry, I couldn't generate a response.")
+    except urllib.error.HTTPError as e:
+        error_msg = e.read().decode('utf-8')
+        logger.error(f"LLM API HTTPError in chat: {e.code} - {error_msg}")
+        logger.error(f"Failed Payload: {json.dumps(payload)}")
+        return "I am currently experiencing connection issues with my AI provider. Please try again later."
+    except urllib.error.URLError as e:
+        logger.error(f"LLM API URLError (timeout or network): {e.reason}")
+        return "I am currently experiencing connection issues with my AI provider. Please try again later."
     except Exception as e:
         logger.error(f"Error communicating with LLM for chat: {e}")
         return "I am currently experiencing connection issues with my AI provider. Please try again later."

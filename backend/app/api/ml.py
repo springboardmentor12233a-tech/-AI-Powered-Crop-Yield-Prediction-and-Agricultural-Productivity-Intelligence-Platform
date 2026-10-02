@@ -111,6 +111,7 @@ class AgriculturalReportRequest(PredictionRequest):
 class ChatRequest(BaseModel):
     message: str = Field(..., description="User message")
     context: Optional[dict] = Field(None, description="Agricultural context for the LLM")
+    history: Optional[list] = Field(None, description="Conversation history")
 
 # ==========================================
 # ENDPOINTS
@@ -242,16 +243,16 @@ def chat_with_assistant(request: ChatRequest, current_user=Depends(get_current_u
         
         system_prompt = (
             "You are an expert Agricultural AI Assistant for YieldSense AI. "
-            "Answer the farmer's question clearly and accurately using the provided context. "
-            "Do NOT fabricate any metrics, accuracies (e.g. 92%), or project statistics. "
-            "If the user asks for current live weather (e.g., 'What's the weather today?'), "
-            "you MUST clearly state that live weather data is not available through this connected data source, "
-            "and offer analysis based ONLY on the provided historical/agricultural context. DO NOT hallucinate current weather."
+            "You handle two types of questions: GENERAL agricultural questions and PERSONALIZED questions about the user's latest prediction.\n"
+            "1. GENERAL QUESTIONS: Answer general agricultural questions (e.g., 'What is the best soil pH for wheat?', 'Tell me about tomato diseases') using your general agricultural knowledge. Do NOT restrict yourself to the user's latest prediction if they ask a general question or ask about a different crop. Do NOT use their latest prediction data as if it were for a different crop.\n"
+            "2. PERSONALIZED QUESTIONS: When the user asks about their prediction, weather, soil, or how to improve their yield, use the provided context. Clearly indicate that your answer is based on their current prediction. If they ask for a personalized prediction of a crop that is NOT in the context, explain that they must provide inputs through the Yield Prediction module first.\n"
+            "Do NOT fabricate any metrics, accuracies, or project statistics. "
+            "If the user asks for current live weather, clearly state that live weather data is not available and offer analysis based ONLY on the provided context."
         )
         if request.context:
             system_prompt += (
-                f"\n\nContext based on their latest data:\n{request.context}\n\n"
-                "If the user asks about their prediction, provide a structured response approximately like this (use markdown):\n"
+                f"\n\nLATEST PREDICTION CONTEXT:\n{request.context}\n\n"
+                "If the user asks about their prediction or the crop in this context, provide a structured response approximately like this (use markdown):\n"
                 "### Prediction Summary\n"
                 "- Crop: [Crop]\n"
                 "- Region: [Region]\n"
@@ -269,18 +270,18 @@ def chat_with_assistant(request: ChatRequest, current_user=Depends(get_current_u
                 "[Short interpretation of the yield based on conditions]\n\n"
                 "### Recommendations\n"
                 "- [Recommendation 1]\n"
-                "- [Recommendation 2]"
+                "- [Recommendation 2]\n\n"
+                "IMPORTANT: If the user asks about a DIFFERENT crop than the one in this context, DO NOT use this context to answer. Provide general information instead, and do NOT pretend you have personalized data for that crop."
             )
         else:
             system_prompt += (
                 "\n\nNo prediction data is currently available for this user. "
                 "If they ask about their prediction, weather, soil, or recommendations, "
-                "you MUST respond EXACTLY with: 'No prediction context exists yet. Please run a Yield Prediction first.'"
+                "you MUST respond EXACTLY with: 'I can provide general agricultural information. For a personalized YieldSense prediction, you need to run a Yield Prediction first.'"
             )
             
-        prompt = f"{system_prompt}\n\nFarmer: {request.message}\nAssistant:"
-        
-        reply = chat_with_llm(prompt)
+        history = request.history if request.history else []
+        reply = chat_with_llm(system_prompt, history, request.message)
         
         return {"reply": reply}
     except Exception as e:
