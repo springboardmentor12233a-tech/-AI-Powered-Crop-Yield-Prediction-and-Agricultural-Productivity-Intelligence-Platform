@@ -6,7 +6,7 @@ import logging
 
 from backend.prediction import predict_yield
 from backend.weather_analysis import assess_weather, load_historical_weather_analysis
-from backend.soil_analysis import assess_soil_suitability, load_historical_soil_analysis
+from backend.soil_analysis import assess_soil_suitability, load_historical_soil_analysis, get_historical_soil_data
 from backend.agricultural_report import generate_agricultural_report
 from backend.llm_insights import generate_llm_insights
 from backend.app.api.auth import get_current_user
@@ -175,6 +175,15 @@ def soil_analysis(request: SoilAnalysisRequest, current_user=Depends(get_current
         logger.error(f"Soil analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/historical-soil-data", summary="Get Historical Soil Dataset")
+def get_historical_soil_endpoint(crop_type: Optional[str] = None, current_user=Depends(get_current_user)):
+    try:
+        data = get_historical_soil_data(crop_type)
+        return data
+    except Exception as e:
+        logger.error(f"Error fetching historical soil data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/agricultural-report", summary="Structured Agricultural Forecast Report")
 def agricultural_report(request: AgriculturalReportRequest, current_user=Depends(get_current_user)):
     try:
@@ -235,6 +244,9 @@ def chat_with_assistant(request: ChatRequest, current_user=Depends(get_current_u
             "You are an expert Agricultural AI Assistant for YieldSense AI. "
             "Answer the farmer's question clearly and accurately using the provided context. "
             "Do NOT fabricate any metrics, accuracies (e.g. 92%), or project statistics. "
+            "If the user asks for current live weather (e.g., 'What's the weather today?'), "
+            "you MUST clearly state that live weather data is not available through this connected data source, "
+            "and offer analysis based ONLY on the provided historical/agricultural context. DO NOT hallucinate current weather."
         )
         if request.context:
             system_prompt += (

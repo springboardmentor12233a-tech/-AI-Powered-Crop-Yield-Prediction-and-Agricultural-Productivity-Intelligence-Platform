@@ -28,6 +28,23 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 min-w-[150px]">
+        <p className="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-1">{label}</p>
+        <p className="text-sm font-bold text-emerald-600 mb-2">Yield: {data.yield.toLocaleString()} kg/ha</p>
+        <div className="space-y-1">
+          {data.crop && <p className="text-xs text-slate-500"><span className="font-medium">Crop:</span> {data.crop}</p>}
+          {data.region && <p className="text-xs text-slate-500"><span className="font-medium">Region:</span> {data.region}</p>}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function Dashboard() {
   const { recentPrediction, analysisState, fetchAnalysis, retryInsights } = useAppContext();
   const navigate = useNavigate();
@@ -47,14 +64,8 @@ export default function Dashboard() {
           return (a.id || 0) - (b.id || 0);
         });
         setHistory(sorted);
-        
-        if (!recentPrediction && sorted.length > 0) {
-          const latest = sorted[sorted.length - 1];
-          fetchAnalysis({
-            input: latest.input_data,
-            result: { predicted_yield_kg_per_hectare: latest.predicted_yield }
-          });
-        }
+        // Dashboard does not need to overwrite recentPrediction.
+        // AppShell handles the current prediction loading.
       } catch (err) {
         console.error("Failed to load prediction history", err);
       }
@@ -68,11 +79,8 @@ export default function Dashboard() {
   const loadingExtras = analysisState?.status === 'loading';
   const llmError = analysisState?.llmError;
 
-  // Use recentPrediction if available, otherwise use the latest from history
-  const activePrediction = recentPrediction || (history.length > 0 ? {
-    input: history[history.length - 1].input_data,
-    result: { predicted_yield_kg_per_hectare: history[history.length - 1].predicted_yield }
-  } : null);
+  // Use recentPrediction as the only active prediction. AppShell guarantees it loads.
+  const activePrediction = recentPrediction;
 
   const hasData = !!activePrediction;
   const input = activePrediction?.input;
@@ -201,8 +209,15 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={history.length > 1 ? history.map(item => ({
                     date: new Date(item.input_data.observation_date || item.created_at).toLocaleDateString(),
-                    yield: Math.round(item.predicted_yield)
-                  })) : [{ date: 'Current', yield: result.predicted_yield_kg_per_hectare }]}>
+                    yield: Math.round(item.predicted_yield),
+                    crop: item.input_data.crop_type || item.crop_type,
+                    region: item.input_data.region || item.region
+                  })) : [{ 
+                    date: 'Current', 
+                    yield: result.predicted_yield_kg_per_hectare,
+                    crop: input.crop_type,
+                    region: input.region
+                  }]}>
                     <defs>
                       <linearGradient id="colorYield" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
@@ -212,7 +227,7 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dx={-10} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '3 3' }} />
                     <Area type="monotone" dataKey="yield" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorYield)" />
                   </AreaChart>
                 </ResponsiveContainer>

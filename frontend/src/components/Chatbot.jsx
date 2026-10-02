@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, User, Bot, Loader2, Maximize2, Minimize2 } from 'lucide-react';
+import { MessageSquare, X, Send, User, Bot, Maximize2, Minimize2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { chatMessage } from '../services/api';
@@ -48,14 +48,13 @@ const formatMessage = (content) => {
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hello! I am your YieldSense AI assistant. How can I help you with your farming decisions today?' }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   
   const { recentPrediction, analysisState, reportState } = useAppContext();
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -64,14 +63,15 @@ export default function Chatbot() {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
+      // Auto-focus input when opened
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isTyping]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const sendMessage = async (userMessageText) => {
+    if (!userMessageText.trim()) return;
 
-    const userMessage = input;
+    const userMessage = userMessageText;
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsTyping(true);
@@ -81,7 +81,7 @@ export default function Chatbot() {
       const context = {};
       if (recentPrediction) {
         context.prediction_input = recentPrediction.input;
-        context.predicted_yield = recentPrediction.result.predicted_yield_kg_per_hectare;
+        context.predicted_yield = recentPrediction.result?.predicted_yield_kg_per_hectare;
       }
       if (analysisState?.weatherData) {
         context.weather = analysisState.weatherData;
@@ -96,19 +96,47 @@ export default function Chatbot() {
         context.overall_agricultural_forecasting_summary = reportState.data.overall_agricultural_forecasting_summary;
       }
 
+      // We explicitly make it an object even if empty to avoid `null` serialization bugs with some backend versions
+      const contextPayload = Object.keys(context).length > 0 ? context : {};
+
       const response = await chatMessage({
         message: userMessage,
-        context: Object.keys(context).length > 0 ? context : null
+        context: contextPayload
       });
 
       setMessages(prev => [...prev, { role: 'assistant', content: response.reply }]);
     } catch (error) {
-      console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+      console.error("Chat error:", error);
+      // Give a friendly error message as requested in UX guidelines
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ I couldn\'t connect to the AI service right now. Please check your connection and try again.' }]);
     } finally {
       setIsTyping(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    sendMessage(input);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
+  };
+
+  const handleChipClick = (text) => {
+    sendMessage(text);
+  };
+
+  const actionChips = [
+    "Explain my yield",
+    "Analyze weather",
+    "Check soil",
+    "Give recommendations"
+  ];
 
   return (
     <>
@@ -125,18 +153,21 @@ export default function Chatbot() {
       <div className={`fixed bg-white shadow-2xl flex flex-col transition-all origin-bottom-right z-[100] ${
         isMaximized 
           ? 'top-0 left-0 w-screen h-screen rounded-none' 
-          : 'bottom-6 right-6 w-96 max-h-[600px] h-[80vh] rounded-2xl'
+          : 'bottom-6 right-6 w-[24rem] max-h-[650px] h-[85vh] rounded-2xl'
       } ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
         
         {/* Header */}
         <div className={`flex items-center justify-between p-4 bg-primary-600 text-white flex-shrink-0 ${isMaximized ? '' : 'rounded-t-2xl'}`}>
           <div className="flex items-center space-x-2">
             <Bot className="w-5 h-5" />
-            <h3 className="font-semibold">AI Assistant</h3>
+            <div>
+              <h3 className="font-semibold leading-none mb-1">YieldSense AI</h3>
+              <p className="text-xs text-primary-100 leading-none">Agricultural Assistant</p>
+            </div>
           </div>
           <div className="flex items-center space-x-3">
             <button onClick={() => setIsMaximized(!isMaximized)} className="text-white hover:text-primary-100 transition-colors" aria-label={isMaximized ? "Minimize" : "Maximize"}>
-              {isMaximized ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+              {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
             <button onClick={() => setIsOpen(false)} className="text-white hover:text-primary-100 transition-colors" aria-label="Close">
               <X className="w-5 h-5" />
@@ -144,54 +175,99 @@ export default function Chatbot() {
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`flex w-full max-w-[85%] md:max-w-3xl ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === 'user' ? 'bg-primary-100 text-primary-600 ml-2' : 'bg-slate-200 text-slate-600 mr-2'}`}>
-                  {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                </div>
-                <div className={`p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-primary-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'}`}>
-                  {msg.role === 'user' ? msg.content : formatMessage(msg.content)}
-                </div>
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-50 relative flex flex-col">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 my-8">
+              <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mb-2">
+                <Bot className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-1">Hello! I'm YieldSense AI</h3>
+                <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                  I can analyze your crop yields, weather conditions, soil data, and provide personalized agricultural recommendations.
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2 max-w-xs mt-4">
+                {actionChips.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleChipClick(chip)}
+                    disabled={isTyping}
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600 hover:border-primary-500 hover:text-primary-600 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {chip}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="flex w-full max-w-[85%] md:max-w-3xl flex-row">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-200 text-slate-600 mr-2">
-                  <Bot className="w-4 h-4" />
+          ) : (
+            <div className="space-y-4">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex w-full max-w-[85%] md:max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === 'user' ? 'bg-primary-100 text-primary-600 ml-2' : 'bg-slate-200 text-slate-600 mr-2'}`}>
+                      {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                    </div>
+                    <div className={`p-3 rounded-2xl text-[14px] leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-primary-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'}`}>
+                      {msg.role === 'user' ? (
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      ) : (
+                        formatMessage(msg.content)
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-sm rounded-tl-none">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex w-full max-w-[85%] flex-row">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-200 text-slate-600 mr-2">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm rounded-tl-none flex items-center space-x-1.5">
+                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-1" />
         </div>
 
-        {/* Input */}
-        <div className={`p-4 bg-white border-t border-slate-100 flex-shrink-0 ${isMaximized ? '' : 'rounded-b-2xl'}`}>
-          <form onSubmit={handleSend} className="flex items-center space-x-2">
-            <input
-              type="text"
+        {/* Input Area */}
+        <div className={`p-3 bg-white border-t border-slate-100 flex-shrink-0 ${isMaximized ? '' : 'rounded-b-2xl'}`}>
+          <form onSubmit={handleSend} className="relative flex items-end">
+            <textarea
+              ref={inputRef}
               value={input}
               disabled={isTyping}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isTyping ? "AI is generating a response..." : "Ask about your farm..."}
-              className="flex-1 px-4 py-2 border border-slate-200 rounded-full focus:outline-none focus:border-primary-500 text-sm disabled:bg-slate-50 disabled:text-slate-400 transition-colors"
+              onKeyDown={handleKeyDown}
+              placeholder={isTyping ? "AI is typing..." : "Message YieldSense AI..."}
+              className="flex-1 max-h-32 min-h-[44px] w-full resize-none py-2.5 pl-4 pr-12 border border-slate-200 rounded-2xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 text-[14px] bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 transition-all custom-scrollbar"
+              rows={1}
+              style={{ height: 'auto', minHeight: '44px' }}
+              onInput={(e) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+              }}
             />
             <button
               type="submit"
               disabled={!input.trim() || isTyping}
-              className="p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="absolute right-2 bottom-2 p-1.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
+          <div className="text-center mt-2">
+            <p className="text-[10px] text-slate-400">YieldSense AI can make mistakes. Verify agricultural advice.</p>
+          </div>
         </div>
 
       </div>

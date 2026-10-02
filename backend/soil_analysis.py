@@ -274,5 +274,71 @@ def main():
     print("TASK 10: Visualizations saved to 'soil_plots/' directory.")
     print("-" * 50)
     
+def get_historical_soil_data(crop_type: str = None) -> dict:
+    data_path = "../Smart_Farming_Crop_Yield_2024.csv"
+    if not os.path.exists(data_path):
+        data_path = "Smart_Farming_Crop_Yield_2024.csv"
+        
+    if not os.path.exists(data_path):
+        return {"overall": {}, "relationships": {}, "records": []}
+
+    df = pd.read_csv(data_path)
+    X = df.drop(columns=['yield_kg_per_hectare'])
+    y = df['yield_kg_per_hectare']
+    
+    # Must use the train set just like load_historical_soil_analysis
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.20, random_state=42)
+    train_df = X_train.copy()
+    train_df['yield_kg_per_hectare'] = y_train
+    
+    if crop_type and crop_type in train_df['crop_type'].values:
+        df_target = train_df[train_df['crop_type'] == crop_type]
+    else:
+        df_target = train_df
+        
+    overall_moisture = df_target['soil_moisture_%']
+    overall_pH = df_target['soil_pH']
+    yields = df_target['yield_kg_per_hectare']
+    
+    moisture_corr, _ = pearsonr(overall_moisture, yields) if len(df_target) > 1 else (0, 0)
+    ph_corr, _ = pearsonr(overall_pH, yields) if len(df_target) > 1 else (0, 0)
+    
+    records = []
+    for _, row in df_target.iterrows():
+        records.append({
+            "soil_moisture": round(float(row['soil_moisture_%']), 2),
+            "soil_pH": round(float(row['soil_pH']), 2),
+            "yield": round(float(row['yield_kg_per_hectare']), 2),
+            "crop": str(row['crop_type'])
+        })
+        
+    return {
+        "overall": {
+            "soil_moisture": {
+                "count": len(overall_moisture),
+                "min": round(float(overall_moisture.min()), 2),
+                "p25": round(float(overall_moisture.quantile(0.25)), 2),
+                "median": round(float(overall_moisture.median()), 2),
+                "p75": round(float(overall_moisture.quantile(0.75)), 2),
+                "max": round(float(overall_moisture.max()), 2),
+                "mean": round(float(overall_moisture.mean()), 2)
+            },
+            "soil_pH": {
+                "count": len(overall_pH),
+                "min": round(float(overall_pH.min()), 2),
+                "p25": round(float(overall_pH.quantile(0.25)), 2),
+                "median": round(float(overall_pH.median()), 2),
+                "p75": round(float(overall_pH.quantile(0.75)), 2),
+                "max": round(float(overall_pH.max()), 2),
+                "mean": round(float(overall_pH.mean()), 2)
+            }
+        },
+        "relationships": {
+            "soil_moisture_yield_correlation": round(float(moisture_corr), 3),
+            "soil_pH_yield_correlation": round(float(ph_corr), 3)
+        },
+        "records": records
+    }
+
 if __name__ == "__main__":
     main()

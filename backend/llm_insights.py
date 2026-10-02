@@ -9,12 +9,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+class Alert(BaseModel):
+    title: str
+    reason: str
+    action: str
+    severity: str
+
+class ConditionInsight(BaseModel):
+    condition: str
+    value: str
+    interpretation: str
+    recommendation: str
+
 class LLMInsightsResponse(BaseModel):
     summary: str
+    status: str
     yield_interpretation: str
-    weather_insights: list[str]
-    soil_insights: list[str]
-    attention_points: list[str]
+    weather_insights: list[ConditionInsight]
+    soil_insights: list[ConditionInsight]
+    attention_points: list[Alert]
     limitations: list[str]
 
 logger = logging.getLogger(__name__)
@@ -37,26 +50,20 @@ def generate_llm_insights(report_data: dict) -> dict:
     url = f"{base_url}/chat/completions"
 
     system_prompt = """
-You are a highly cautious and analytical agricultural AI.
+You are a practical, farmer-facing agricultural AI.
 Your task is to interpret the provided structured Agricultural Report and output a human-readable JSON insights summary.
 
 STRICT CONSTRAINTS:
-1. Grounding: You MUST ONLY use the facts and numbers present in the provided JSON report.
-2. No Causation: Distinguish correlation from causation. Use cautious language ("historically associated with", "the model predicts", "in this dataset", "may warrant attention").
-3. Forbidden Language: DO NOT use words like "causes", "guarantees", "optimal", "ideal", "best soil", "best weather", "the crop prefers", or "increase X to increase yield".
-4. No Inventions: Do not invent missing values, biological explanations, causal relationships, or generic farming prescriptions not found in the report data.
-5. Limitations Field: You MUST return a "limitations" field containing a concise list of limitations, uncertainties, or caveats associated with the analysis. This is absolutely required by the schema.
+1. Grounding: You MUST ONLY use the facts and numbers present in the provided JSON report. Do not invent weather forecasts.
+2. Practical & Clear: Provide actionable alerts and recommendations. Avoid statistical jargon like 'quartiles' or 'correlation coefficients'.
+3. Output Format:
+   - status: Must be one of "Needs Attention", "Moderate", or "Favorable".
+   - weather_insights / soil_insights: Provide the condition (e.g., 'Rainfall', 'Soil Moisture'), its current value from the report (e.g., '120 mm'), a short interpretation, and a practical recommendation.
+   - attention_points: High/Medium/Low severity alerts based on the report data. Include a title, reason, and action.
+4. Limitations Field: You MUST ALWAYS return a "limitations" field containing a concise list of limitations (e.g., "Recommendations are based on historical model predictions and should not be treated as guaranteed outcomes.")
 
 OUTPUT FORMAT:
-You MUST output valid JSON exactly matching this structure (and nothing else):
-{
-    "summary": "A 1-2 sentence overall cautious summary of the prediction and context.",
-    "yield_interpretation": "A cautious statement about the predicted yield.",
-    "weather_insights": ["Insight 1", "Insight 2..."],
-    "soil_insights": ["Insight 1", "Insight 2..."],
-    "attention_points": ["Points that stand out as below average or negative correlations in the historical data..."],
-    "limitations": ["A reminder that these are historical associations and do not establish causation."]
-}
+You MUST output valid JSON exactly matching the provided schema.
 """
 
     payload = {
@@ -74,14 +81,55 @@ You MUST output valid JSON exactly matching this structure (and nothing else):
                     "type": "object",
                     "properties": {
                         "summary": {"type": "string"},
+                        "status": {"type": "string"},
                         "yield_interpretation": {"type": "string"},
-                        "weather_insights": {"type": "array", "items": {"type": "string"}},
-                        "soil_insights": {"type": "array", "items": {"type": "string"}},
-                        "attention_points": {"type": "array", "items": {"type": "string"}},
+                        "weather_insights": {
+                            "type": "array", 
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "condition": {"type": "string"},
+                                    "value": {"type": "string"},
+                                    "interpretation": {"type": "string"},
+                                    "recommendation": {"type": "string"}
+                                },
+                                "required": ["condition", "value", "interpretation", "recommendation"],
+                                "additionalProperties": False
+                            }
+                        },
+                        "soil_insights": {
+                            "type": "array", 
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "condition": {"type": "string"},
+                                    "value": {"type": "string"},
+                                    "interpretation": {"type": "string"},
+                                    "recommendation": {"type": "string"}
+                                },
+                                "required": ["condition", "value", "interpretation", "recommendation"],
+                                "additionalProperties": False
+                            }
+                        },
+                        "attention_points": {
+                            "type": "array", 
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {"type": "string"},
+                                    "reason": {"type": "string"},
+                                    "action": {"type": "string"},
+                                    "severity": {"type": "string"}
+                                },
+                                "required": ["title", "reason", "action", "severity"],
+                                "additionalProperties": False
+                            }
+                        },
                         "limitations": {"type": "array", "items": {"type": "string"}}
                     },
                     "required": [
                         "summary", 
+                        "status",
                         "yield_interpretation", 
                         "weather_insights", 
                         "soil_insights", 

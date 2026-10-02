@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { EmptyState, LoadingState, ErrorState } from '../components/common/StateComponents';
-import { getWeatherAnalysis, getPredictionHistory } from '../services/api';
+import { getPredictionHistory } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { CloudRain, ArrowRight, Thermometer, Droplets, Sun } from 'lucide-react';
 import {
@@ -16,44 +16,18 @@ import {
 } from 'recharts';
 
 export default function WeatherAnalysis() {
-  const { recentPrediction } = useAppContext();
+  const { recentPrediction, analysisState } = useAppContext();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  const data = analysisState?.weatherData;
+  const loading = !data && analysisState?.status === 'loading';
+  const error = !data && analysisState?.status === 'error';
+
   const [history, setHistory] = useState([]);
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
-
-  const fetchAnalysis = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        crop_type: recentPrediction.input.crop_type,
-        region: recentPrediction.input.region,
-        temperature_C: recentPrediction.input.temperature_C,
-        rainfall_mm: recentPrediction.input.rainfall_mm,
-        "humidity_%": recentPrediction.input["humidity_%"],
-        sunlight_hours: recentPrediction.input.sunlight_hours
-      };
-      const result = await getWeatherAnalysis(payload);
-      setData(result);
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to load weather analysis.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (recentPrediction) {
-      fetchAnalysis();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recentPrediction]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -85,7 +59,7 @@ export default function WeatherAnalysis() {
   }
 
   if (loading) return <LoadingState message="Analyzing historical weather impacts..." />;
-  if (error) return <ErrorState message={error} onRetry={fetchAnalysis} />;
+  if (error) return <ErrorState message="Failed to load weather analysis data." />;
   if (!data) return null;
 
   return (

@@ -49,11 +49,12 @@ export function AppProvider({ children }) {
   const analysisInFlightRef = useRef(null);
 
   const fetchAnalysis = useCallback(async (prediction, forceRetry = false) => {
-    if (!prediction) return;
+    if (!prediction || !prediction.id) return;
 
-    const signature = JSON.stringify(prediction.input);
+    // Deduplicate strictly by prediction ID
+    const signature = prediction.id.toString();
 
-    // If we're already fetching this exact signature, do nothing.
+    // If we're already fetching this exact prediction ID, do nothing.
     if (!forceRetry && analysisInFlightRef.current === signature) {
       return;
     }
@@ -69,32 +70,34 @@ export function AppProvider({ children }) {
     try {
       const { input } = prediction;
       
-      const [weather, soil] = await Promise.all([
-        getWeatherAnalysis(input).catch(() => null),
-        getSoilAnalysis(input).catch(() => null)
-      ]);
+      // Fire weather and soil independently and update context immediately upon success
+      getWeatherAnalysis(input)
+        .then(weather => setAnalysisState(prev => ({ ...prev, weatherData: weather })))
+        .catch(() => setAnalysisState(prev => ({ ...prev, weatherData: null })));
+        
+      getSoilAnalysis(input)
+        .then(soil => setAnalysisState(prev => ({ ...prev, soilData: soil })))
+        .catch(() => setAnalysisState(prev => ({ ...prev, soilData: null })));
       
       let insights = null;
       let llmError = false;
       try {
         insights = await getLLMInsights(input);
-      } catch {
+      } catch (err) {
+        console.error("LLM Insights Error:", err);
         llmError = true;
       }
 
-      setAnalysisState({
+      setAnalysisState(prev => ({
+        ...prev,
         status: 'success',
-        signature,
-        weatherData: weather,
-        soilData: soil,
         insightsData: insights,
         llmError
-      });
+      }));
     } catch {
       setAnalysisState(prev => ({
         ...prev,
-        status: 'error',
-        signature
+        status: 'error'
       }));
       analysisInFlightRef.current = null; // allow retry on total failure
     }

@@ -5,13 +5,11 @@ import {
   AlertCircle,
   BarChart2,
   TrendingUp,
-  Droplets,
-  CloudRain
+  Info
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar,
-  ScatterChart, Scatter, ZAxis
+  BarChart, Bar
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { getPredictionHistory } from '../services/api';
@@ -60,8 +58,8 @@ export default function Analytics() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Analytics</h2>
-          <p className="text-slate-500 mt-1">Advanced agricultural productivity trends.</p>
+          <h2 className="text-2xl font-bold text-slate-800">Performance Analytics</h2>
+          <p className="text-slate-500 mt-1">Visualize your agricultural trends and productivity history.</p>
         </div>
         <Card>
           <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
@@ -79,10 +77,9 @@ export default function Analytics() {
   }
 
   // Prepare data for charts
-  const timeSeriesData = history.map((item, index) => ({
-    name: new Date(item.input_data.observation_date || item.created_at).toLocaleDateString(),
-    yield: Math.round(item.predicted_yield),
-    index: index + 1
+  const timeSeriesData = history.map((item) => ({
+    date: new Date(item.input_data?.observation_date || item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+    yield: Math.round(item.predicted_yield)
   }));
 
   // Average yield by crop
@@ -100,19 +97,7 @@ export default function Analytics() {
     averageYield: Math.round(cropStats[crop].total / cropStats[crop].count)
   }));
 
-  // Soil moisture vs Yield
-  const scatterData = history.map(item => ({
-    moisture: item.input_data["soil_moisture_%"],
-    yield: Math.round(item.predicted_yield),
-    crop: item.crop_type
-  }));
-
-  // Rainfall vs Yield
-  const rainfallScatterData = history.map(item => ({
-    rainfall: item.input_data.rainfall_mm,
-    yield: Math.round(item.predicted_yield),
-    crop: item.crop_type
-  }));
+  // Analytics charts rely strictly on formatted history data.
 
   return (
     <div className="space-y-6 pb-12">
@@ -122,7 +107,7 @@ export default function Analytics() {
       </div>
       
       {/* 1. KEY METRICS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-primary-50 border-primary-100">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-2">
@@ -157,105 +142,96 @@ export default function Analytics() {
         </Card>
       </div>
 
-      {/* 2. CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* TIME SERIES */}
-        <Card className="col-span-full">
-          <CardHeader>
-            <CardTitle>Yield Progression</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[350px] w-full">
+      {/* 2. YIELD PROGRESSION (Full Width) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Yield Progression</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {timeSeriesData.length < 2 ? (
+            <div className="flex flex-col items-center justify-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 h-[280px]">
+              <Info className="w-5 h-5 text-slate-400 mb-2" />
+              <p className="text-sm text-slate-500">Not enough prediction data available yet.</p>
+            </div>
+          ) : (
+            <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={timeSeriesData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <AreaChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorProgression" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fill: '#64748b', fontSize: 11 }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    minTickGap={30} 
+                  />
+                  <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-sm border border-slate-200">
+                            <p className="text-sm font-semibold text-slate-800 mb-1">{payload[0].payload.date}</p>
+                            <p className="text-sm font-bold text-emerald-600">Yield: {payload[0].payload.yield.toLocaleString()} kg/ha</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <Area type="monotone" dataKey="yield" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorProgression)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* CROP COMPARISON */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Average Yield by Crop</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
+      {/* 3. AVERAGE YIELD BY CROP (Full Width) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Average Yield by Crop</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {cropData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 h-[280px]">
+              <Info className="w-5 h-5 text-slate-400 mb-2" />
+              <p className="text-sm text-slate-500">No prediction history available yet.</p>
+            </div>
+          ) : (
+            <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cropData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }} 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-sm border border-slate-200">
+                            <p className="text-sm font-semibold text-slate-800 mb-1">{payload[0].payload.name}</p>
+                            <p className="text-sm font-bold text-emerald-600">Yield: {payload[0].payload.averageYield.toLocaleString()} kg/ha</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Bar dataKey="averageYield" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* MOISTURE VS YIELD */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Droplets className="w-5 h-5 mr-2 text-cyan-500" />
-              Soil Moisture Impact
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis type="number" dataKey="moisture" name="Moisture %" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis type="number" dataKey="yield" name="Yield" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <ZAxis type="category" dataKey="crop" name="Crop" />
-                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Scatter name="Yield Analysis" data={scatterData} fill="#0ea5e9" />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* RAINFALL VS YIELD */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CloudRain className="w-5 h-5 mr-2 text-indigo-500" />
-              Rainfall Impact
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis type="number" dataKey="rainfall" name="Rainfall (mm)" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis type="number" dataKey="yield" name="Yield" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <ZAxis type="category" dataKey="crop" name="Crop" />
-                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Scatter name="Yield Analysis" data={rainfallScatterData} fill="#6366f1" />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

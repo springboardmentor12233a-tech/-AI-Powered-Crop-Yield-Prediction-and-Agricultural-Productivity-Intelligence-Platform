@@ -96,6 +96,12 @@ export const getSoilAnalysis = async (data) => {
   return response.data;
 };
 
+export const getHistoricalSoilData = async (cropType = null) => {
+  const url = cropType ? `/ml/historical-soil-data?crop_type=${encodeURIComponent(cropType)}` : '/ml/historical-soil-data';
+  const response = await api.get(url);
+  return response.data;
+};
+
 export const getAgriculturalReport = async (data) => {
   const response = await api.post('/ml/agricultural-report', data);
   return response.data;

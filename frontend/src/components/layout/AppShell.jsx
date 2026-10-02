@@ -22,16 +22,29 @@ export function AppShell() {
         try {
           const hist = await getPredictionHistory();
           if (hist && hist.length > 0) {
-            // Sort chronologically (ascending)
-            const sorted = [...hist].sort((a, b) => new Date(a.input_data?.observation_date || a.created_at) - new Date(b.input_data?.observation_date || b.created_at));
-            const latest = sorted[sorted.length - 1];
-            const predictionObj = {
-              input: latest.input_data,
-              result: { predicted_yield_kg_per_hectare: latest.predicted_yield }
-            };
-            setRecentPrediction(predictionObj);
-            // Optionally, we can also preload analysis here
-            fetchAnalysis(predictionObj);
+            const savedId = localStorage.getItem('currentPredictionId');
+            let latest;
+            
+            if (savedId) {
+              latest = hist.find(h => h.id.toString() === savedId);
+            }
+            
+            if (!latest) {
+              // Fallback to highest ID (most recently created), NOT observation_date
+              const sorted = [...hist].sort((a, b) => (a.id || 0) - (b.id || 0));
+              latest = sorted[sorted.length - 1];
+            }
+            
+            if (latest) {
+              const predictionObj = {
+                id: latest.id,
+                input: latest.input_data,
+                result: { predicted_yield_kg_per_hectare: latest.predicted_yield }
+              };
+              setRecentPrediction(predictionObj);
+              fetchAnalysis(predictionObj);
+              localStorage.setItem('currentPredictionId', latest.id.toString());
+            }
           }
         } catch (err) {
           console.error("Failed to load prediction history for context:", err);

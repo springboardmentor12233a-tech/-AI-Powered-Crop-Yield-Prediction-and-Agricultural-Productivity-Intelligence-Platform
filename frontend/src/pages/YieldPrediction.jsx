@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { predictYield } from '../services/api';
+import { predictYield, getPredictionHistory } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { Sprout, Loader2, ArrowRight } from 'lucide-react';
 
@@ -49,8 +49,25 @@ export default function YieldPrediction() {
     setError(null);
     try {
       const predictionResult = await predictYield(formData);
+      
+      // Fetch history immediately to get the newly created record's ID
+      const hist = await getPredictionHistory();
+      // Sort by ID to ensure we get the absolute latest created record
+      const sorted = [...hist].sort((a, b) => (a.id || 0) - (b.id || 0));
+      const latest = sorted[sorted.length - 1];
+      
+      if (latest) {
+        localStorage.setItem('currentPredictionId', latest.id.toString());
+        setRecentPrediction({ 
+          id: latest.id,
+          input: formData, 
+          result: predictionResult 
+        });
+      } else {
+        setRecentPrediction({ input: formData, result: predictionResult });
+      }
+      
       setResult(predictionResult);
-      setRecentPrediction({ input: formData, result: predictionResult });
     } catch (err) {
       setError(err.response?.data?.detail || "An error occurred during prediction.");
     } finally {
