@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Sprout, 
   TrendingUp, 
+  TrendingDown,
   CloudRain, 
   TestTube, 
   Lightbulb, 
@@ -11,13 +12,18 @@ import {
   Thermometer,
   Droplets,
   LineChart as LineChartIcon,
-  FileText
+  FileText,
+  Brain,
+  ShieldCheck,
+  CheckCircle2,
+  Wind
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { useAppContext } from '../context/AppContext';
 import { getPredictionHistory } from '../services/api';
+import { cn } from '../utils/cn';
 import {
   AreaChart,
   Area,
@@ -32,12 +38,12 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 min-w-[150px]">
-        <p className="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-1">{label}</p>
-        <p className="text-sm font-bold text-emerald-600 mb-2">Yield: {data.yield.toLocaleString()} kg/ha</p>
-        <div className="space-y-1">
-          {data.crop && <p className="text-xs text-slate-500"><span className="font-medium">Crop:</span> {data.crop}</p>}
-          {data.region && <p className="text-xs text-slate-500"><span className="font-medium">Region:</span> {data.region}</p>}
+      <div className="bg-white p-4 rounded-xl shadow-xl border border-slate-100 min-w-[180px]">
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
+        <p className="text-2xl font-extrabold text-[#1F6B45] mb-2">{data.yield.toLocaleString()} <span className="text-sm font-medium text-slate-500">kg/ha</span></p>
+        <div className="space-y-1.5 pt-2 border-t border-slate-50">
+          {data.crop && <p className="text-xs font-semibold text-slate-600">Crop: <span className="text-slate-800">{data.crop}</span></p>}
+          {data.region && <p className="text-xs font-semibold text-slate-600">Region: <span className="text-slate-800">{data.region}</span></p>}
         </div>
       </div>
     );
@@ -64,8 +70,6 @@ export default function Dashboard() {
           return (a.id || 0) - (b.id || 0);
         });
         setHistory(sorted);
-        // Dashboard does not need to overwrite recentPrediction.
-        // AppShell handles the current prediction loading.
       } catch (err) {
         console.error("Failed to load prediction history", err);
       }
@@ -79,455 +83,357 @@ export default function Dashboard() {
   const loadingExtras = analysisState?.status === 'loading';
   const llmError = analysisState?.llmError;
 
-  // Use recentPrediction as the only active prediction. AppShell guarantees it loads.
   const activePrediction = recentPrediction;
-
   const hasData = !!activePrediction;
   const input = activePrediction?.input;
   const result = activePrediction?.result;
 
+  // Calculate trends
+  let yieldTrend = null;
+  let yieldTrendValue = null;
+  if (hasData && history.length > 1) {
+    const currentYield = result.predicted_yield_kg_per_hectare;
+    const prevYield = history[history.length - 2]?.predicted_yield;
+    if (prevYield && prevYield > 0) {
+      const diff = ((currentYield - prevYield) / prevYield) * 100;
+      yieldTrend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral';
+      yieldTrendValue = `${Math.abs(diff).toFixed(1)}%`;
+    }
+  }
+
+  const getSoilStatus = () => {
+    if (!input) return { status: 'Unknown', color: 'text-slate-500' };
+    const moisture = input['soil_moisture_%'];
+    if (moisture >= 60 && moisture <= 80) return { status: 'Optimal', color: 'text-[#16A34A]' };
+    if (moisture > 80) return { status: 'High Moisture', color: 'text-[#0EA5E9]' };
+    return { status: 'Needs Water', color: 'text-[#F59E0B]' };
+  };
+
+  const getWeatherStatus = () => {
+    if (!input) return { status: 'Unknown', color: 'text-slate-500' };
+    const temp = input.temperature_C;
+    if (temp >= 20 && temp <= 30) return { status: 'Favorable', color: 'text-[#16A34A]' };
+    if (temp > 30) return { status: 'Heat Stress Risk', color: 'text-[#EF4444]' };
+    return { status: 'Cool', color: 'text-[#0EA5E9]' };
+  };
+
+  const soilStatus = getSoilStatus();
+  const weatherStatus = getWeatherStatus();
+
   return (
-    <div className="space-y-6 pb-12">
-      {/* 1. TOP HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Welcome to YieldSense AI</h2>
-          <p className="text-slate-500 mt-1">A centralized agricultural intelligence platform for crop yield forecasting and farm productivity analysis.</p>
+    <div className="space-y-8 pb-16 max-w-7xl mx-auto">
+      
+      {/* 1. HERO SECTION */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-10 md:p-14 shadow-card border border-[#2E8B57]/30">
+        <div className="absolute -top-24 -right-24 opacity-10 pointer-events-none transform rotate-12">
+          <Sprout className="w-[400px] h-[400px] text-[#A8C957]" />
         </div>
-        <Button onClick={() => navigate('/predict')} icon={Sprout} className="flex-shrink-0">
-          {hasData ? 'Run New Prediction' : 'Run Your First Prediction'}
-        </Button>
+        <div className="relative z-10 max-w-2xl">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#FCFCF8] tracking-tight mb-5 leading-tight">
+            Your farm intelligence <br className="hidden md:block"/> at a glance.
+          </h2>
+          <p className="text-lg md:text-xl text-[#c6dfcd] mb-8 font-medium leading-relaxed max-w-xl">
+            Monitor crop health, predict yield, and make smarter agricultural decisions backed by AI.
+          </p>
+          <button 
+            onClick={() => navigate('/predict')} 
+            className="group relative inline-flex items-center justify-center bg-[#A8C957] text-[#12372A] font-bold text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-[#5BAE65] hover:text-white transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+          >
+            <span className="relative z-10 flex items-center">
+              {hasData ? 'Run New Prediction' : 'Run Your First Prediction'}
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* 2. KPI ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-slate-500">Predicted Yield</p>
-              <TrendingUp className="w-4 h-4 text-primary-500" />
-            </div>
-            {hasData ? (
-              <h3 className="text-2xl font-bold text-slate-800">{result.predicted_yield_kg_per_hectare.toLocaleString()} <span className="text-sm font-normal text-slate-500">kg/ha</span></h3>
-            ) : (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-400">No prediction yet</h3>
-                <p className="text-xs text-slate-400 mt-1">Run a prediction</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* 2. KPI CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-slate-500">Yield Performance</p>
-              <LineChartIcon className="w-4 h-4 text-blue-500" />
+        {/* Yield Card */}
+        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 group">
+          <div className="flex justify-between items-start mb-5">
+            <div className="p-3.5 bg-gradient-to-br from-[#e8f0ea] to-[#c6dfcd] rounded-2xl text-[#1F6B45] group-hover:scale-110 transition-transform">
+              <Sprout className="w-6 h-6" />
             </div>
-            {hasData && Array.isArray(history) && history.length > 1 ? (
-              <h3 className="text-2xl font-bold text-slate-800">
-                {result?.predicted_yield_kg_per_hectare >= history[history.length - 2]?.predicted_yield ? 'Improving' : 'Declining'}
-              </h3>
-            ) : (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-400">Not enough data</h3>
-                <p className="text-xs text-slate-400 mt-1">Run more predictions</p>
+            {yieldTrend && (
+              <div className={cn("flex items-center text-sm font-bold px-2.5 py-1 rounded-lg", yieldTrend === 'up' ? 'bg-emerald-50 text-emerald-700' : yieldTrend === 'down' ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-700')}>
+                {yieldTrend === 'up' ? <TrendingUp className="w-4 h-4 mr-1.5" /> : yieldTrend === 'down' ? <TrendingDown className="w-4 h-4 mr-1.5" /> : null}
+                {yieldTrendValue}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <h3 className="text-slate-500 font-bold text-xs mb-1.5 uppercase tracking-widest">Predicted Yield</h3>
+            <div className="flex items-baseline">
+              <span className="text-3xl font-extrabold text-slate-800 tracking-tight">{hasData ? result.predicted_yield_kg_per_hectare.toLocaleString() : '--'}</span>
+              {hasData && <span className="ml-2 text-sm font-semibold text-slate-500">kg/ha</span>}
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-slate-500">Soil Status</p>
-              <TestTube className="w-4 h-4 text-amber-500" />
+        {/* Soil Card */}
+        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 group">
+          <div className="flex justify-between items-start mb-5">
+            <div className="p-3.5 bg-[#fef3c7] rounded-2xl text-[#d97706] group-hover:scale-110 transition-transform">
+              <TestTube className="w-6 h-6" />
             </div>
-            {hasData && soilData ? (
-              <div className="flex flex-col items-center justify-center">
-                <h3 className="text-lg font-semibold text-emerald-600">Analyzed</h3>
-                <button onClick={() => navigate('/soil')} className="text-xs text-primary-500 mt-1 flex items-center hover:underline">
-                  View Details <ArrowRight className="w-3 h-3 ml-1" />
-                </button>
-              </div>
-            ) : (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-400">No soil analysis yet</h3>
-                <button onClick={() => navigate('/soil')} className="text-xs text-primary-500 mt-1 flex items-center hover:underline">
-                  Run Soil Analysis <ArrowRight className="w-3 h-3 ml-1" />
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <h3 className="text-slate-500 font-bold text-xs mb-1.5 uppercase tracking-widest">Soil Health</h3>
+            <div className={cn("text-2xl font-extrabold tracking-tight", hasData ? soilStatus.color : 'text-slate-400')}>
+              {hasData ? soilStatus.status : 'No Data'}
+            </div>
+            {hasData && <p className="text-sm font-medium text-slate-500 mt-2">Moisture: {input?.['soil_moisture_%']}% | pH: {input?.soil_pH}</p>}
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-slate-500">Weather Impact</p>
-              <CloudRain className="w-4 h-4 text-cyan-500" />
+        {/* Weather Card */}
+        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 group">
+          <div className="flex justify-between items-start mb-5">
+            <div className="p-3.5 bg-[#e0f2fe] rounded-2xl text-[#0284c7] group-hover:scale-110 transition-transform">
+              <CloudRain className="w-6 h-6" />
             </div>
-            {hasData && weatherData ? (
-              <div className="flex flex-col items-center justify-center">
-                <h3 className="text-lg font-semibold text-emerald-600">Analyzed</h3>
-                <button onClick={() => navigate('/weather')} className="text-xs text-primary-500 mt-1 flex items-center hover:underline">
-                  View Details <ArrowRight className="w-3 h-3 ml-1" />
-                </button>
-              </div>
-            ) : (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-400">No weather analysis yet</h3>
-                <button onClick={() => navigate('/weather')} className="text-xs text-primary-500 mt-1 flex items-center hover:underline">
-                  Run Weather Analysis <ArrowRight className="w-3 h-3 ml-1" />
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <h3 className="text-slate-500 font-bold text-xs mb-1.5 uppercase tracking-widest">Weather Impact</h3>
+            <div className={cn("text-2xl font-extrabold tracking-tight", hasData ? weatherStatus.color : 'text-slate-400')}>
+              {hasData ? weatherStatus.status : 'No Data'}
+            </div>
+            {hasData && <p className="text-sm font-medium text-slate-500 mt-2">{input?.temperature_C}°C | {input?.rainfall_mm}mm Rain</p>}
+          </div>
+        </div>
+
+        {/* AI Risk Card */}
+        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 group">
+          <div className="flex justify-between items-start mb-5">
+            <div className="p-3.5 bg-[#f3e8ff] rounded-2xl text-[#9333ea] group-hover:scale-110 transition-transform">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-slate-500 font-bold text-xs mb-1.5 uppercase tracking-widest">AI Risk Level</h3>
+            <div className="text-2xl font-extrabold tracking-tight text-[#16A34A]">
+              {hasData ? (insightsData?.attention_points?.length > 1 ? <span className="text-[#F59E0B]">Moderate</span> : 'Low') : <span className="text-slate-400">No Data</span>}
+            </div>
+            {hasData && <p className="text-sm font-medium text-slate-500 mt-2">{insightsData?.attention_points?.length || 0} active warnings</p>}
+          </div>
+        </div>
       </div>
 
-      {/* 3. MAIN CONTENT ROW */}
+      {/* 3. MAIN CHARTS & AI SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 flex flex-col">
-          <CardHeader>
-            <CardTitle>Yield Forecast / Productivity Trend</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-[300px] flex flex-col">
+        
+        {/* Yield Performance Area Chart */}
+        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-bold text-slate-800 tracking-tight">Yield Performance</h3>
+            <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#A8C957] outline-none appearance-none cursor-pointer">
+              <option>Last 30 Days</option>
+              <option>All Time</option>
+            </select>
+          </div>
+          
+          <div className="h-[350px] w-full">
             {!hasData ? (
-              <div className="flex-1 flex flex-col items-center justify-center bg-primary-50/50 rounded-xl border border-dashed border-primary-200 p-8 text-center">
-                <Sprout className="w-12 h-12 text-primary-400 mb-4" />
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Welcome to your Dashboard!</h3>
-                <p className="text-slate-600 mb-6 max-w-md">
-                  You have not created a prediction yet. Start your journey by running your first yield forecast to unlock weather, soil, and AI insights.
-                </p>
-                <Button onClick={() => navigate('/predict')} size="lg" className="shadow-md">
-                  Run Your First Prediction
-                </Button>
+              <div className="w-full h-full flex flex-col items-center justify-center bg-[#F7F8F2] rounded-2xl border border-dashed border-[#c6dfcd]">
+                <LineChartIcon className="w-12 h-12 text-[#5BAE65] mb-4 opacity-50" />
+                <p className="text-slate-500 font-semibold text-center">Run a prediction to visualize<br/>your yield trends over time.</p>
               </div>
             ) : (
-              <div className="h-[300px] w-full flex flex-col">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={Array.isArray(history) && history.length > 1 ? history.map(item => ({
-                    date: new Date(item.input_data?.observation_date || item.created_at).toLocaleDateString(),
-                    yield: Math.round(item.predicted_yield),
-                    crop: item.input_data?.crop_type || item.crop_type,
-                    region: item.input_data?.region || item.region
-                  })) : [{ 
-                    date: 'Current', 
-                    yield: result?.predicted_yield_kg_per_hectare || 0,
-                    crop: input?.crop_type,
-                    region: input?.region
-                  }]}>
-                    <defs>
-                      <linearGradient id="colorYield" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dx={-10} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                    <Area type="monotone" dataKey="yield" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorYield)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-                {history.length <= 1 && (
-                  <p className="text-center text-xs text-slate-500 mt-2">Current prediction. Make additional predictions to visualize your yield trend.</p>
-                )}
-              </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={Array.isArray(history) && history.length > 1 ? history.map(item => ({
+                  date: new Date(item.input_data?.observation_date || item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                  yield: Math.round(item.predicted_yield),
+                  crop: item.input_data?.crop_type || item.crop_type,
+                  region: item.input_data?.region || item.region
+                })) : [{ 
+                  date: 'Today', 
+                  yield: result?.predicted_yield_kg_per_hectare || 0,
+                  crop: input?.crop_type,
+                  region: input?.region
+                }]}>
+                  <defs>
+                    <linearGradient id="colorYield" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2E8B57" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#2E8B57" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 600, fontSize: 12 }} dy={15} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 600, fontSize: 12 }} dx={-10} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                  <Area type="monotone" dataKey="yield" stroke="#1F6B45" strokeWidth={4} fillOpacity={1} fill="url(#colorYield)" />
+                </AreaChart>
+              </ResponsiveContainer>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Prediction Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
+        {/* AI Intelligence Card */}
+        <div className="bg-gradient-to-b from-[#12372A] to-[#0d291e] rounded-[2rem] shadow-card p-8 relative overflow-hidden flex flex-col h-full border border-[#1F6B45]/50">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#5BAE65]/10 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
+          
+          <div className="flex items-center mb-8 relative z-10">
+            <div className="p-3 bg-gradient-to-br from-[#A8C957] to-[#5BAE65] rounded-xl shadow-lg mr-4">
+              <Brain className="w-6 h-6 text-[#12372A]" />
+            </div>
+            <h3 className="text-xl font-extrabold text-[#FCFCF8]">AI Intelligence</h3>
+          </div>
+
+          <div className="flex-1 flex flex-col relative z-10">
             {!hasData ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-50 rounded-xl border border-slate-100">
-                <Badge variant="neutral" className="mb-4">No prediction yet</Badge>
-                <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                  You haven't created a prediction yet. Your next prediction will populate yield, weather, soil and recommendation insights here.
-                </p>
-                <Button onClick={() => navigate('/predict')} variant="primary" size="sm" className="w-full">
-                  Run Your First Prediction
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="text-center p-6 bg-primary-50 rounded-xl border border-primary-100">
-                  <Badge variant="success" className="mb-3">Prediction Active</Badge>
-                  <p className="text-sm text-primary-600 font-medium mb-1">Estimated Production</p>
-                  <h4 className="text-3xl font-bold text-primary-700">{result?.predicted_yield_kg_per_hectare?.toLocaleString() || 0}</h4>
-                  <p className="text-xs text-primary-500 mt-1">kg per hectare</p>
+               <div className="flex-1 flex flex-col items-center justify-center text-center">
+                 <p className="text-[#c6dfcd] font-medium leading-relaxed mb-6">Your personalized AI insights will appear here after generating a forecast.</p>
+               </div>
+            ) : loadingExtras ? (
+               <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                 <div className="w-10 h-10 border-4 border-[#1F6B45] border-t-[#A8C957] rounded-full animate-spin"></div>
+                 <p className="text-[#A8C957] font-semibold animate-pulse">Analyzing farm conditions...</p>
+               </div>
+            ) : insightsData ? (
+              <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="bg-[#1F6B45]/40 backdrop-blur-sm border border-[#5BAE65]/20 rounded-2xl p-5">
+                  <p className="text-[#F7F8F2] font-medium text-sm leading-relaxed">
+                    {insightsData.summary} {insightsData.yield_interpretation}
+                  </p>
                 </div>
                 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-sm text-slate-500">Region</span>
-                    <span className="text-sm font-medium text-slate-800">{input?.region || '-'}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-sm text-slate-500">Crop Type</span>
-                    <span className="text-sm font-medium text-slate-800">{input?.crop_type || '-'}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 4. SECOND CONTENT ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Modeled Weather Conditions</CardTitle>
-            <p className="text-xs text-slate-500 mt-1">Conditions used for this prediction</p>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {!hasData ? (
-              <div className="h-full flex items-center justify-center p-6 text-center text-sm text-slate-500 bg-slate-50 rounded-lg">
-                Weather analysis will appear after a prediction.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <div className="flex items-center text-red-600 mb-1">
-                      <Thermometer className="w-4 h-4 mr-1" />
-                      <span className="text-xs font-medium uppercase tracking-wider">Temp</span>
-                    </div>
-                    <p className="text-lg font-bold text-slate-800">{input?.temperature_C ?? '-'}°C</p>
-                  </div>
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center text-blue-600 mb-1">
-                      <CloudRain className="w-4 h-4 mr-1" />
-                      <span className="text-xs font-medium uppercase tracking-wider">Rain</span>
-                    </div>
-                    <p className="text-lg font-bold text-slate-800">{input?.rainfall_mm ?? '-'}mm</p>
-                  </div>
-                  <div className="p-3 bg-cyan-50 rounded-lg">
-                    <div className="flex items-center text-cyan-600 mb-1">
-                      <Droplets className="w-4 h-4 mr-1" />
-                      <span className="text-xs font-medium uppercase tracking-wider">Humidity</span>
-                    </div>
-                    <p className="text-lg font-bold text-slate-800">{input?.["humidity_%"] ?? '-'}%</p>
-                  </div>
-                </div>
-                {weatherData && weatherData.agricultural_insight && (
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <p className="text-sm font-medium text-slate-700 mb-1">Historical Context</p>
-                    <p className="text-sm text-slate-600">{weatherData.agricultural_insight}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Soil Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {!hasData ? (
-              <div className="h-full flex items-center justify-center p-6 text-center text-sm text-slate-500 bg-slate-50 rounded-lg">
-                Run a prediction to analyze soil conditions.
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-slate-700">Soil Moisture</span>
-                    <span className="text-slate-600">{input?.["soil_moisture_%"] ?? '-'}%</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${input?.["soil_moisture_%"] || 0}%` }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-slate-700">Soil pH</span>
-                    <span className="text-slate-600">{input?.soil_pH ?? '-'}</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${((input?.soil_pH || 0) / 14) * 100}%` }}></div>
-                  </div>
-                </div>
-                {soilData && soilData.agricultural_insight && (
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <p className="text-sm font-medium text-slate-700 mb-1">Historical Context</p>
-                    <p className="text-sm text-slate-600">{soilData.agricultural_insight}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Agricultural Alerts</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {!hasData ? (
-              <div className="h-full flex items-center justify-center p-6 text-center text-sm text-slate-500 bg-slate-50 rounded-lg">
-                Alerts will be generated after a prediction.
-              </div>
-            ) : !insightsData ? (
-              <div className="h-full flex items-center justify-center p-6 text-center text-sm text-slate-500 bg-slate-50 rounded-lg">
-                {loadingExtras ? "Analyzing alerts..." : "Alerts unavailable."}
-              </div>
-            ) : (!insightsData.attention_points?.length && !insightsData.limitations?.length) ? (
-              <div className="h-full flex items-center justify-center p-6 text-center text-sm text-emerald-600 bg-emerald-50 rounded-lg font-medium">
-                No significant alerts available for the current prediction.
-              </div>
-            ) : (
-              <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2">
-                {insightsData.attention_points && insightsData.attention_points.length > 0 && (
-                  <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-                    <div className="flex items-center mb-2 text-red-800">
-                      <AlertTriangle className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-bold">Warnings & Attention Points</span>
-                    </div>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {Array.isArray(insightsData.attention_points) && insightsData.attention_points.map((pt, idx) => (
-                        <li key={idx} className="text-sm text-red-700">
-                          {typeof pt === 'string' ? pt : (
-                            <span>
-                              <strong>{pt.title}</strong>: {pt.reason} <em>({pt.action})</em>
-                            </span>
-                          )}
+                {insightsData.limitations && insightsData.limitations.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold text-[#A8C957] uppercase tracking-widest mb-3 flex items-center">
+                      <CheckCircle2 className="w-4 h-4 mr-2" /> Recommended Actions
+                    </h4>
+                    <ul className="space-y-3">
+                      {insightsData.limitations.slice(0, 3).map((pt, idx) => (
+                        <li key={idx} className="flex items-start bg-[#081a13]/50 rounded-xl p-3 border border-[#1F6B45]/30">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#A8C957] mt-1.5 mr-3 flex-shrink-0"></div>
+                          <span className="text-[#c6dfcd] text-sm leading-relaxed">{pt}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
-                {insightsData.limitations && insightsData.limitations.length > 0 && (
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                    <div className="flex items-center mb-2 text-blue-800">
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-bold">Recommendations</span>
-                    </div>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {insightsData.limitations.map((pt, idx) => (
-                        <li key={idx} className="text-sm text-blue-700">{pt}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                 <p className="text-red-300 font-medium leading-relaxed mb-4">Unable to fetch AI insights.</p>
+                 <button onClick={retryInsights} className="px-4 py-2 bg-[#1F6B45] text-white rounded-lg text-sm font-bold hover:bg-[#2E8B57] transition-colors">Retry</button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 5. INSIGHTS ROW */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold text-slate-800 flex items-center">
-          <Lightbulb className="w-5 h-5 mr-2 text-primary-500" />
-          AI Agricultural Insight
-        </h3>
-        {!hasData ? (
-          <Card>
-            <CardContent className="p-6 text-center text-sm text-slate-500 bg-slate-50">
-              <p className="mb-4">AI-generated agricultural insights will appear after your first analysis.</p>
-              <Button onClick={() => navigate('/predict')} variant="outline" size="sm">Generate Analysis</Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {insightsData ? (
-              <Card className="bg-primary-50 border-primary-100">
-                <CardContent className="p-6">
-                  <h4 className="text-lg font-bold text-slate-800 mb-4">AI Agricultural Insight</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <h5 className="text-sm font-semibold text-primary-800">Prediction Interpretation</h5>
-                      <p className="text-sm text-slate-700 leading-relaxed mt-1">{insightsData.summary} {insightsData.yield_interpretation}</p>
-                    </div>
-                    
-                    {insightsData.weather_insights && insightsData.weather_insights.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-semibold text-cyan-800">Weather Observations</h5>
-                        <ul className="list-disc pl-4 space-y-1 mt-1">
-                          {Array.isArray(insightsData.weather_insights) && insightsData.weather_insights.map((pt, idx) => (
-                            <li key={idx} className="text-sm text-slate-700">
-                              {typeof pt === 'string' ? pt : (
-                                <span>
-                                  <strong>{pt.condition} ({pt.value})</strong>: {pt.interpretation} <br/>
-                                  <span className="text-xs text-slate-500">Recommendation: {pt.recommendation}</span>
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {insightsData.soil_insights && insightsData.soil_insights.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-semibold text-amber-800">Soil Observations</h5>
-                        <ul className="list-disc pl-4 space-y-1 mt-1">
-                          {Array.isArray(insightsData.soil_insights) && insightsData.soil_insights.map((pt, idx) => (
-                            <li key={idx} className="text-sm text-slate-700">
-                              {typeof pt === 'string' ? pt : (
-                                <span>
-                                  <strong>{pt.condition} ({pt.value})</strong>: {pt.interpretation} <br/>
-                                  <span className="text-xs text-slate-500">Recommendation: {pt.recommendation}</span>
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {insightsData.strategic_forecasting && (
-                      <div className="pt-2 border-t border-primary-100">
-                        <h5 className="text-sm font-semibold text-indigo-800">Strategic Forecasting</h5>
-                        <p className="text-sm text-slate-700 leading-relaxed mt-1">{insightsData.strategic_forecasting}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="col-span-full">
-                <CardContent className="p-6 text-center text-sm text-slate-500 bg-slate-50 flex flex-col items-center justify-center space-y-3">
-                  {loadingExtras ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin"></div>
-                      <span>Generating AI insights...</span>
-                    </div>
-                  ) : llmError ? (
-                    <>
-                      <span>Unable to generate AI insights.</span>
-                      <Button onClick={retryInsights} variant="outline" size="sm">Retry</Button>
-                    </>
-                  ) : (
-                    <span>Insights unavailable.</span>
-                  )}
-                </CardContent>
-              </Card>
-            )}
           </div>
-        )}
-      </div>
-
-      {/* 6. BOTTOM ACTION AREA */}
-      <div className="pt-6 border-t border-slate-200">
-        <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">Quick Actions</h3>
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => navigate('/predict')} variant="secondary" icon={Sprout}>New Yield Prediction</Button>
-          <Button onClick={() => navigate('/weather')} variant="outline" icon={CloudRain}>Analyze Weather</Button>
-          <Button onClick={() => navigate('/soil')} variant="outline" icon={TestTube}>Analyze Soil</Button>
-          <Button onClick={() => navigate('/reports')} variant="outline" icon={FileText}>Generate Report</Button>
+          
+          {hasData && insightsData && (
+             <button onClick={() => navigate('/recommendations')} className="mt-6 w-full py-3.5 bg-[#1F6B45]/50 hover:bg-[#1F6B45] text-[#A8C957] font-bold rounded-xl border border-[#5BAE65]/30 transition-colors">
+               View Full Analysis
+             </button>
+          )}
         </div>
       </div>
 
+      {/* 4. FARM HEALTH & ALERTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Farm Health Visuals */}
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+          <h3 className="text-xl font-bold text-slate-800 mb-8">Environmental Intelligence</h3>
+          
+          {!hasData ? (
+             <p className="text-slate-500 font-medium text-center py-12">Data available after prediction.</p>
+          ) : (
+             <div className="space-y-6">
+                {/* Temperature */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center text-slate-700 font-bold text-sm">
+                      <Thermometer className="w-4 h-4 mr-2 text-rose-500" /> Temperature
+                    </div>
+                    <span className="font-extrabold text-slate-800">{input?.temperature_C}°C</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-400 to-rose-500 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (input?.temperature_C || 0) * 2.5)}%` }}></div>
+                  </div>
+                </div>
+
+                {/* Rainfall */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center text-slate-700 font-bold text-sm">
+                      <CloudRain className="w-4 h-4 mr-2 text-blue-500" /> Rainfall
+                    </div>
+                    <span className="font-extrabold text-slate-800">{input?.rainfall_mm}mm</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-300 to-blue-600 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (input?.rainfall_mm || 0) / 3)}%` }}></div>
+                  </div>
+                </div>
+
+                {/* Humidity */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center text-slate-700 font-bold text-sm">
+                      <Droplets className="w-4 h-4 mr-2 text-cyan-500" /> Humidity
+                    </div>
+                    <span className="font-extrabold text-slate-800">{input?.['humidity_%']}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div className="bg-gradient-to-r from-cyan-300 to-cyan-500 h-full rounded-full transition-all duration-1000" style={{ width: `${input?.['humidity_%'] || 0}%` }}></div>
+                  </div>
+                </div>
+                
+                {/* NDVI */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center text-slate-700 font-bold text-sm">
+                      <Sprout className="w-4 h-4 mr-2 text-emerald-500" /> Vegetation Index (NDVI)
+                    </div>
+                    <span className="font-extrabold text-slate-800">{input?.ndvi?.toFixed(2) || 'N/A'}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#A8C957] to-[#1F6B45] h-full rounded-full transition-all duration-1000" style={{ width: `${((input?.ndvi || 0) * 100)}%` }}></div>
+                  </div>
+                </div>
+             </div>
+          )}
+        </div>
+
+        {/* Agricultural Alerts */}
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8 flex flex-col">
+          <h3 className="text-xl font-bold text-slate-800 mb-6">Agricultural Alerts</h3>
+          
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {!hasData ? (
+               <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                 <AlertTriangle className="w-12 h-12 text-slate-200 mb-3" />
+                 <p className="text-slate-500 font-medium">Monitoring system inactive.<br/>Run a prediction to check for alerts.</p>
+               </div>
+            ) : insightsData?.attention_points?.length > 0 ? (
+               <div className="space-y-4">
+                 {insightsData.attention_points.map((pt, idx) => (
+                   <div key={idx} className="flex p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                     <AlertTriangle className="w-6 h-6 text-amber-600 mr-4 flex-shrink-0" />
+                     <div>
+                       <h4 className="font-bold text-amber-900 text-sm mb-1">
+                         {typeof pt === 'string' ? pt : pt.title || 'Attention Required'}
+                       </h4>
+                       {typeof pt !== 'string' && (
+                         <p className="text-amber-800 text-sm leading-relaxed">{pt.reason} <span className="font-semibold block mt-1">Action: {pt.action}</span></p>
+                       )}
+                     </div>
+                   </div>
+                 ))}
+               </div>
+            ) : (
+               <div className="flex flex-col items-center justify-center h-full text-center py-8 bg-[#F7F8F2] rounded-2xl border border-dashed border-[#c6dfcd]">
+                 <CheckCircle2 className="w-12 h-12 text-[#5BAE65] mb-3" />
+                 <p className="text-[#1F6B45] font-bold">All Systems Nominal</p>
+                 <p className="text-sm text-[#2E8B57] mt-1">No critical agricultural alerts detected.</p>
+               </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
     </div>
   );
 }

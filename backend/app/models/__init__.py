@@ -5,5 +5,6 @@ from .role import Role
 from .user import User
 from .prediction_history import PredictionHistory
 from .password_reset import PasswordResetToken
+from .notification import Notification
 
-__all__ = ["Role", "User", "PredictionHistory", "PasswordResetToken"]
+__all__ = ["Role", "User", "PredictionHistory", "PasswordResetToken", "Notification"]

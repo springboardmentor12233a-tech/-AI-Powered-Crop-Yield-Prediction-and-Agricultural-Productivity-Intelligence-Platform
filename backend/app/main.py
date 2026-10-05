@@ -7,7 +7,7 @@ from backend.weather_analysis import load_historical_weather_analysis
 from backend.soil_analysis import load_historical_soil_analysis
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import health, auth, ml
+from .api import health, auth, ml, notifications
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(ml.router)
+app.include_router(notifications.router)
 
 
 @app.get("/")

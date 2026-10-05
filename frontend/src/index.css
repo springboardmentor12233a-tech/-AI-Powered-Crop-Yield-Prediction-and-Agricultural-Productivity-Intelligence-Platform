@@ -1,20 +1,47 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 @theme {
-  --color-primary-50: #f0fdf4;
-  --color-primary-100: #dcfce7;
-  --color-primary-500: #22c55e;
-  --color-primary-600: #16a34a;
-  --color-primary-700: #15803d;
-  --color-primary-900: #14532d;
+  --color-agri-deep: #12372A;
+  --color-agri-forest: #1F6B45;
+  --color-agri-emerald: #2E8B57;
+  --color-agri-fresh: #5BAE65;
+  --color-agri-lime: #A8C957;
   
-  --color-surface-50: #f8fafc;
+  --color-agri-cream: #F7F8F2;
+  --color-agri-white: #FCFCF8;
+  
+  --color-slate-800: #1e293b;
+  --color-slate-700: #334155;
+  --color-slate-500: #64748B;
+  --color-slate-200: #e2e8f0;
+  
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-success: #16A34A;
+  --color-info: #0EA5E9;
+  
+  --color-primary-50: #F7F8F2; /* Map primary to agri colors for compatibility */
+  --color-primary-100: #e8f0ea;
+  --color-primary-200: #c6dfcd;
+  --color-primary-300: #A8C957;
+  --color-primary-400: #5BAE65;
+  --color-primary-500: #2E8B57;
+  --color-primary-600: #1F6B45;
+  --color-primary-700: #12372A;
+  --color-primary-800: #0d291e;
+  --color-primary-900: #081a13;
+
+  --color-surface-50: #F7F8F2;
   --color-surface-100: #f1f5f9;
-  --color-surface: #ffffff;
+  --color-surface: #FCFCF8;
   
-  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-soft: 0 4px 20px -2px rgba(18, 55, 42, 0.05);
+  --shadow-card: 0 2px 10px rgba(18, 55, 42, 0.03), 0 10px 25px rgba(18, 55, 42, 0.04);
   
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
@@ -22,3 +49,4 @@
     @apply bg-surface-50 text-slate-800 antialiased font-sans;
   }
 }
+

@@ -4,10 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/common/C
 import { EmptyState, LoadingState, ErrorState } from '../components/common/StateComponents';
 import { getPredictionHistory, getHistoricalSoilData } from '../services/api';
 import { useAppContext } from '../context/AppContext';
-import { TestTube, ArrowRight, Sprout, Droplets, Info } from 'lucide-react';
+import { TestTube, ArrowRight, Sprout, Droplets, Info, Layers } from 'lucide-react';
 import {
-  LineChart,
-  Line,
   ScatterChart,
   Scatter,
   BarChart,
@@ -23,22 +21,21 @@ const CustomTooltip = ({ active, payload, label, dataKeyName, dataKeyUnit }) => 
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-100 min-w-[150px]">
-        <p className="text-sm font-semibold text-slate-800 mb-2 border-b border-slate-100 pb-1">{label}</p>
-        <p className="text-sm font-bold text-emerald-600 mb-2">{dataKeyName}: {data[payload[0].dataKey]}{dataKeyUnit}</p>
-        <div className="space-y-1">
-          {data.crop && <p className="text-xs text-slate-500"><span className="font-medium">Crop:</span> {data.crop}</p>}
-          {data.region && <p className="text-xs text-slate-500"><span className="font-medium">Region:</span> {data.region}</p>}
-          {payload[0].dataKey === 'moisture' && data.ph && <p className="text-xs text-slate-500"><span className="font-medium">Soil pH:</span> {data.ph}</p>}
-          {payload[0].dataKey === 'ph' && data.moisture && <p className="text-xs text-slate-500"><span className="font-medium">Soil Moisture:</span> {data.moisture}%</p>}
-          {data.yield && <p className="text-xs text-slate-500"><span className="font-medium">Yield:</span> {data.yield.toLocaleString()} kg/ha</p>}
+      <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-100 min-w-[200px]">
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">{label || 'Data Point'}</p>
+        <p className="text-lg font-black text-[#1F6B45] mb-3">{dataKeyName}: {data[payload[0].dataKey]}{dataKeyUnit}</p>
+        <div className="space-y-2">
+          {data.crop && <p className="text-xs text-slate-500 flex justify-between"><span className="font-bold text-slate-700">Crop:</span> <span>{data.crop}</span></p>}
+          {data.region && <p className="text-xs text-slate-500 flex justify-between"><span className="font-bold text-slate-700">Region:</span> <span>{data.region}</span></p>}
+          {payload[0].dataKey === 'moisture' && data.ph && <p className="text-xs text-slate-500 flex justify-between"><span className="font-bold text-slate-700">Soil pH:</span> <span>{data.ph}</span></p>}
+          {payload[0].dataKey === 'ph' && data.moisture && <p className="text-xs text-slate-500 flex justify-between"><span className="font-bold text-slate-700">Moisture:</span> <span>{data.moisture}%</span></p>}
+          {data.yield && <p className="text-xs text-slate-500 flex justify-between"><span className="font-bold text-slate-700">Yield:</span> <span className="text-[#5BAE65] font-bold">{data.yield.toLocaleString()} kg/ha</span></p>}
         </div>
       </div>
     );
   }
   return null;
 };
-
 
 export default function SoilAnalysis() {
   const { recentPrediction, analysisState } = useAppContext();
@@ -146,198 +143,174 @@ export default function SoilAnalysis() {
     region: h.input.region
   }));
 
-  const parseAssessment = (assessmentObj) => {
-    if (!assessmentObj) return {};
-    let classification = assessmentObj.assessment;
-    let yieldAssoc = null;
-    let range = null;
-    let correlation = null;
-    let rawContext = assessmentObj.historical_context || "";
-    let rawAssessment = assessmentObj.assessment || "";
-
-    const classMatch = rawAssessment.match(/Value is in the '([^']+)'/);
-    if (classMatch) classification = classMatch[1] + " quartile";
-    
-    const yieldMatch = rawAssessment.match(/associated with (a.*?) historical yield/);
-    if (yieldMatch) yieldAssoc = yieldMatch[1] + " historical yield";
-
-    const rangeMatch = rawContext.match(/\(([\d.]+\s*-\s*[\d.]+)\)/);
-    if (rangeMatch) range = rangeMatch[1];
-
-    const corrMatch = rawContext.match(/correlation \(([+-]?[\d.]+)\)/);
-    if (corrMatch) correlation = corrMatch[1];
-    
-    return {
-      classification,
-      yieldAssoc,
-      range,
-      correlation,
-      isLimited: rawContext.includes("Limited historical evidence")
-    };
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Soil Analysis</h2>
-          <p className="text-slate-500 mt-1">Deep analysis of soil properties and suitability for {recentPrediction.input.crop_type}.</p>
+    <div className="space-y-8 pb-16 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-8 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#d97706]/20 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#10b981]/20 rounded-full blur-[80px] -mb-20 -ml-20 pointer-events-none"></div>
+        <div className="relative z-10">
+          <h2 className="text-3xl font-extrabold text-[#FCFCF8] tracking-tight">Soil Deep Analysis</h2>
+          <p className="text-[#c6dfcd] mt-2 font-medium">Substrate evaluation and suitability for {recentPrediction.input.crop_type}.</p>
+        </div>
+        <div className="relative z-10 flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+          <Layers className="w-8 h-8 text-[#A8C957]" />
         </div>
       </div>
 
-      {/* SECTION 1: CURRENT SOIL CONDITIONS */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle>Current Soil Conditions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-blue-50/50 rounded-xl p-5 border border-blue-100 flex items-center justify-between">
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm relative overflow-hidden group">
+          <div className="absolute -right-4 -top-4 bg-blue-50 w-32 h-32 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 ease-out"></div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                   <Droplets className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-semibold text-blue-800">Soil Moisture</span>
                 </div>
-                <p className="text-xs text-slate-500">Current prediction</p>
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Soil Moisture</span>
               </div>
-              <div className="text-3xl font-bold text-slate-800">{recentPrediction.input["soil_moisture_%"]}%</div>
+              <p className="text-xs text-slate-400 font-medium ml-13">Current assessment</p>
             </div>
-            
-            <div className="bg-emerald-50/50 rounded-xl p-5 border border-emerald-100 flex items-center justify-between">
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <Sprout className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-semibold text-emerald-800">Soil pH</span>
-                </div>
-                <p className="text-xs text-slate-500">Current prediction</p>
-              </div>
-              <div className="text-3xl font-bold text-slate-800">{recentPrediction.input.soil_pH}</div>
-            </div>
+            <div className="text-5xl font-black text-[#12372A]">{recentPrediction.input["soil_moisture_%"]}<span className="text-2xl text-slate-300 ml-1">%</span></div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm relative overflow-hidden group">
+          <div className="absolute -right-4 -top-4 bg-emerald-50 w-32 h-32 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 ease-out"></div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <Sprout className="w-5 h-5 text-emerald-600" />
+                </div>
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Soil pH</span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium ml-13">Current assessment</p>
+            </div>
+            <div className="text-5xl font-black text-[#12372A]">{recentPrediction.input.soil_pH}</div>
+          </div>
+        </div>
+      </div>
 
-      {/* SECTION 2: SOIL INSIGHTS */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle>Soil Insights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3">
+      <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+          <h3 className="text-xl font-bold text-[#12372A]">AI Soil Insights</h3>
+          <p className="text-sm text-slate-500 font-medium mt-1">Machine learning interpretations of soil viability.</p>
+        </div>
+        <div className="p-8">
+          <ul className="space-y-4">
             {soilData.historical_yield_context && (
-              <li className="flex items-start text-sm text-slate-700">
-                <span className="text-emerald-500 mr-2 mt-0.5">•</span>
-                <span className="leading-relaxed">{soilData.historical_yield_context}</span>
+              <li className="flex items-start bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100/50">
+                <ArrowRight className="w-5 h-5 text-emerald-500 mr-4 flex-shrink-0 mt-0.5" />
+                <span className="text-[15px] font-medium text-emerald-900 leading-relaxed">{soilData.historical_yield_context}</span>
               </li>
             )}
             {soilData.overall_assessment && (
-              <li className="flex items-start text-sm text-slate-700">
-                <span className="text-emerald-500 mr-2 mt-0.5">•</span>
-                <span className="leading-relaxed">{soilData.overall_assessment}</span>
+              <li className="flex items-start bg-[#f0f9ff]/50 p-5 rounded-2xl border border-[#bae6fd]/50">
+                <ArrowRight className="w-5 h-5 text-[#0284c7] mr-4 flex-shrink-0 mt-0.5" />
+                <span className="text-[15px] font-medium text-[#0c4a6e] leading-relaxed">{soilData.overall_assessment}</span>
               </li>
             )}
             {soilData.agricultural_insight && (
-              <li className="flex items-start text-sm text-slate-700">
-                <span className="text-emerald-500 mr-2 mt-0.5">•</span>
-                <span className="leading-relaxed">{soilData.agricultural_insight}</span>
+              <li className="flex items-start bg-amber-50/50 p-5 rounded-2xl border border-amber-100/50">
+                <ArrowRight className="w-5 h-5 text-amber-500 mr-4 flex-shrink-0 mt-0.5" />
+                <span className="text-[15px] font-medium text-amber-900 leading-relaxed">{soilData.agricultural_insight}</span>
               </li>
             )}
           </ul>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* SECTION 3: HISTORICAL SOIL ANALYSIS */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Historical Soil Analysis</CardTitle>
-          <p className="text-sm text-slate-500 font-normal mt-1">
+      <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+          <h3 className="text-xl font-bold text-[#12372A]">Historical Analysis & Distribution</h3>
+          <p className="text-sm text-slate-500 font-medium mt-1">
             Historical soil conditions and their relationship with crop yield.
           </p>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-8">
           {datasetLoading ? (
-            <div className="flex-1 flex items-center justify-center bg-slate-50/50 m-4 rounded-xl border border-dashed border-slate-200 py-12">
+            <div className="flex-1 flex items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 py-16">
               <LoadingState message="Loading historical dataset..." />
             </div>
           ) : !historicalDataset || historicalDataset.records.length === 0 ? (
-            <div className="flex flex-col items-center justify-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 py-8 px-6 my-2 min-h-[180px]">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-100 shadow-sm mb-3">
-                <TestTube className="w-5 h-5 text-slate-400" />
+            <div className="flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 py-12 px-6 my-2">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-slate-100 shadow-sm mb-4">
+                <TestTube className="w-8 h-8 text-slate-300" />
               </div>
-              <h4 className="text-sm font-semibold text-slate-800 mb-1.5">No historical soil records yet.</h4>
-              <p className="text-sm text-slate-500 text-center max-w-xs leading-relaxed">
-                The training dataset is currently empty.
+              <h4 className="text-lg font-bold text-slate-800 mb-2">No historical soil records yet.</h4>
+              <p className="text-sm text-slate-500 text-center max-w-sm leading-relaxed">
+                The training dataset is currently empty. Make predictions to build historical trends.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Soil Moisture Distribution */}
-              <div className="border border-slate-100 rounded-xl p-5 bg-white shadow-sm flex flex-col">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4 text-center">Soil Moisture Distribution</h4>
-                <div className="h-[260px] w-full">
+              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Moisture Frequency Distribution</h4>
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={createBins(historicalDataset.records, 'soil_moisture', 10)} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="bin" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
-                      <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', padding: '8px' }} />
-                      <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Observations" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="bin" tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} tickMargin={10} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: '600' }} />
+                      <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Observations" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Soil pH Distribution */}
-              <div className="border border-slate-100 rounded-xl p-5 bg-white shadow-sm flex flex-col">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4 text-center">Soil pH Distribution</h4>
-                <div className="h-[260px] w-full">
+              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">pH Level Frequency Distribution</h4>
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={createBins(historicalDataset.records, 'soil_pH', 10)} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="bin" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
-                      <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', padding: '8px' }} />
-                      <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} name="Observations" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="bin" tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} tickMargin={10} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: '600' }} />
+                      <Bar dataKey="count" fill="#10b981" radius={[6, 6, 0, 0]} name="Observations" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Soil Moisture vs Yield */}
-              <div className="border border-slate-100 rounded-xl p-5 bg-white shadow-sm flex flex-col">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4 text-center">Soil Moisture vs Yield</h4>
-                <div className="h-[260px] w-full">
+              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Moisture vs Yield Scatter</h4>
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis type="number" dataKey="soil_moisture" name="Soil Moisture" unit="%" tick={{ fontSize: 11, fill: '#64748b' }} tickMargin={10} domain={['dataMin', 'dataMax']} />
-                      <YAxis type="number" dataKey="yield" name="Yield" unit=" kg/ha" tick={{ fontSize: 11, fill: '#64748b' }} tickMargin={10} axisLine={false} tickLine={false} domain={['dataMin', 'dataMax']} />
-                      <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', padding: '8px' }} />
-                      <Scatter name="Training Records" data={historicalDataset.records} fill="#3b82f6" fillOpacity={0.6} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" dataKey="soil_moisture" name="Soil Moisture" unit="%" tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} tickMargin={10} domain={['dataMin', 'dataMax']} axisLine={false} tickLine={false} />
+                      <YAxis type="number" dataKey="yield" name="Yield" unit=" kg/ha" tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} tickMargin={10} axisLine={false} tickLine={false} domain={['dataMin', 'dataMax']} />
+                      <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip dataKeyName="Moisture" dataKeyUnit="%" />} />
+                      <Scatter name="Training Records" data={historicalDataset.records} fill="#3b82f6" fillOpacity={0.7} />
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Soil pH vs Yield */}
-              <div className="border border-slate-100 rounded-xl p-5 bg-white shadow-sm flex flex-col">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4 text-center">Soil pH vs Yield</h4>
-                <div className="h-[260px] w-full">
+              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">pH vs Yield Scatter</h4>
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis type="number" dataKey="soil_pH" name="Soil pH" tick={{ fontSize: 11, fill: '#64748b' }} tickMargin={10} domain={['dataMin', 'dataMax']} />
-                      <YAxis type="number" dataKey="yield" name="Yield" unit=" kg/ha" tick={{ fontSize: 11, fill: '#64748b' }} tickMargin={10} axisLine={false} tickLine={false} domain={['dataMin', 'dataMax']} />
-                      <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', padding: '8px' }} />
-                      <Scatter name="Training Records" data={historicalDataset.records} fill="#10b981" fillOpacity={0.6} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" dataKey="soil_pH" name="Soil pH" tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} tickMargin={10} domain={['dataMin', 'dataMax']} axisLine={false} tickLine={false} />
+                      <YAxis type="number" dataKey="yield" name="Yield" unit=" kg/ha" tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} tickMargin={10} axisLine={false} tickLine={false} domain={['dataMin', 'dataMax']} />
+                      <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip dataKeyName="pH Level" dataKeyUnit="" />} />
+                      <Scatter name="Training Records" data={historicalDataset.records} fill="#10b981" fillOpacity={0.7} />
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

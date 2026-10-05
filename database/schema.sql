@@ -275,3 +275,21 @@ CREATE INDEX idx_agricultural_observations_disease_status_id
 -- ============================================================
 -- END OF SCHEMA
 -- ============================================================
+
+-- ==========================================
+-- NOTIFICATIONS
+-- ==========================================
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message VARCHAR(1000) NOT NULL,
+    type VARCHAR(50) DEFAULT 'info' NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notifications_user_id 
+        FOREIGN KEY (user_id) 
+        REFERENCES users(id) 
+        ON DELETE CASCADE
+);
+

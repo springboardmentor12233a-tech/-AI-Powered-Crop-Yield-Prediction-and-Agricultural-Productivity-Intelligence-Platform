@@ -99,6 +99,8 @@ check_delete.py
 inspect_fks.py
 test_req.py
 test_admin_management.py
+test_notifications.py
+create_notifications_table.py
 frontend/capture_error.cjs
 frontend/recovered.json
 frontend/test_imports.js

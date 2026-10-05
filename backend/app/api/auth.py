@@ -138,6 +138,11 @@ def register(
     """
     try:
         db_user = AuthService.create_user(db, user_data)
+        
+        # Notify admins
+        from backend.app.services.notification import notify_admins
+        notify_admins(db, "New User Registered", f"A new user ({db_user.email}) has registered.", type="info")
+        
         return UserResponse.model_validate(db_user)
     except ValueError as e:
         if "already registered" in str(e):
