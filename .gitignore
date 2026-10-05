@@ -94,6 +94,11 @@ test_login.py
 test_predict_auth.py
 test_llm.py
 test_llm_out.txt
+test_reset_password.py
+check_delete.py
+inspect_fks.py
+test_req.py
+test_admin_management.py
 frontend/capture_error.cjs
 frontend/recovered.json
 frontend/test_imports.js

@@ -72,6 +72,31 @@ export const getAllUsers = async () => {
   return response.data;
 };
 
+export const updateAdminUser = async (userId, userData) => {
+  const response = await api.patch(`/auth/admin/users/${userId}`, userData);
+  return response.data;
+};
+
+export const deleteAdminUser = async (userId) => {
+  const response = await api.delete(`/auth/admin/users/${userId}`);
+  return response.data;
+};
+
+export const getAllRoles = async () => {
+  const response = await api.get('/auth/admin/roles');
+  return response.data;
+};
+
+export const forgotPassword = async (email) => {
+  const response = await api.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+export const resetPassword = async (token, new_password) => {
+  const response = await api.post('/auth/reset-password', { token, new_password });
+  return response.data;
+};
+
 // ==========================================
 // Milestone 2 Core Endpoints
 // ==========================================

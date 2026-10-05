@@ -30,6 +30,13 @@ class UserUpdate(BaseModel):
     """Schema for updating user details"""
     name: str
 
+class AdminUserUpdate(BaseModel):
+    """Schema for admin updating a user"""
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role_id: Optional[int] = None
+    is_active: Optional[bool] = None
+
 
 class UserCreate(UserBase):
     """Schema for user registration"""
@@ -63,3 +70,14 @@ class TokenData(BaseModel):
     """Schema for JWT token payload"""
     email: Optional[str] = None
     user_id: Optional[int] = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Schema for requesting a password reset"""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Schema for resetting a password with a token"""
+    token: str
+    new_password: str = Field(..., min_length=8, description="Password must be at least 8 characters")

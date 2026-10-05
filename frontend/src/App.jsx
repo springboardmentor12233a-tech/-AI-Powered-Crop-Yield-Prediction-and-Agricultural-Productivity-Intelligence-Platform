@@ -8,7 +8,7 @@ import SoilAnalysis from './pages/SoilAnalysis';
 import Analytics from './pages/Analytics';
 import Recommendations from './pages/Recommendations';
 import AgriculturalReport from './pages/AgriculturalReport';
-import { Login, Register } from './pages/AuthPages';
+import { Login, Register, ForgotPassword, ResetPassword } from './pages/AuthPages';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import Settings from './pages/Settings';
@@ -31,6 +31,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           <Route element={<ProtectedRoute allowedRoles={['admin', 'user', 'farmer']} />}>
             <Route path="/" element={<AppShell />}>

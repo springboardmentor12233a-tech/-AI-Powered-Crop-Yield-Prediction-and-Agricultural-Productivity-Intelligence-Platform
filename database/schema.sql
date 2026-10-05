@@ -38,6 +38,25 @@ CREATE TABLE users (
 );
 
 -- ============================================================
+-- TABLE 2b: password_reset_tokens
+-- ============================================================
+-- Purpose: Stores single-use tokens for password reset functionality
+-- token_hash is a securely hashed version of the token sent via email
+
+CREATE TABLE password_reset_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_password_reset_user_id 
+        FOREIGN KEY (user_id) 
+        REFERENCES users(id) 
+        ON DELETE CASCADE
+);
+
+-- ============================================================
 -- TABLE 3: regions
 -- ============================================================
 -- Purpose: Stores geographic regions for agricultural observations

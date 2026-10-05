@@ -9,6 +9,9 @@ from .auth import (
     Token,
     TokenData,
     UserUpdate,
+    AdminUserUpdate,
+    ForgotPasswordRequest,
+    ResetPasswordRequest
 )
 
 __all__ = [
@@ -19,4 +22,7 @@ __all__ = [
     "Token",
     "TokenData",
     "UserUpdate",
+    "AdminUserUpdate",
+    "ForgotPasswordRequest",
+    "ResetPasswordRequest",
 ]

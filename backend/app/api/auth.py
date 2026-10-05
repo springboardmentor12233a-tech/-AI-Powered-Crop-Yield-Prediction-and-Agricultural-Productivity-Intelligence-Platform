@@ -14,8 +14,16 @@ from ..schemas import (
     UserResponse,
     Token,
     UserUpdate,
+    AdminUserUpdate,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    RoleResponse
 )
+from ..models import User, Role
 from ..services import AuthService
+import os
+import smtplib
+from email.message import EmailMessage
 from ..core.security import (
     create_access_token,
     get_current_user_from_token,
@@ -307,4 +315,141 @@ def get_all_users(
         List of UserResponse
     """
     return AuthService.get_all_users(db)
+
+
+@router.get("/admin/roles", response_model=list[RoleResponse])
+def get_all_roles(
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+) -> list[RoleResponse]:
+    """
+    Get all roles (Admin only).
+    """
+    return db.query(Role).all()
+
+@router.patch("/admin/users/{user_id}", response_model=UserResponse)
+def update_user_by_admin(
+    user_id: int,
+    user_data: AdminUserUpdate,
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+) -> UserResponse:
+    """
+    Update a user's details and role (Admin only).
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user_data.name is not None:
+        user.name = user_data.name
+    if user_data.email is not None:
+        # Check if email is already taken by another user
+        if user_data.email != user.email and AuthService.user_email_exists(db, user_data.email):
+            raise HTTPException(status_code=409, detail="Email already registered")
+        user.email = user_data.email
+    if user_data.role_id is not None:
+        role = db.query(Role).filter(Role.id == user_data.role_id).first()
+        if not role:
+            raise HTTPException(status_code=400, detail="Invalid role ID")
+        user.role_id = user_data.role_id
+    if user_data.is_active is not None:
+        user.is_active = user_data.is_active
+        
+    db.commit()
+    db.refresh(user)
+    return UserResponse.model_validate(user)
+
+@router.delete("/admin/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_by_admin(
+    user_id: int,
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a user (Admin only).
+    """
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
+        
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    db.delete(user)
+    db.commit()
+    return None
+
+def send_reset_email(email: str, token: str) -> bool:
+    """Send reset password email using SMTP"""
+    smtp_server = os.getenv("SMTP_SERVER")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM_EMAIL")
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    if not all([smtp_server, smtp_port, smtp_user, smtp_password, smtp_from]):
+        print(f"SMTP not configured. Would have sent token {token} to {email}")
+        return False
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Password Reset - YieldSense AI'
+    msg['From'] = smtp_from
+    msg['To'] = email
+    
+    reset_url = f"{frontend_url}/reset-password?token={token}"
+    
+    msg.set_content(f"You requested a password reset. Click the following link to reset your password:\n\n{reset_url}\n\nIf you did not request this, please ignore this email.")
+
+    try:
+        with smtplib.SMTP(smtp_server, int(smtp_port)) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
+
+@router.post("/forgot-password")
+def forgot_password(
+    request: ForgotPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Request a password reset link.
+    """
+    raw_token = AuthService.create_password_reset_token(db, request.email)
+    
+    if raw_token:
+        # Send email
+        success = send_reset_email(request.email, raw_token)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Email service is not configured or currently unavailable."
+            )
+        
+    return {"message": "If an account exists for this email, a password reset link has been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(
+    request: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Reset password using a token.
+    """
+    success = AuthService.reset_password_with_token(db, request.token, request.new_password)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+        
+    return {"message": "Password has been successfully reset."}
 
