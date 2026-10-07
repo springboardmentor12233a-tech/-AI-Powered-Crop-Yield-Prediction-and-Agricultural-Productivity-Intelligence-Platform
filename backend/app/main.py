@@ -43,7 +43,13 @@ app = FastAPI(
 import os
 
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000")
-allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+allowed_origins = [origin.strip().rstrip("/") for origin in allowed_origins_str.split(",") if origin.strip()]
+
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    clean_url = frontend_url.strip().rstrip("/")
+    if clean_url not in allowed_origins:
+        allowed_origins.append(clean_url)
 
 app.add_middleware(
     CORSMiddleware,
