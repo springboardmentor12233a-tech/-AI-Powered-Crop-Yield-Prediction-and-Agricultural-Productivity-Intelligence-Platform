@@ -19,7 +19,15 @@ import {
   Hash, 
   Check, 
   HelpCircle, 
-  X 
+  X,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  Globe,
+  Cpu,
+  UserCheck,
+  Building,
+  CheckSquare
 } from 'lucide-react';
 import UserProfilePanel from './UserProfilePanel';
 
@@ -88,12 +96,13 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   
   // Form fields
-  const [identifier, setIdentifier] = useState(''); // Email or Username
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState('farmer@cropcast.ai'); // Default to demo email
+  const [password, setPassword] = useState('password123');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [selectedRole, setSelectedRole] = useState('Farmer');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   // Password Reset Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -161,6 +170,21 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
     return () => clearInterval(interval);
   }, [decodedToken, onLogout]);
 
+  // Handle Role Dropdown change
+  const handleRoleDropdownChange = (e) => {
+    const roleId = e.target.value;
+    setSelectedRole(roleId);
+    
+    // Auto-fill demo account credentials matching selected role if in login mode
+    if (mode === 'login') {
+      const demo = DEMO_ACCOUNTS.find(d => d.role === roleId);
+      if (demo) {
+        setIdentifier(demo.identifier);
+        setPassword('password123');
+      }
+    }
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!identifier.trim()) {
@@ -190,6 +214,7 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
     setLoading(true);
     setIdentifier(demoAccount.identifier);
     setPassword('password123');
+    setSelectedRole(demoAccount.role);
 
     try {
       const response = await apiFetch('/api/auth/login', {
@@ -215,6 +240,12 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSsoLogin = (providerName) => {
+    // Single Sign-On simulation using demo account matching current selected role
+    const demo = DEMO_ACCOUNTS.find(d => d.role === selectedRole) || DEMO_ACCOUNTS[0];
+    handleDemoLogin(demo);
   };
 
   const handleSubmit = async (e) => {
@@ -369,35 +400,34 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
     }
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+  const currentRoleConfig = ROLES.find(r => r.id === selectedRole) || ROLES[0];
+  const CurrentRoleIcon = currentRoleConfig.icon;
 
-      {/* Header Banner */}
-      <div className="glass-card" style={{ padding: '24px 32px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(15, 23, 42, 0.9) 100%)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span className="badge badge-emerald"><ShieldCheck size={13} /> Enhanced Security & UX Engine</span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Bcrypt • Remember Me • Role Redirect</span>
-            </div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
-              User Authentication & Role Redirect Portal
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '800px' }}>
-              Automatic role-based redirect (Farmer $\rightarrow$ Advisory, Consultant/Researcher $\rightarrow$ Analytics, Admin $\rightarrow$ User Management), "Remember me" session extension (7 days), and interactive password reset.
-            </p>
-          </div>
-          {currentUser && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '10px 18px', borderRadius: '12px' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>{currentUser.full_name}</div>
-                <div style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 600 }}>Role: {currentUser.role}</div>
-                {timeLeftStr && (
-                  <div style={{ fontSize: '0.7rem', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', marginTop: '2px' }}>
-                    <Clock size={11} /> Session: {timeLeftStr}
-                  </div>
-                )}
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+      {/* Authenticated Top User Info Bar (If logged in) */}
+      {currentUser && (
+        <div className="glass-card" style={{ padding: '20px 28px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${currentRoleConfig.badgeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${currentRoleConfig.badgeColor}` }}>
+                <CurrentRoleIcon size={24} color={currentRoleConfig.badgeColor} />
               </div>
+              <div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff' }}>{currentUser.full_name}</div>
+                <div style={{ fontSize: '0.8rem', color: currentRoleConfig.badgeColor, fontWeight: 700 }}>
+                  Role: {currentUser.role} • Workspace: {currentRoleConfig.redirectLabel}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {timeLeftStr && (
+                <div style={{ fontSize: '0.78rem', color: '#fbbf24', background: 'rgba(15, 23, 42, 0.6)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={13} /> {timeLeftStr}
+                </div>
+              )}
               <button 
                 className="btn-secondary" 
                 onClick={() => {
@@ -405,378 +435,524 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
                   setSuccessMsg('Logged out successfully. Token removed.');
                   setErrorMsg('');
                 }} 
-                style={{ padding: '8px 14px', fontSize: '0.8rem', background: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5' }}
+                style={{ padding: '8px 16px', fontSize: '0.85rem', background: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5' }}
               >
-                <LogOut size={14} /> Logout
+                <LogOut size={14} /> Logout Session
               </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Role Redirect Mapping Specs Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
-        {ROLES.map(r => (
-          <div key={r.id} className="glass-card" style={{ padding: '14px 18px', borderLeft: `4px solid ${r.badgeColor}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <r.icon size={16} color={r.badgeColor} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>{r.title} Redirect</span>
+      {/* REAL LOGIN MAIN CONTAINER: 2-COLUMN SPLIT SHOWCASE */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: currentUser ? '1fr 1fr' : '1.1fr 1fr', 
+        gap: '32px',
+        alignItems: 'stretch'
+      }}>
+
+        {/* LEFT COLUMN: AgTech AI Showcase Hero Banner & Features */}
+        <div className="glass-card" style={{ 
+          padding: '36px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          justify: 'space-between',
+          background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(7, 10, 17, 0.98) 100%)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Ambient Glow Graphic */}
+          <div style={{ position: 'absolute', top: '-60px', left: '-60px', width: '220px', height: '220px', background: 'rgba(16, 185, 129, 0.15)', borderRadius: '50%', filter: 'blur(50px)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: '-40px', right: '-40px', width: '200px', height: '200px', background: 'rgba(6, 182, 212, 0.15)', borderRadius: '50%', filter: 'blur(50px)', pointerEvents: 'none' }} />
+
+          <div>
+            {/* Brand Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' }}>
+                <Sprout size={24} color="#ffffff" />
+              </div>
+              <div>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  CropCast <span style={{ color: '#34d399', fontSize: '1.2rem', fontWeight: 600 }}>AI</span>
+                </h1>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Precision Agriculture Intelligence Platform</span>
+              </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Redirects to: <strong style={{ color: r.badgeColor }}>{r.redirectLabel}</strong>
+
+            <div style={{ marginBottom: '28px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#34d399', fontWeight: 600, marginBottom: '12px' }}>
+                <Sparkles size={13} /> Enterprise Security & Role Governance
+              </div>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.25, marginBottom: '12px' }}>
+                Secure Access to Real-Time Crop Yield Telemetry
+              </h2>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Log in to harness predictive machine learning models trained on soil nutrients, rainfall forecasts, and agro-climatic indices.
+              </p>
             </div>
-          </div>
-        ))}
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: currentUser ? '1fr 1fr' : '1fr 420px', gap: '24px' }}>
-
-        {/* LEFT COLUMN: Login / Register Form */}
-        <div className="glass-card" style={{ padding: '32px' }}>
-
-          {/* Tab Selection */}
-          <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.8)', padding: '4px', borderRadius: '12px', marginBottom: '24px', border: '1px solid var(--border-glass)' }}>
-            <button
-              onClick={() => { setMode('login'); setErrorMsg(''); setSuccessMsg(''); setFieldErrors({}); }}
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: mode === 'login' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
-                color: mode === 'login' ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              <KeyRound size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
-              Login to Account
-            </button>
-            <button
-              onClick={() => { setMode('register'); setErrorMsg(''); setSuccessMsg(''); setFieldErrors({}); }}
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: mode === 'register' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
-                color: mode === 'register' ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              <User size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
-              Register New Account
-            </button>
-          </div>
-
-          {errorMsg && (
-            <div style={{ padding: '12px 16px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '10px', color: '#fca5a5', fontSize: '0.85rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <AlertCircle size={18} style={{ shrink: 0 }} />
-              <div>{errorMsg}</div>
-            </div>
-          )}
-
-          {successMsg && (
-            <div style={{ padding: '12px 16px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: '10px', color: '#6ee7b7', fontSize: '0.85rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <CheckCircle2 size={18} style={{ shrink: 0 }} />
-              <div>{successMsg}</div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-
-            {/* Registration specific fields */}
-            {mode === 'register' && (
-              <>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                    Full Name <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="e.g. Rajesh Kumar"
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (fieldErrors.fullName) setFieldErrors(prev => ({ ...prev, fullName: null }));
-                      }}
-                      style={{ paddingLeft: '42px', borderColor: fieldErrors.fullName ? '#ef4444' : undefined }}
-                    />
-                  </div>
-                  {fieldErrors.fullName && (
-                    <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px', display: 'block' }}>{fieldErrors.fullName}</span>
-                  )}
+            {/* Live Metrics Showcase Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '28px' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '14px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Cpu size={14} color="#06b6d4" /> ML Ensemble Accuracy
                 </div>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#06b6d4', marginTop: '4px' }}>94.8%</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '2px' }}>XGBoost + RandomForest</div>
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                    Username (Optional)
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="e.g. rajesh_farmer"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      style={{ paddingLeft: '42px' }}
-                    />
-                  </div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '14px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldCheck size={14} color="#10b981" /> Auth & Protection
                 </div>
-              </>
+                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#10b981', marginTop: '4px' }}>JWT + Bcrypt</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '2px' }}>Role-Based Access Control</div>
+              </div>
+            </div>
+
+            {/* Role Capabilities Quick Summary List */}
+            <div style={{ background: 'rgba(7, 10, 17, 0.7)', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '16px' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Platform Roles & Workspaces:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {ROLES.map(r => (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: r.badgeColor }} />
+                    <strong style={{ color: '#ffffff', minWidth: '85px' }}>{r.title}:</strong>
+                    <span>{r.redirectLabel}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Trust Badge */}
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={12} color="#10b981" /> 256-Bit Encrypted Session
+            </span>
+            <span>Version 2.4.0 (2026)</span>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Ultra-Sleek Real Login Card */}
+        <div className="glass-card" style={{ 
+          padding: '36px', 
+          background: 'rgba(15, 23, 42, 0.85)',
+          display: 'flex',
+          flexDirection: 'column',
+          justify: 'space-between'
+        }}>
+
+          <div>
+            {/* Form Mode Switcher Tabs */}
+            <div style={{ 
+              display: 'flex', 
+              background: 'rgba(7, 10, 17, 0.9)', 
+              padding: '4px', 
+              borderRadius: '12px', 
+              marginBottom: '24px', 
+              border: '1px solid var(--border-glass)' 
+            }}>
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setErrorMsg(''); setSuccessMsg(''); setFieldErrors({}); }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: mode === 'login' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
+                  color: mode === 'login' ? '#ffffff' : 'var(--text-muted)',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: mode === 'login' ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'
+                }}
+              >
+                <KeyRound size={15} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode('register'); setErrorMsg(''); setSuccessMsg(''); setFieldErrors({}); }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: mode === 'register' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
+                  color: mode === 'register' ? '#ffffff' : 'var(--text-muted)',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: mode === 'register' ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'
+                }}
+              >
+                <User size={15} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                Create Account
+              </button>
+            </div>
+
+            {/* Single Sign-On (SSO) Quick Login Options */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleSsoLogin('Google')}
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center', padding: '10px', fontSize: '0.82rem', fontWeight: 600 }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" style={{ marginRight: '6px' }}>
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  </svg>
+                  Google SSO
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSsoLogin('Enterprise SSO')}
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center', padding: '10px', fontSize: '0.82rem', fontWeight: 600 }}
+                >
+                  <Globe size={16} color="#38bdf8" style={{ marginRight: '6px' }} />
+                  Enterprise SSO
+                </button>
+              </div>
+
+              {/* OR Divider Line */}
+              <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0 16px 0' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+                <span style={{ padding: '0 12px', fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  OR CONTINUE WITH EMAIL
+                </span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.1)' }} />
+              </div>
+            </div>
+
+            {/* Error / Success Notifications */}
+            {errorMsg && (
+              <div style={{ padding: '12px 14px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '10px', color: '#fca5a5', fontSize: '0.83rem', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>{errorMsg}</div>
+                <button onClick={() => setErrorMsg('')} style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer' }}><X size={14} /></button>
+              </div>
             )}
 
-            {/* Email / Username */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                {mode === 'login' ? 'Email address or Username' : 'Email Address'} <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-                <input
-                  type={mode === 'register' ? 'email' : 'text'}
-                  className="input-field"
-                  placeholder={mode === 'login' ? 'farmer@cropcast.ai or farmer' : 'name@company.com'}
-                  value={identifier}
-                  onChange={(e) => {
-                    setIdentifier(e.target.value);
-                    if (fieldErrors.identifier) setFieldErrors(prev => ({ ...prev, identifier: null }));
-                  }}
-                  style={{ paddingLeft: '42px', borderColor: fieldErrors.identifier ? '#ef4444' : undefined }}
-                />
+            {successMsg && (
+              <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: '10px', color: '#6ee7b7', fontSize: '0.83rem', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>{successMsg}</div>
+                <button onClick={() => setSuccessMsg('')} style={{ background: 'none', border: 'none', color: '#6ee7b7', cursor: 'pointer' }}><X size={14} /></button>
               </div>
-              {fieldErrors.identifier && (
-                <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px', display: 'block' }}>{fieldErrors.identifier}</span>
-              )}
-            </div>
+            )}
 
-            {/* Password Field + Forgot Password Link */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                  Password (min 6 characters) <span style={{ color: '#ef4444' }}>*</span>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+              {/* ROLE SELECTION DROPDOWN (PROMINENT REAL LOGIN DROPDOWN) */}
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <UserCheck size={16} color={currentRoleConfig.badgeColor} />
+                    Select Role / Workspace
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: currentRoleConfig.badgeColor, fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: `${currentRoleConfig.badgeColor}20` }}>
+                    {currentRoleConfig.redirectLabel}
+                  </span>
                 </label>
-                {mode === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResetEmail(identifier);
-                      setShowForgotModal(true);
+
+                <div style={{ position: 'relative' }}>
+                  <select
+                    id="roleSelectDropdown"
+                    value={selectedRole}
+                    onChange={handleRoleDropdownChange}
+                    className="input-field"
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      paddingLeft: '42px',
+                      paddingRight: '40px',
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      background: `linear-gradient(135deg, ${currentRoleConfig.badgeColor}18 0%, rgba(15, 23, 42, 0.9) 100%)`,
+                      borderColor: `${currentRoleConfig.badgeColor}60`,
+                      cursor: 'pointer',
+                      fontSize: '0.95rem'
                     }}
-                    style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
                   >
-                    Forgot password?
-                  </button>
+                    {ROLES.map((r) => (
+                      <option key={r.id} value={r.id} style={{ background: '#0f172a', color: '#ffffff', padding: '12px' }}>
+                        {r.title} — ({r.redirectLabel})
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {/* Left Role Icon */}
+                  <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                    <CurrentRoleIcon size={18} color={currentRoleConfig.badgeColor} />
+                  </div>
+
+                  {/* Right Custom Chevron Arrow */}
+                  <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                    <ChevronDown size={18} color={currentRoleConfig.badgeColor} />
+                  </div>
+                </div>
+
+                {/* Role Description helper note */}
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sparkles size={12} color={currentRoleConfig.badgeColor} />
+                  <span>{currentRoleConfig.description}</span>
+                </div>
+              </div>
+
+              {/* Registration specific fields */}
+              {mode === 'register' && (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      Full Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="e.g. Rajesh Kumar"
+                        value={fullName}
+                        onChange={(e) => {
+                          setFullName(e.target.value);
+                          if (fieldErrors.fullName) setFieldErrors(prev => ({ ...prev, fullName: null }));
+                        }}
+                        style={{ paddingLeft: '42px', borderColor: fieldErrors.fullName ? '#ef4444' : undefined }}
+                      />
+                    </div>
+                    {fieldErrors.fullName && (
+                      <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px', display: 'block' }}>{fieldErrors.fullName}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      Username (Optional)
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="e.g. rajesh_farmer"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        style={{ paddingLeft: '42px' }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Email / Username Field */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                  {mode === 'login' ? 'Email Address or Username' : 'Email Address'} <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                  <input
+                    type={mode === 'register' ? 'email' : 'text'}
+                    className="input-field"
+                    placeholder={mode === 'login' ? 'farmer@cropcast.ai or farmer' : 'name@company.com'}
+                    value={identifier}
+                    onChange={(e) => {
+                      setIdentifier(e.target.value);
+                      if (fieldErrors.identifier) setFieldErrors(prev => ({ ...prev, identifier: null }));
+                    }}
+                    style={{ paddingLeft: '42px', borderColor: fieldErrors.identifier ? '#ef4444' : undefined }}
+                  />
+                </div>
+                {fieldErrors.identifier && (
+                  <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px', display: 'block' }}>{fieldErrors.identifier}</span>
                 )}
               </div>
-              <div style={{ position: 'relative' }}>
-                <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-                <input
-                  type="password"
-                  className="input-field"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: null }));
-                  }}
-                  style={{ paddingLeft: '42px', borderColor: fieldErrors.password ? '#ef4444' : undefined }}
-                />
-              </div>
-              {fieldErrors.password && (
-                <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px', display: 'block' }}>{fieldErrors.password}</span>
-              )}
-            </div>
 
-            {/* Remember Me Checkbox */}
-            {mode === 'login' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
-                <input
-                  type="checkbox"
-                  id="rememberMeCheckbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ width: '16px', height: '16px', accentColor: '#10b981', cursor: 'pointer' }}
-                />
-                <label htmlFor="rememberMeCheckbox" style={{ fontSize: '0.82rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                  Remember me on this device (Keep session active for 7 days)
-                </label>
-              </div>
-            )}
-
-            {/* Role selection for registration */}
-            {mode === 'register' && (
+              {/* Password Field + Eye Show/Hide Toggle */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px' }}>
-                  Select Platform Access Role
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {ROLES.map((r) => {
-                    const RoleIcon = r.icon;
-                    const isSelected = selectedRole === r.id;
-                    return (
-                      <div
-                        key={r.id}
-                        onClick={() => setSelectedRole(r.id)}
-                        style={{
-                          padding: '12px',
-                          borderRadius: '10px',
-                          border: isSelected ? `2px solid ${r.badgeColor}` : '1px solid rgba(255, 255, 255, 0.1)',
-                          background: isSelected ? `${r.badgeColor}18` : 'rgba(15, 23, 42, 0.5)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `${r.badgeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <RoleIcon size={18} color={r.badgeColor} />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>{r.title}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Redirects: {r.redirectLabel}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                    Password (min 6 characters) <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetEmail(identifier);
+                        setShowForgotModal(true);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Forgot password?
+                    </button>
+                  )}
                 </div>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="input-field"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: null }));
+                    }}
+                    style={{ paddingLeft: '42px', paddingRight: '42px', borderColor: fieldErrors.password ? '#ef4444' : undefined }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justify: 'center'
+                    }}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {fieldErrors.password && (
+                  <span style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px', display: 'block' }}>{fieldErrors.password}</span>
+                )}
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-              style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem', marginTop: '6px' }}
-            >
-              {loading ? 'Authenticating & Redirecting...' : mode === 'login' ? 'Sign In & Auto-Redirect' : 'Register & Set Up Workspace'}
-              <ArrowRight size={18} />
-            </button>
-          </form>
+              {/* Remember Me Checkbox */}
+              {mode === 'login' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                  <input
+                    type="checkbox"
+                    id="rememberMeCheckbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    style={{ width: '16px', height: '16px', accentColor: '#10b981', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="rememberMeCheckbox" style={{ fontSize: '0.82rem', color: 'var(--text-muted)', cursor: 'pointer', userSelect: 'none' }}>
+                    Remember me on this device (7-day extended token)
+                  </label>
+                </div>
+              )}
 
-        </div>
+              {/* Primary Action Button */}
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading}
+                style={{ 
+                  width: '100%', 
+                  justify: 'center', 
+                  padding: '14px', 
+                  fontSize: '1rem', 
+                  marginTop: '8px',
+                  fontWeight: 700
+                }}
+              >
+                {loading ? 'Authenticating & Redirecting...' : mode === 'login' ? `Sign In as ${selectedRole}` : `Register as ${selectedRole}`}
+                <ArrowRight size={18} />
+              </button>
+            </form>
+          </div>
 
-        {/* RIGHT COLUMN: Quick Demo Logins & Active Session */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-          {/* Quick 1-Click Role Login Panel with Redirect Targets */}
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-              <Sparkles size={18} color="#10b981" />
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
-                Instant Demo Logins & Role Auto-Redirect
-              </h3>
+          {/* Quick 1-Click Role Presets */}
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Instant Demo Presets:
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Click any role to authenticate and automatically navigate to its dedicated workspace:
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
               {DEMO_ACCOUNTS.map((acc) => {
                 const roleConfig = ROLES.find(r => r.id === acc.role) || ROLES[0];
-                const RoleIcon = roleConfig.icon;
-                const isCurrentRole = currentUser && currentUser.role === acc.role;
-
+                const isSelected = selectedRole === acc.role;
                 return (
                   <button
                     key={acc.role}
+                    type="button"
                     onClick={() => handleDemoLogin(acc)}
                     disabled={loading}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justify: 'space-between',
-                      padding: '10px 14px',
-                      borderRadius: '10px',
-                      border: isCurrentRole ? `1px solid ${roleConfig.badgeColor}` : '1px solid rgba(255, 255, 255, 0.08)',
-                      background: isCurrentRole ? `${roleConfig.badgeColor}20` : 'rgba(15, 23, 42, 0.6)',
-                      color: '#ffffff',
+                      padding: '6px 8px',
+                      borderRadius: '8px',
+                      border: isSelected ? `1px solid ${roleConfig.badgeColor}` : '1px solid rgba(255, 255, 255, 0.08)',
+                      background: isSelected ? `${roleConfig.badgeColor}25` : 'rgba(15, 23, 42, 0.6)',
+                      color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
                       cursor: 'pointer',
-                      textAlign: 'left',
+                      textAlign: 'center',
                       transition: 'all 0.2s'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <RoleIcon size={18} color={roleConfig.badgeColor} />
-                      <div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{acc.name} ({acc.role})</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Redirect $\rightarrow$ {roleConfig.redirectLabel}</div>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', background: `${roleConfig.badgeColor}25`, color: roleConfig.badgeColor }}>
-                      Login
-                    </span>
+                    {acc.role}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Active Token & Session Expiry Inspector */}
-          {token && (
-            <div className="glass-card" style={{ padding: '24px', background: 'rgba(15, 23, 42, 0.9)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={18} color="#34d399" />
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>Active Session Token</h3>
-                </div>
-                <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>
-                  {decodedToken && (decodedToken.exp - Math.floor(Date.now() / 1000) > 3600) ? '7-DAY REMEMBER' : '30m EXPIRY'}
-                </span>
-              </div>
-
-              {decodedToken && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem', background: 'rgba(7, 10, 17, 0.7)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>User Subject (ID):</span>
-                    <span style={{ fontFamily: 'monospace', color: '#6ee7b7' }}>{decodedToken.sub}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Email:</span>
-                    <span style={{ fontWeight: 600, color: '#ffffff' }}>{decodedToken.email}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Embedded Role:</span>
-                    <span style={{ fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase' }}>{decodedToken.role || currentUser?.role}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Session Countdown:</span>
-                    <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Clock size={13} /> {timeLeftStr || 'Active'}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ marginTop: '16px' }}>
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setSuccessMsg('Session ended. JWT token removed from localStorage.');
-                    setErrorMsg('');
-                  }}
-                  className="btn-secondary"
-                  style={{ width: '100%', justifyContent: 'center', background: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#fca5a5' }}
-                >
-                  <LogOut size={16} /> Logout & Revoke Session Token
-                </button>
-              </div>
-            </div>
-          )}
-
         </div>
 
       </div>
+
+      {/* ACTIVE TOKEN & SESSION INSPECTOR (If token exists) */}
+      {token && (
+        <div className="glass-card" style={{ padding: '24px', background: 'rgba(15, 23, 42, 0.9)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} color="#34d399" />
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>Active JWT Session Token</h3>
+            </div>
+            <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>
+              {decodedToken && (decodedToken.exp - Math.floor(Date.now() / 1000) > 3600) ? '7-DAY REMEMBER' : '30m EXPIRY'}
+            </span>
+          </div>
+
+          {decodedToken && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.8rem', background: 'rgba(7, 10, 17, 0.7)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)', display: 'block' }}>User Subject ID:</span>
+                <span style={{ fontFamily: 'monospace', color: '#6ee7b7', fontWeight: 600 }}>{decodedToken.sub}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Authenticated Email:</span>
+                <span style={{ fontWeight: 600, color: '#ffffff' }}>{decodedToken.email}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Role Granted:</span>
+                <span style={{ fontWeight: 700, color: currentRoleConfig.badgeColor, textTransform: 'uppercase' }}>{decodedToken.role || currentUser?.role}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Session Remaining:</span>
+                <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Clock size={13} /> {timeLeftStr || 'Active'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* FORGOT PASSWORD MODAL */}
       {showForgotModal && (
@@ -872,7 +1048,7 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
         </div>
       )}
 
-      {/* BOTTOM SECTION: Protected Routes Tester */}
+      {/* BOTTOM SECTION: Protected Routes RBAC Tester */}
       <div className="glass-card" style={{ padding: '28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
           <div>
@@ -887,7 +1063,7 @@ export default function LoginPage({ currentUser, token, onLoginSuccess, onLogout
             </p>
           </div>
           <div style={{ fontSize: '0.8rem', color: currentUser ? '#34d399' : '#f87171', fontWeight: 600 }}>
-            {currentUser ? `Currently Authenticated: ${currentUser.full_name} (${currentUser.role})` : '⚠️ Session Inactive'}
+            {currentUser ? `Authenticated: ${currentUser.full_name} (${currentUser.role})` : '⚠️ Session Inactive'}
           </div>
         </div>
 

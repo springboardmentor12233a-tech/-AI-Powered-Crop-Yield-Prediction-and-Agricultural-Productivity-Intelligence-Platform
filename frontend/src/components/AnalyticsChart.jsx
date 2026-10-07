@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  BarChart, Bar, Legend, LineChart, Line, ComposedChart, RadarChart, Radar, 
-  PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell 
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Legend, LineChart, Line, ComposedChart, RadarChart, Radar,
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell
 } from 'recharts';
-import { 
-  TrendingUp, BarChart3, Cpu, Sparkles, Download, Filter, Search, 
-  Layers, MapPin, Calendar, CloudRain, ShieldAlert, Award, FileText, CheckCircle2, TestTube 
+import {
+  TrendingUp, BarChart3, Cpu, Sparkles, Download, Filter, Search,
+  Layers, MapPin, Calendar, CloudRain, ShieldAlert, Award, FileText, CheckCircle2, TestTube
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -154,9 +154,9 @@ export default function AnalyticsChart() {
   // Filtered Regional Data for Table & Charts
   const filteredRegionalData = regionalReports.filter(item => {
     const matchesCrop = cropFilter === 'All' || item.primary_crop === cropFilter || item.secondary_crop === cropFilter;
-    const matchesSearch = item.region.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.state.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.belt.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.belt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCrop && matchesSearch;
   });
 
@@ -224,10 +224,10 @@ export default function AnalyticsChart() {
 
   return (
     <div ref={dashboardRef} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
+
       {/* Upper Analytics Navigation & Controls Bar */}
       <div className="glass-card" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-        
+
         {/* Navigation Tabs */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
@@ -270,7 +270,7 @@ export default function AnalyticsChart() {
 
         {/* Action Controls & Filters */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          
+
           {/* Crop Filter Dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Filter size={14} color="var(--text-muted)" />
@@ -306,7 +306,7 @@ export default function AnalyticsChart() {
       {/* ========================================================================= */}
       {(activeTab === 'overview' || activeTab === 'ml_models') && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
-          
+
           {/* ML Models Performance Comparison Card */}
           <div className="glass-card" style={{ padding: '24px', gridColumn: 'span 1' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -389,7 +389,7 @@ export default function AnalyticsChart() {
       {/* ========================================================================= */}
       {(activeTab === 'overview' || activeTab === 'seasonal') && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
-          
+
           {/* Seasonal Yield Progression Area Chart */}
           <div className="glass-card" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
@@ -407,16 +407,16 @@ export default function AnalyticsChart() {
                 <AreaChart data={seasonalTrends} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                   <defs>
                     <linearGradient id="rabiGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="kharifGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="zaidGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -465,7 +465,7 @@ export default function AnalyticsChart() {
       {/* ========================================================================= */}
       {(activeTab === 'overview' || activeTab === 'regional') && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
-          
+
           {/* Regional Yield Benchmark Bar Chart */}
           <div className="glass-card" style={{ padding: '24px', gridColumn: activeTab === 'regional' ? 'span 2' : 'span 1' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>

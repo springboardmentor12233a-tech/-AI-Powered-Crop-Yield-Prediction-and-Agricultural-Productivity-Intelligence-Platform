@@ -85,14 +85,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout,
               My Account ({currentUser.role})
             </button>
           </nav>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="badge badge-emerald" style={{ padding: '8px 16px', fontSize: '0.82rem', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399' }}>
-              <Lock size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-              Root Gateway (/) — Default Opening Login Page
-            </span>
-          </div>
-        )}
+        ) : null}
 
         {/* User Account / Auth Indicator */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
