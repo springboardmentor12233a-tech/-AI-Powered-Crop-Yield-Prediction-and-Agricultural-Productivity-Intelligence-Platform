@@ -1,17 +1,19 @@
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
-import YieldPrediction from './pages/YieldPrediction';
-import WeatherAnalysis from './pages/WeatherAnalysis';
-import SoilAnalysis from './pages/SoilAnalysis';
-import Analytics from './pages/Analytics';
-import Recommendations from './pages/Recommendations';
-import AgriculturalReport from './pages/AgriculturalReport';
 import { Login, Register, ForgotPassword, ResetPassword } from './pages/AuthPages';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import Settings from './pages/Settings';
+
+const YieldPrediction = React.lazy(() => import('./pages/YieldPrediction'));
+const WeatherAnalysis = React.lazy(() => import('./pages/WeatherAnalysis'));
+const SoilAnalysis = React.lazy(() => import('./pages/SoilAnalysis'));
+const Analytics = React.lazy(() => import('./pages/Analytics'));
+const Recommendations = React.lazy(() => import('./pages/Recommendations'));
+const AgriculturalReport = React.lazy(() => import('./pages/AgriculturalReport'));
 
 
 
@@ -41,12 +43,12 @@ function App() {
               
               {/* Farmer Routes */}
               <Route element={<ProtectedRoute allowedRoles={['user', 'farmer']} />}>
-                <Route path="predict" element={<YieldPrediction />} />
-                <Route path="weather" element={<WeatherAnalysis />} />
-                <Route path="soil" element={<SoilAnalysis />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="recommendations" element={<Recommendations />} />
-                <Route path="reports" element={<AgriculturalReport />} />
+                <Route path="predict" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><YieldPrediction /></Suspense>} />
+                <Route path="weather" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><WeatherAnalysis /></Suspense>} />
+                <Route path="soil" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><SoilAnalysis /></Suspense>} />
+                <Route path="analytics" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><Analytics /></Suspense>} />
+                <Route path="recommendations" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><Recommendations /></Suspense>} />
+                <Route path="reports" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><AgriculturalReport /></Suspense>} />
               </Route>
 
               {/* Admin Routes */}

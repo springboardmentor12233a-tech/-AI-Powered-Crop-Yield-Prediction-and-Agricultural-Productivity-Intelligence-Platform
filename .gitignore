@@ -77,30 +77,11 @@ playwright-report/
 test-results/
 blob-report/
 playwright/.cache/
-test_duplicate.*
-weather_plots/
-soil_plots/
 
-# ---------- Linting / Code Analysis ----------
-lint_results.*
-frontend/lint_results.*
-
-# ---------- Scratch / Temporary Scripts ----------
-reset_password.py
+# ---------- Setup Scripts ----------
 setup_db.py
-test_db.py
-test_full_auth.py
-test_login.py
-test_predict_auth.py
-test_llm.py
-test_llm_out.txt
-test_reset_password.py
-check_delete.py
-inspect_fks.py
-test_req.py
-test_admin_management.py
-test_notifications.py
-create_notifications_table.py
-frontend/capture_error.cjs
-frontend/recovered.json
-frontend/test_imports.js
+
+# ---------- Allow specific ML Models ----------
+!models/
+!models/random_forest_yield_model.joblib
+!models/preprocessor.joblib

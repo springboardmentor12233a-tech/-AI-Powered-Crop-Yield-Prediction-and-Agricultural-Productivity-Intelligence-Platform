@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shield, Users, Database, Sprout, Loader2, Edit, Trash2, X, Check, AlertCircle, Search, Server } from 'lucide-react';
+import { Shield, Users, Database, Sprout, Loader2, Edit, Trash2, X, Check, AlertCircle, Search, Server, User as UserIcon } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { useAuth } from '../context/AuthContext';
 import { getAllUsers, getAllRoles, updateAdminUser, deleteAdminUser } from '../services/api';
@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [rolesList, setRolesList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchUserQuery, setSearchUserQuery] = useState('');
   
   // Edit state
   const [editingUser, setEditingUser] = useState(null);
@@ -99,6 +100,11 @@ export default function AdminDashboard() {
   const totalUsers = usersList.length;
   const totalFarmers = usersList.filter(u => u.role.role_name === 'user').length;
   
+  const filteredUsers = usersList.filter(u => 
+    u.name.toLowerCase().includes(searchUserQuery.toLowerCase()) || 
+    u.email.toLowerCase().includes(searchUserQuery.toLowerCase())
+  );
+  
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-8 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
@@ -107,13 +113,22 @@ export default function AdminDashboard() {
           <h2 className="text-3xl font-extrabold text-[#FCFCF8] tracking-tight">Admin Console</h2>
           <p className="text-[#c6dfcd] mt-2 font-medium">System overview and user management.</p>
         </div>
-        <div className="relative z-10 flex items-center space-x-3 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20">
-          <div className="p-2 bg-[#A8C957] rounded-full text-[#12372A]">
-            <Shield className="w-5 h-5" />
+        <div className="relative z-10 flex items-center space-x-3 bg-white px-4 py-2.5 rounded-xl border border-slate-100 shadow-sm">
+          <div className="p-2 bg-[#e8f0ea] rounded-xl text-[#1F6B45]">
+            {(user?.role?.role_name === 'admin' || user?.role === 'admin') ? (
+              <Shield className="w-5 h-5" />
+            ) : (
+              <UserIcon className="w-5 h-5" />
+            )}
           </div>
-          <div>
-            <p className="text-xs font-bold text-[#c6dfcd] uppercase tracking-wider">Logged In As</p>
-            <span className="font-extrabold text-[#F7F8F2]">{user?.name}</span>
+          <div className="flex flex-col">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Logged In As</p>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-extrabold text-slate-800 leading-none">{user?.name || 'User'}</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-[#A8C957]/20 text-[#12372A] leading-none">
+                {user?.role?.role_name || user?.role || 'Admin'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -170,6 +185,8 @@ export default function AdminDashboard() {
             <input 
               type="text" 
               placeholder="Search users..." 
+              value={searchUserQuery}
+              onChange={(e) => setSearchUserQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#5BAE65] transition-all"
             />
           </div>
@@ -202,7 +219,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {usersList.map((u) => (
+                  {filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="py-4 px-8 text-sm font-semibold text-slate-400">#{u.id}</td>
                       <td className="py-4 px-8">
@@ -255,7 +272,7 @@ export default function AdminDashboard() {
                   ))}
                 </tbody>
               </table>
-              {usersList.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <div className="text-center py-16">
                   <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                   <p className="text-slate-500 font-medium text-lg">No users found.</p>

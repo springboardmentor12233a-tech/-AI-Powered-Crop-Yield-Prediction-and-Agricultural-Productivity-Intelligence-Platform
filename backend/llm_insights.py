@@ -54,16 +54,16 @@ You are a practical, farmer-facing agricultural AI.
 Your task is to interpret the provided structured Agricultural Report and output a human-readable JSON insights summary.
 
 STRICT CONSTRAINTS:
-1. Grounding: You MUST ONLY use the facts and numbers present in the provided JSON report. Do not invent weather forecasts.
+1. Grounding: You MUST ONLY use the facts and numbers present in the provided JSON report. Do not invent agricultural facts or weather forecasts.
 2. Practical & Clear: Provide actionable alerts and recommendations. Avoid statistical jargon like 'quartiles' or 'correlation coefficients'.
 3. Output Format:
    - status: Must be one of "Needs Attention", "Moderate", or "Favorable".
    - weather_insights / soil_insights: Provide the condition (e.g., 'Rainfall', 'Soil Moisture'), its current value from the report (e.g., '120 mm'), a short interpretation, and a practical recommendation.
    - attention_points: High/Medium/Low severity alerts based on the report data. Include a title, reason, and action.
-4. Limitations Field: You MUST ALWAYS return a "limitations" field containing a concise list of limitations (e.g., "Recommendations are based on historical model predictions and should not be treated as guaranteed outcomes.")
+4. Limitations Field (MANDATORY): You MUST ALWAYS return a "limitations" field containing a concise list of limitations (e.g., "Recommendations are based on historical model predictions and should not be treated as guaranteed outcomes and do not establish causation."). You must include at least one concise statement in the limitations array. Do not omit this property.
 
 OUTPUT FORMAT:
-You MUST output valid JSON exactly matching the provided schema.
+You MUST output valid JSON exactly matching the provided schema. Do not omit any required property.
 """
 
     payload = {
@@ -125,7 +125,11 @@ You MUST output valid JSON exactly matching the provided schema.
                                 "additionalProperties": False
                             }
                         },
-                        "limitations": {"type": "array", "items": {"type": "string"}}
+                        "limitations": {
+                            "type": "array", 
+                            "items": {"type": "string"},
+                            "description": "MANDATORY array containing at least one limitation statement."
+                        }
                     },
                     "required": [
                         "summary", 
@@ -207,9 +211,17 @@ def chat_with_llm(system_prompt: str, history: list, current_message: str) -> st
     
     if history:
         for msg in history:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            messages_payload.append({"role": role, "content": content})
+            if isinstance(msg, dict):
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+            else:
+                role = "user"
+                content = str(msg)
+            
+            messages_payload.append({
+                "role": role,
+                "content": content
+            })
             
     messages_payload.append({"role": "user", "content": current_message})
 
@@ -231,7 +243,23 @@ def chat_with_llm(system_prompt: str, history: list, current_message: str) -> st
         with urllib.request.urlopen(req, timeout=60) as response:
             response_body = response.read().decode("utf-8")
             response_data = json.loads(response_body)
-            return response_data.get("choices", [{}])[0].get("message", {}).get("content", "Sorry, I couldn't generate a response.")
+            
+            if not isinstance(response_data, dict):
+                return str(response_data)
+                
+            choices = response_data.get("choices", [])
+            if choices and isinstance(choices, list):
+                choice = choices[0]
+                if isinstance(choice, str):
+                    return choice
+                elif isinstance(choice, dict):
+                    msg = choice.get("message", {})
+                    if isinstance(msg, str):
+                        return msg
+                    elif isinstance(msg, dict):
+                        return msg.get("content", "Sorry, I couldn't generate a response.")
+            
+            return "Sorry, I couldn't generate a response."
     except urllib.error.HTTPError as e:
         error_msg = e.read().decode('utf-8')
         logger.error(f"LLM API HTTPError in chat: {e.code} - {error_msg}")

@@ -57,6 +57,28 @@ CREATE TABLE password_reset_tokens (
 );
 
 -- ============================================================
+-- ============================================================
+-- TABLE 2c: prediction_history
+-- ============================================================
+-- Purpose: Stores user predictions and their results.
+
+CREATE TABLE prediction_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    region VARCHAR(100) NOT NULL,
+    crop_type VARCHAR(100) NOT NULL,
+    input_data JSON NOT NULL,
+    predicted_yield DOUBLE PRECISION NOT NULL,
+    weather_risk VARCHAR(50),
+    soil_status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_prediction_history_user_id 
+        FOREIGN KEY (user_id) 
+        REFERENCES users(id) 
+        ON DELETE CASCADE
+);
+
+-- ============================================================
 -- TABLE 3: regions
 -- ============================================================
 -- Purpose: Stores geographic regions for agricultural observations
@@ -273,6 +295,9 @@ CREATE INDEX idx_agricultural_observations_disease_status_id
     ON agricultural_observations(disease_status_id);
 
 -- ============================================================
+CREATE INDEX idx_prediction_history_created_at 
+    ON prediction_history(created_at);
+
 -- END OF SCHEMA
 -- ============================================================
 

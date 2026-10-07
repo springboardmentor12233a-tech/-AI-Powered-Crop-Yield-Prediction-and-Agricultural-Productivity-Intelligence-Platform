@@ -7,14 +7,15 @@ import { useAuth } from '../../context/AuthContext';
 import { useAppContext } from '../../context/AppContext';
 
 const SEARCH_PAGES = [
-  { name: 'Dashboard', path: '/', keywords: ['dashboard', 'home', 'main'] },
-  { name: 'Yield Prediction', path: '/predict', keywords: ['yield', 'predict', 'forecast'] },
-  { name: 'Weather Analysis', path: '/weather', keywords: ['weather', 'climate', 'temperature', 'rain'] },
-  { name: 'Soil Analysis', path: '/soil', keywords: ['soil', 'moisture', 'ph', 'ndvi'] },
-  { name: 'Analytics', path: '/analytics', keywords: ['analytics', 'charts', 'history'] },
-  { name: 'Recommendations', path: '/recommendations', keywords: ['recommendations', 'advice', 'actions'] },
-  { name: 'Agricultural Reports', path: '/reports', keywords: ['report', 'summary', 'pdf'] },
-  { name: 'Settings', path: '/settings', keywords: ['settings', 'profile', 'account'] }
+  { name: 'Dashboard', path: '/', roles: ['admin', 'user', 'farmer'] },
+  { name: 'Yield Prediction', path: '/predict', roles: ['user', 'farmer'] },
+  { name: 'Weather Analysis', path: '/weather', roles: ['user', 'farmer'] },
+  { name: 'Soil Analysis', path: '/soil', roles: ['user', 'farmer'] },
+  { name: 'Analytics', path: '/analytics', roles: ['user', 'farmer'] },
+  { name: 'Recommendations', path: '/recommendations', roles: ['user', 'farmer'] },
+  { name: 'Agricultural Reports', path: '/reports', roles: ['user', 'farmer'] },
+  { name: 'Settings', path: '/settings', roles: ['admin', 'user', 'farmer'] },
+  { name: 'Admin Dashboard', path: '/admin', roles: ['admin'] }
 ];
 
 export function Header({ title }) {
@@ -93,12 +94,12 @@ export function Header({ title }) {
       return;
     }
     const q = searchQuery.toLowerCase();
+    const role = user?.role?.role_name || user?.role || 'user';
     const results = SEARCH_PAGES.filter(page => 
-      page.name.toLowerCase().includes(q) || 
-      page.keywords.some(kw => kw.includes(q))
+      page.roles.includes(role) && page.name.toLowerCase().includes(q)
     );
     setSearchResults(results);
-  }, [searchQuery]);
+  }, [searchQuery, user]);
 
   const handleSearchSelect = (path) => {
     navigate(path);
@@ -121,7 +122,7 @@ export function Header({ title }) {
   const displayTitle = getPageTitle();
 
   return (
-    <header className="bg-surface/90 backdrop-blur-md border-b border-slate-200 h-[72px] px-8 flex items-center justify-between sticky top-0 z-10 shadow-sm transition-all">
+    <header className="bg-surface/90 backdrop-blur-md border-b border-slate-200 h-[72px] px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all">
       <div className="flex items-center">
         <h1 className="text-xl font-bold text-slate-800 tracking-tight">{displayTitle}</h1>
         
@@ -144,23 +145,29 @@ export function Header({ title }) {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="text" 
-            placeholder="Search modules..." 
+            placeholder={(user?.role?.role_name || user?.role) === 'admin' ? "Search admin modules..." : "Search modules..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#5BAE65]/50 focus:bg-white w-64 transition-all shadow-inner"
           />
-          {searchResults.length > 0 && (
+          {searchQuery.trim() !== '' && (
             <div className="absolute top-full left-0 mt-3 w-64 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
               <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-50">Results</div>
-              {searchResults.map((res, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSearchSelect(res.path)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-sm text-slate-700 transition-colors border-l-2 border-transparent hover:border-[#5BAE65]"
-                >
-                  {res.name}
-                </button>
-              ))}
+              {searchResults.length > 0 ? (
+                searchResults.map((res, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSearchSelect(res.path)}
+                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-sm text-slate-700 transition-colors border-l-2 border-transparent hover:border-[#5BAE65]"
+                  >
+                    {res.name}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-sm text-slate-500 text-center">
+                  No modules found
+                </div>
+              )}
             </div>
           )}
         </div>
