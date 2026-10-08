@@ -408,7 +408,7 @@ def send_reset_email(email: str, token: str) -> bool:
     msg.set_content(f"You requested a password reset. Click the following link to reset your password:\n\n{reset_url}\n\nIf you did not request this, please ignore this email.")
 
     try:
-        with smtplib.SMTP(smtp_server, int(smtp_port)) as server:
+        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=10) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.send_message(msg)
