@@ -32,15 +32,18 @@ async function requestJson(url, errorMessage) {
 }
 
 export async function getCoordinates({ state, district }) {
-  const query = district || state;
-  if (!query) throw new Error("Unable to find weather data for this location.");
+  const query = district?.trim();
+  if (!state?.trim() || !query) {
+    throw new Error("Select both a state and district to resolve this location.");
+  }
   const params = new URLSearchParams({ name: query, count: "10", language: "en", format: "json", countryCode: "IN" });
   const data = await requestJson(`${GEOCODING_URL}?${params}`, "Unable to find weather data for this location.");
   const results = data.results || [];
-  const normalizedState = state?.toLowerCase().replace(/\s+/g, " ");
-  const result = results.find((item) => item.admin1?.toLowerCase() === normalizedState) || results[0];
+  const normalize = (value) => value?.trim().toLowerCase().replace(/\s+/g, " ");
+  const normalizedState = normalize(state);
+  const result = results.find((item) => normalize(item.admin1) === normalizedState);
   if (!result) throw new Error("Unable to find weather data for this location.");
-  return { latitude: result.latitude, longitude: result.longitude, name: result.name, admin1: result.admin1 || state };
+  return { latitude: result.latitude, longitude: result.longitude, name: result.name, admin1: result.admin1 };
 }
 
 export async function getCurrentWeather({ latitude, longitude }) {

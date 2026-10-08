@@ -11,8 +11,17 @@ const EMPTY_PARAMETERS = {
   potassium: null,
 };
 
+function currentUserScope() {
+  try {
+    const user = JSON.parse(localStorage.getItem("yieldsense-user") || "null");
+    return user?.id || "anonymous";
+  } catch {
+    return "anonymous";
+  }
+}
+
 function soilDataStorageKey(location) {
-  return `yieldsense-soil-data:${location.state}:${location.district}`.toLowerCase();
+  return `yieldsense-soil-data:${currentUserScope()}:${location.state}:${location.district}`.toLowerCase();
 }
 
 function propertyValue(data, property) {
@@ -21,13 +30,35 @@ function propertyValue(data, property) {
 
 export async function getSoilData(location) {
   const parameters = { ...EMPTY_PARAMETERS };
+  if (!location?.state?.trim() || !location?.district?.trim()) {
+    return saveSoilData(location, {
+      location: { state: location?.state || "", district: location?.district || "" },
+      coordinates: null,
+      source: "SoilGrids / ISRIC",
+      sourceUrl: SOILGRIDS_SOURCE_URL,
+      dataType: location?.state
+        ? "Select a district to check SoilGrids coverage"
+        : "Set a farm location to check SoilGrids coverage",
+      parameters,
+      depth: "0-5cm",
+      fetchedAt: Date.now(),
+      isReference: true,
+    });
+  }
+
+  const cached = loadSoilData(location);
+  const cacheAge = cached?.fetchedAt ? Date.now() - cached.fetchedAt : Infinity;
+  if (cacheAge < 24 * 60 * 60 * 1000) return cached;
+
   let requestFailed = false;
-  let coordinates = location;
+  let coordinatesUnavailable = false;
+  let coordinates = cached?.coordinates || location;
   if (coordinates?.latitude === undefined || coordinates?.longitude === undefined) {
     try {
       coordinates = await getCoordinates(location);
     } catch {
       coordinates = null;
+      coordinatesUnavailable = true;
     }
   }
   const source = coordinates?.latitude !== undefined && coordinates?.longitude !== undefined
@@ -49,24 +80,37 @@ export async function getSoilData(location) {
   }
 
   const verified = loadVerifiedSoilTest(location);
+  const hasValues = Object.values(parameters).some((value) => value !== null);
+
   const result = {
     location: { state: location?.state, district: location?.district },
     coordinates: coordinates?.latitude !== undefined && coordinates?.longitude !== undefined
       ? { latitude: coordinates.latitude, longitude: coordinates.longitude }
       : null,
-    source: verified ? "User-provided verified soil test" : source ? "SoilGrids / ISRIC" : "SoilGrids / ISRIC unavailable",
+    source: verified ? "Farmer-entered soil test" : source ? "SoilGrids / ISRIC" : "SoilGrids / ISRIC",
     sourceUrl: SOILGRIDS_SOURCE_URL,
-    dataType: requestFailed ? "Soil data temporarily unavailable" : verified ? "User-provided verified soil test" : Object.values(parameters).some((value) => value !== null) ? "Location-based SoilGrids data" : "Data unavailable",
+    dataType: verified
+      ? "Farmer-entered soil test"
+      : requestFailed
+        ? "SoilGrids could not be reached"
+        : coordinatesUnavailable
+          ? "Location coordinates could not be resolved"
+          : hasValues
+            ? "Location-based gridded reference data"
+            : source
+              ? "No SoilGrids values are modeled at these coordinates"
+              : "Set a farm location to check SoilGrids coverage",
     parameters: verified ? { ...parameters, ...verified } : parameters,
     depth: "0-5cm",
-    isReference: false,
+    fetchedAt: Date.now(),
+    isReference: !verified,
   };
   saveSoilData(location, result);
   return result;
 }
 
 export function soilStorageKey(location) {
-  return `yieldsense-soil-test:${location.state}:${location.district}`.toLowerCase();
+  return `yieldsense-soil-test:${currentUserScope()}:${location.state}:${location.district}`.toLowerCase();
 }
 
 export function loadSoilTest(location) {

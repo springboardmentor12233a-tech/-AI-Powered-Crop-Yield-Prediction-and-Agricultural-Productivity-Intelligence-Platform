@@ -54,7 +54,7 @@ function classify(value, rule) {
   return { label: "Critical", tone: "red", value: number, unit: rule.unit };
 }
 
-export function analyzeWeather(weather, crop = "Rice") {
+export function analyzeWeather(weather, crop = "") {
   const rules = cropWeatherRules[crop] || baseWeather;
   const values = {
     temperature: weather?.temperature,
@@ -65,5 +65,10 @@ export function analyzeWeather(weather, crop = "Rice") {
   };
   const parameters = Object.fromEntries(Object.entries(values).map(([name, value]) => [name, classify(value, rules[name])]));
   const risks = Object.entries(parameters).filter(([, result]) => result.label === "Warning" || result.label === "Critical").map(([name, result]) => `${name} is ${result.label.toLowerCase()} at ${result.value} ${result.unit}.`);
-  return { crop, parameters, risks, availableCount: Object.values(parameters).filter(({ value }) => value !== null).length };
+  return {
+    crop: crop || null,
+    parameters,
+    risks,
+    availableCount: Object.values(parameters).filter(({ value }) => value !== null).length,
+  };
 }

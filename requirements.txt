@@ -9,3 +9,6 @@ uvicorn
 catboost
 psycopg2-binary
 pydantic
+PyJWT
+passlib[bcrypt]
+reportlab

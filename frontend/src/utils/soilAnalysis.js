@@ -40,12 +40,12 @@ function numberValue(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-export function classifyParameter(name, value, crop = "Rice") {
+export function classifyParameter(name, value, crop = "") {
   const number = numberValue(value);
   if (number === null) return { label: "Data unavailable", tone: "neutral", value: null, unit: units[name] };
   if (name === "nitrogen") return { label: "Recorded", tone: "neutral", value: number, unit: units[name], definition: "Total nitrogen; available-nitrogen thresholds are not applicable." };
   const range = cropSoilRules[crop]?.[name];
-  if (!range) return { label: "Data unavailable", tone: "neutral", value: number, unit: units[name] };
+  if (!range) return { label: "Not evaluated", tone: "neutral", value: number, unit: units[name] };
   const margin = name === "ph" ? 0.8 : Math.max((range[1] - range[0]) * 0.5, 10);
   const warning = [range[0] - margin, range[1] + margin];
   if (number >= range[0] && number <= range[1]) return { label: "Suitable", tone: "green", value: number, unit: units[name] };
@@ -53,7 +53,7 @@ export function classifyParameter(name, value, crop = "Rice") {
   return { label: "Critical", tone: "red", value: number, unit: units[name] };
 }
 
-export function analyzeSoil(parameters = {}, crop = "Rice") {
+export function analyzeSoil(parameters = {}, crop = "") {
   const names = Object.keys(parameterLabels);
   const statuses = Object.fromEntries(names.map((name) => [name, classifyParameter(name, parameters[name], crop)]));
   const warnings = Object.entries(statuses).filter(([, status]) => status.label === "Warning" || status.label === "Critical").map(([name, status]) => `${parameterLabels[name]} is ${status.label.toLowerCase()} at ${status.value} ${status.unit}.`);
@@ -61,5 +61,15 @@ export function analyzeSoil(parameters = {}, crop = "Rice") {
   const available = Object.values(statuses).filter(({ value }) => value !== null);
   const health = !available.length ? "Insufficient Data" : available.some(({ label }) => label === "Critical") ? "Critical" : warnings.length ? "Needs Attention" : "Good";
   const suitability = !available.length ? "Insufficient Data" : health === "Critical" ? "Critical" : warnings.length ? "Needs attention" : "Suitable";
-  return { statuses, warnings, recommendations, suitability, health, availableCount: available.length, cropNote: `${crop}-specific screening ranges are applied to each available measurement.` };
+  return {
+    statuses,
+    warnings,
+    recommendations,
+    suitability,
+    health,
+    availableCount: available.length,
+    cropNote: crop
+      ? `${crop}-specific screening ranges are applied to each available measurement.`
+      : "Select a crop to apply crop-specific screening ranges.",
+  };
 }

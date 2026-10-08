@@ -1,0 +1,193 @@
+.app-shell {
+  width: 100%;
+  overflow-x: clip;
+}
+
+.main-area,
+.content,
+.dashboard-grid > *,
+.two-column > *,
+.prediction-layout > * {
+  min-width: 0;
+}
+
+.table-wrap {
+  max-width: 100%;
+}
+
+.admin-filter {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.admin-filter .field {
+  flex: 1;
+  min-width: min(100%, 260px);
+}
+
+.admin-status {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-report-groups {
+  margin-bottom: 20px;
+}
+
+.analytics-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.analytics-chart-card {
+  min-width: 0;
+}
+
+.analytics-chart-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.analytics-chart {
+  display: block;
+  width: 100%;
+  min-width: 420px;
+  height: auto;
+}
+
+.chart-axis {
+  stroke: var(--line);
+}
+
+.chart-bar,
+.chart-point {
+  fill: var(--green);
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 2;
+}
+
+.chart-value {
+  fill: var(--ink);
+  font-size: 9px;
+  text-anchor: middle;
+}
+
+.chart-label {
+  fill: var(--muted);
+  font-size: 8px;
+  text-anchor: middle;
+}
+
+.chart-unit {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.admin-header.header > div:nth-child(2) {
+  display: block;
+}
+
+@media (max-width: 1050px) and (min-width: 761px) {
+  .dashboard-grid,
+  .prediction-layout,
+  .weather-details,
+  .two-column,
+  .soil-analysis-grid,
+  .profile-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .soil-readings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .soil-readings div:nth-child(3) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .soil-readings div:nth-child(2),
+  .soil-readings div:nth-child(4) {
+    padding-left: 14px;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar-wrap,
+  .sidebar-wrap.open {
+    width: 0;
+    flex: 0 0 0;
+  }
+
+  .sidebar-wrap.open {
+    width: 260px;
+    flex-basis: 260px;
+  }
+
+  .sidebar-wrap.open .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: 15px 0 30px rgba(0, 0, 0, .12);
+  }
+
+  .mobile-close,
+  .menu-button {
+    display: block;
+  }
+
+  .mobile-overlay.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 35, 20, .35);
+    z-index: 19;
+  }
+
+  .admin-sidebar-wrap.open {
+    width: 260px;
+    flex: 0 0 260px;
+  }
+
+  .admin-header.header {
+    padding: 0 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .analytics-chart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-filter .field,
+  .admin-filter .button {
+    width: 100%;
+  }
+
+  .admin-header.header > div:nth-child(2) {
+    display: block;
+  }
+
+  .table-card {
+    min-width: 0;
+  }
+}

@@ -1,14 +1,18 @@
 from collections import defaultdict
 
 
-def summarize(rows):
-    yields = [float(row["predicted_yield"]) for row in rows]
+def _yield_summary(values):
+    values = [float(value) for value in values]
     return {
-        "count": len(rows),
-        "average_yield": sum(yields) / len(yields) if yields else None,
-        "highest_yield": max(yields) if yields else None,
-        "lowest_yield": min(yields) if yields else None,
+        "count": len(values),
+        "average_yield": sum(values) / len(values) if values else None,
+        "highest_yield": max(values) if values else None,
+        "lowest_yield": min(values) if values else None,
     }
+
+
+def summarize(rows):
+    return _yield_summary(row["predicted_yield"] for row in rows)
 
 
 def grouped_average(rows, key):
@@ -16,6 +20,29 @@ def grouped_average(rows, key):
     for row in rows:
         grouped[row[key]].append(float(row["predicted_yield"]))
     return [{"name": name, "average_yield": sum(values) / len(values), "count": len(values)} for name, values in sorted(grouped.items())]
+
+
+def prediction_year_trend(rows):
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[int(row["year"])].append(float(row["predicted_yield"]))
+    return [
+        {"period": str(year), **_yield_summary(values)}
+        for year, values in sorted(grouped.items())
+    ]
+
+
+def prediction_date_trend(rows):
+    grouped = defaultdict(list)
+    for row in rows:
+        created_at = row.get("created_at")
+        if created_at:
+            period = created_at.strftime("%Y-%m")
+            grouped[period].append(float(row["predicted_yield"]))
+    return [
+        {"period": period, **_yield_summary(values)}
+        for period, values in sorted(grouped.items())
+    ]
 
 
 def serialize_rows(rows):
