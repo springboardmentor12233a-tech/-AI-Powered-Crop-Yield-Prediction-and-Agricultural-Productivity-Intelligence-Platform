@@ -121,15 +121,15 @@ export function Header({ title, onMenuToggle }) {
   const displayTitle = getPageTitle();
 
   return (
-    <header className="bg-surface/90 backdrop-blur-md border-b border-slate-200 h-[72px] px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm transition-all">
-      <div className="flex items-center min-w-0">
+    <header className="bg-surface/90 backdrop-blur-md border-b border-slate-200 h-[72px] px-3 sm:px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm transition-all">
+      <div className="flex items-center flex-1 min-w-0 pr-2 sm:pr-4">
         <button 
           onClick={onMenuToggle}
-          className="mr-3 md:hidden p-1.5 -ml-2 text-slate-600 rounded-lg hover:bg-slate-100 focus:outline-none flex-shrink-0"
+          className="mr-2 sm:mr-3 md:hidden p-1.5 -ml-1.5 sm:-ml-2 text-slate-600 rounded-lg hover:bg-slate-100 focus:outline-none flex-shrink-0"
         >
           <Menu className="w-6 h-6" />
         </button>
-        <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight truncate max-w-[120px] xs:max-w-[160px] sm:max-w-sm md:max-w-none">
+        <h1 className="text-base sm:text-lg md:text-xl font-bold text-slate-800 tracking-tight truncate min-w-0">
           {displayTitle}
         </h1>
         
@@ -146,16 +146,16 @@ export function Header({ title, onMenuToggle }) {
         </div>
       </div>
 
-      <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-5 flex-shrink-0">
+      <div className="flex items-center space-x-1.5 sm:space-x-4 md:space-x-5 flex-shrink-0">
         {/* SEARCH */}
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 hidden sm:block" />
           <input 
             type="text" 
-            placeholder={(user?.role?.role_name || user?.role) === 'admin' ? "Search..." : "Search modules..."}
+            placeholder={(user?.role?.role_name || user?.role) === 'admin' ? "Search..." : "Search..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="sm:pl-9 px-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#5BAE65]/50 focus:bg-white w-24 xs:w-32 sm:w-48 md:w-64 transition-all shadow-inner placeholder-slate-400"
+            className="sm:pl-9 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#5BAE65]/50 focus:bg-white w-20 sm:w-48 md:w-64 transition-all shadow-inner placeholder-slate-400"
           />
           {searchQuery.trim() !== '' && (
             <div className="absolute top-full right-0 sm:left-0 mt-3 w-48 sm:w-64 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
@@ -183,11 +183,11 @@ export function Header({ title, onMenuToggle }) {
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative flex-shrink-0"
+            className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative flex-shrink-0"
           >
             <Bell className="w-5 h-5 sm:w-5 sm:h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#EF4444] rounded-full border-2 border-white shadow-sm ring-2 ring-white animate-pulse"></span>
+              <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2.5 h-2.5 bg-[#EF4444] rounded-full border-2 border-white shadow-sm ring-2 ring-white animate-pulse"></span>
             )}
           </button>
           
@@ -237,10 +237,10 @@ export function Header({ title, onMenuToggle }) {
         </div>
         
         {/* PROFILE */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <button 
             onClick={() => setShowProfile(!showProfile)}
-            className="h-9 w-9 rounded-full bg-gradient-to-tr from-[#5BAE65] to-[#A8C957] text-white font-bold text-sm flex items-center justify-center shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border-2 border-white ring-2 ring-transparent focus:ring-[#A8C957]/50"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-tr from-[#5BAE65] to-[#A8C957] text-white font-bold text-sm flex items-center justify-center shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border-2 border-white ring-2 ring-transparent focus:ring-[#A8C957]/50"
           >
             {user?.name?.charAt(0) || 'U'}
           </button>
