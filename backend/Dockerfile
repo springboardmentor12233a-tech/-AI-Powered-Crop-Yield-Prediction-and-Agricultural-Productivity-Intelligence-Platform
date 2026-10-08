@@ -9,11 +9,15 @@ ENV PYTHONUNBUFFERED=1 \
 # Set working directory inside container
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (including OpenMP libgomp1 for XGBoost & Scikit-learn)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip, setuptools, and wheel for prebuilt binary wheel support
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy requirements file and install Python dependencies
 COPY requirements.txt .
