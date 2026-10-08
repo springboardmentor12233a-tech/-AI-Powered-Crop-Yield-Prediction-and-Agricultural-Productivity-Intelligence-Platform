@@ -30,7 +30,7 @@ const AuthLayout = ({ children, title, subtitle }) => (
           </div>
           <div className="flex items-center text-[#e8f0ea]">
             <Sprout className="w-6 h-6 text-[#A8C957] mr-4" />
-            <span className="font-semibold text-lg">95%+ Prediction Accuracy</span>
+            <span className="font-semibold text-lg">AI-Powered Yield Forecasting</span>
           </div>
         </div>
       </div>

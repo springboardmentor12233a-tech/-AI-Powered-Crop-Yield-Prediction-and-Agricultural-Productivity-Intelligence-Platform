@@ -267,7 +267,7 @@ export default function YieldPrediction() {
             {result && !loading && (
               <div className="text-center py-4">
                 <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-[#1F6B45]/50 border border-[#5BAE65]/30 text-[#A8C957] text-xs font-bold uppercase tracking-widest mb-4">
-                  <CheckCircle2 className="w-4 h-4 mr-1.5" /> High Confidence
+                  <CheckCircle2 className="w-4 h-4 mr-1.5" /> AI Forecast
                 </div>
                 <h4 className="text-5xl font-extrabold text-[#FCFCF8] tracking-tight mb-2">
                   {result.predicted_yield_kg_per_hectare.toLocaleString()}

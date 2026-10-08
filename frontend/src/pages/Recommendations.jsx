@@ -12,6 +12,27 @@ export default function Recommendations() {
   const insightsData = analysisState?.insightsData;
   const isLoading = analysisState?.status === 'loading';
 
+  const polishText = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    return text
+      .replace(
+        "indicating a potentially favorable outcome.",
+        "suggesting a potentially favorable outcome based on the current prediction and historical associations."
+      )
+      .replace(
+        "Plan supplemental irrigation to meet crop water needs.",
+        "Consider supplemental irrigation to help address the observed low-rainfall conditions."
+      )
+      .replace(
+        "High soil moisture associated with below-average yield.",
+        "High soil moisture has been associated with below-average yield in the historical data."
+      )
+      .replace(
+        "Use shade or adjust planting dates to reduce heat stress.",
+        "Consider shade management or planting-date adjustments where appropriate to reduce potential heat stress."
+      );
+  };
+
   if (!recentPrediction) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-8 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm max-w-4xl mx-auto mt-8">
@@ -68,11 +89,11 @@ export default function Recommendations() {
                 </span>
               )}
             </div>
-            <p className="text-[#c6dfcd] text-lg leading-relaxed mb-6 font-medium">{insightsData.summary}</p>
+            <p className="text-[#c6dfcd] text-lg leading-relaxed mb-6 font-medium">{polishText(insightsData.summary)}</p>
             <div className="bg-[#081a13]/40 rounded-xl p-5 border border-[#5BAE65]/20 backdrop-blur-sm">
               <p className="text-[#F7F8F2] text-sm leading-relaxed">
                 <strong className="text-[#A8C957] uppercase tracking-wider text-xs mr-2">Yield Interpretation:</strong> 
-                {insightsData.yield_interpretation}
+                {polishText(insightsData.yield_interpretation)}
               </p>
             </div>
           </div>
@@ -94,7 +115,7 @@ export default function Recommendations() {
                   typeof pt === 'string' ? (
                     <div key={idx} className="p-5 rounded-2xl border bg-amber-50 border-amber-100/50 flex items-start shadow-sm">
                       <span className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500 mt-1.5 mr-4"></span>
-                      <span className="text-amber-900 text-sm font-medium leading-relaxed">{pt}</span>
+                      <span className="text-amber-900 text-sm font-medium leading-relaxed">{polishText(pt)}</span>
                     </div>
                   ) : (
                     <div key={idx} className={cn(
@@ -120,14 +141,14 @@ export default function Recommendations() {
                         pt.severity === 'High' ? 'text-red-800/80' :
                         pt.severity === 'Medium' ? 'text-amber-800/80' :
                         'text-blue-800/80'
-                      )}>{pt.reason}</p>
+                      )}>{polishText(pt.reason)}</p>
                       <div className={cn("text-sm font-semibold px-4 py-3 rounded-xl flex items-start",
                         pt.severity === 'High' ? 'bg-red-100/50 text-red-900 border border-red-200/50' :
                         pt.severity === 'Medium' ? 'bg-amber-100/50 text-amber-900 border border-amber-200/50' :
                         'bg-blue-100/50 text-blue-900 border border-blue-200/50'
                       )}>
                         <ArrowRight className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-                        <span>{pt.action}</span>
+                        <span>{polishText(pt.action)}</span>
                       </div>
                     </div>
                   )
@@ -156,7 +177,7 @@ export default function Recommendations() {
                   typeof pt === 'string' ? (
                     <div key={idx} className="p-5 rounded-2xl border bg-[#f0f9ff] border-[#bae6fd]/50 flex items-start shadow-sm">
                       <CheckCircle className="flex-shrink-0 w-4 h-4 text-[#0ea5e9] mt-0.5 mr-3" />
-                      <span className="text-[#0c4a6e] text-sm font-medium leading-relaxed">{pt}</span>
+                      <span className="text-[#0c4a6e] text-sm font-medium leading-relaxed">{polishText(pt)}</span>
                     </div>
                   ) : (
                     <div key={idx} className="bg-slate-50 border border-slate-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -164,10 +185,10 @@ export default function Recommendations() {
                         <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">{pt.condition}</p>
                         <p className="text-lg font-black text-[#0ea5e9]">{pt.value}</p>
                       </div>
-                      <p className="text-sm text-slate-600 mb-5 leading-relaxed font-medium">{pt.interpretation}</p>
+                      <p className="text-sm text-slate-600 mb-5 leading-relaxed font-medium">{polishText(pt.interpretation)}</p>
                       <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex items-start">
                         <Lightbulb className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5 text-[#0ea5e9]" />
-                        <span className="text-sm font-medium text-slate-700">{pt.recommendation}</span>
+                        <span className="text-sm font-medium text-slate-700">{polishText(pt.recommendation)}</span>
                       </div>
                     </div>
                   )
@@ -194,7 +215,7 @@ export default function Recommendations() {
                   typeof pt === 'string' ? (
                     <div key={idx} className="p-5 rounded-2xl border bg-[#f0fdf4] border-[#bbf7d0]/50 flex items-start shadow-sm">
                       <CheckCircle className="flex-shrink-0 w-4 h-4 text-[#22c55e] mt-0.5 mr-3" />
-                      <span className="text-[#14532d] text-sm font-medium leading-relaxed">{pt}</span>
+                      <span className="text-[#14532d] text-sm font-medium leading-relaxed">{polishText(pt)}</span>
                     </div>
                   ) : (
                     <div key={idx} className="bg-[#F7F8F2] border border-[#c6dfcd]/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -202,10 +223,10 @@ export default function Recommendations() {
                         <p className="text-xs font-extrabold text-[#1F6B45]/60 uppercase tracking-widest">{pt.condition}</p>
                         <p className="text-lg font-black text-[#1F6B45]">{pt.value}</p>
                       </div>
-                      <p className="text-sm text-slate-700 mb-5 leading-relaxed font-medium">{pt.interpretation}</p>
+                      <p className="text-sm text-slate-700 mb-5 leading-relaxed font-medium">{polishText(pt.interpretation)}</p>
                       <div className="bg-white border border-[#c6dfcd] rounded-xl p-4 shadow-sm flex items-start">
                         <Sprout className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5 text-[#5BAE65]" />
-                        <span className="text-sm font-medium text-[#12372A]">{pt.recommendation}</span>
+                        <span className="text-sm font-medium text-[#12372A]">{polishText(pt.recommendation)}</span>
                       </div>
                     </div>
                   )

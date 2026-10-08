@@ -13,9 +13,8 @@ const SEARCH_PAGES = [
   { name: 'Soil Analysis', path: '/soil', roles: ['user', 'farmer'] },
   { name: 'Analytics', path: '/analytics', roles: ['user', 'farmer'] },
   { name: 'Recommendations', path: '/recommendations', roles: ['user', 'farmer'] },
-  { name: 'Agricultural Reports', path: '/reports', roles: ['user', 'farmer'] },
-  { name: 'Settings', path: '/settings', roles: ['admin', 'user', 'farmer'] },
-  { name: 'Admin Dashboard', path: '/admin', roles: ['admin'] }
+  { name: 'Reports', path: '/reports', roles: ['user', 'farmer'] },
+  { name: 'Settings', path: '/settings', roles: ['admin', 'user', 'farmer'] }
 ];
 
 export function Header({ title }) {

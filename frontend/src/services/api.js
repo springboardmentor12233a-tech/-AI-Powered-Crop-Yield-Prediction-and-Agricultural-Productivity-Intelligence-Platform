@@ -40,11 +40,11 @@ api.interceptors.response.use(
 
 export const loginUser = async (email, password) => {
   // FastAPI OAuth2PasswordRequestForm requires x-www-form-urlencoded
-  const formData = new URLSearchParams();
-  formData.append('username', email);
-  formData.append('password', password);
+  const params = new URLSearchParams();
+  params.append('username', email);
+  params.append('password', password);
 
-  const response = await api.post('/auth/login', formData, {
+  const response = await api.post('/auth/login', params.toString(), {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }

@@ -26,6 +26,10 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 
+# ---------- Vercel ----------
+.vercel/
+
+
 # ---------- Jupyter ----------
 .ipynb_checkpoints/
 

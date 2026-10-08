@@ -95,6 +95,15 @@ export default function Analytics() {
     region: item.input_data?.region || item.region
   })), [history]);
 
+  const dataSpanDays = useMemo(() => {
+    if (history.length === 0) return 0;
+    if (history.length === 1) return 1;
+    const firstDate = new Date(history[0].input_data?.observation_date || history[0].created_at);
+    const lastDate = new Date(history[history.length-1].input_data?.observation_date || history[history.length-1].created_at);
+    const diff = Math.round((lastDate - firstDate) / (1000 * 60 * 60 * 24));
+    return Math.max(1, diff);
+  }, [history]);
+
   const featureImportance = useMemo(() => {
     if (history.length < 3) return [];
     
@@ -140,7 +149,7 @@ export default function Analytics() {
       {/* HEADER SECTION */}
       <div>
         <h2 className="text-3xl md:text-4xl font-extrabold text-[#12372A] tracking-tight">Farm Analytics</h2>
-        <p className="text-lg text-[#1F6B45]/80 mt-2 font-medium">Deep-dive into historical data and ML feature correlations.</p>
+        <p className="text-lg text-[#1F6B45]/80 mt-2 font-medium">Explore prediction trends and environmental relationships across your farm data.</p>
       </div>
       
       {/* 1. KEY METRICS */}
@@ -161,7 +170,7 @@ export default function Analytics() {
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
-          <h3 className="text-slate-500 font-bold text-xs mb-1 uppercase tracking-widest">Highest Yield</h3>
+          <h3 className="text-slate-500 font-bold text-xs mb-1 uppercase tracking-widest">Highest Predicted Yield</h3>
           <p className="text-3xl font-extrabold text-[#12372A]">
             {history.length > 0 ? Math.round(Math.max(...history.map(h => h.predicted_yield))).toLocaleString() : 0}
             <span className="text-sm font-medium text-slate-500 ml-1">kg/ha</span>
@@ -188,8 +197,8 @@ export default function Analytics() {
           </div>
           <h3 className="text-slate-500 font-bold text-xs mb-1 uppercase tracking-widest">Data Span</h3>
           <p className="text-3xl font-extrabold text-[#12372A]">
-            {history.length > 1 ? Math.round((new Date(history[history.length-1].created_at) - new Date(history[0].created_at)) / (1000 * 60 * 60 * 24)) : 0}
-            <span className="text-sm font-medium text-slate-500 ml-1">days</span>
+            {dataSpanDays}
+            <span className="text-sm font-medium text-slate-500 ml-1">{dataSpanDays === 1 ? 'day' : 'days'}</span>
           </p>
         </div>
       </div>
@@ -208,7 +217,7 @@ export default function Analytics() {
         <>
           {/* 2. YIELD TRENDS */}
           <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
-            <h3 className="text-xl font-bold text-[#12372A] mb-8">Historical Yield Trends</h3>
+            <h3 className="text-xl font-bold text-[#12372A] mb-8">Prediction Yield Trends</h3>
             <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData}>
