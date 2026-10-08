@@ -312,3 +312,181 @@ Responsive behavior includes:
              │ Service            │
              │ (Groq)             │
              └────────────────────┘
+🛠️ Technology Stack
+Frontend
+Technology	Purpose
+React	Frontend framework
+Vite	Frontend build tool
+Tailwind CSS	UI styling
+Recharts	Data visualization
+Lucide React	Icons
+React Router	Client-side routing
+React Markdown	Markdown rendering
+Remark GFM	GitHub-flavored Markdown
+
+
+Backend
+Technology	Purpose
+Python	Backend and ML ecosystem
+FastAPI	REST API framework
+Uvicorn	ASGI server
+SQLAlchemy	Database ORM
+PostgreSQL	Relational database
+Pydantic	Data validation
+JWT	Authentication
+
+
+Machine Learning
+Technology	Purpose
+Scikit-learn	Machine learning
+Pandas	Data processing
+NumPy	Numerical operations
+Matplotlib	Visualization
+Seaborn	Exploratory analysis
+Joblib	Model persistence
+
+
+AI
+Technology	Purpose
+Groq	LLM service
+LLM Integration	Agricultural insights and chatbot
+
+
+Deployment
+Technology	Purpose
+Docker	Containerization
+Docker Compose	Multi-container deployment
+Nginx	Frontend production server
+Vercel	Frontend cloud deployment
+Render	Backend cloud deployment
+PostgreSQL	Cloud database
+
+🧠 Machine Learning Pipeline
+Raw Agricultural Dataset
+          │
+          ▼
+Data Diagnostics
+          │
+          ▼
+Data Cleaning
+          │
+          ▼
+Feature Processing
+          │
+          ▼
+Train / Test Split
+          │
+          ▼
+Model Training
+          │
+          ▼
+GridSearchCV
+          │
+          ▼
+Model Comparison
+          │
+          ▼
+Random Forest Selection
+          │
+          ▼
+Model Validation
+          │
+          ▼
+Joblib Model Persistence
+          │
+          ▼
+FastAPI Prediction Service
+
+🧪 Model Training and Selection
+The following regression algorithms were evaluated using GridSearchCV with 5-fold cross-validation:
+1. Linear Regression
+2. Decision Tree
+3. Random Forest
+4. Gradient Boosting
+5. XGBoost
+The model-selection criterion was the lowest cross-validation RMSE.
+Model	CV RMSE
+Linear Regression	1255.02
+Decision Tree	1237.69
+Random Forest	1193.35
+Gradient Boosting	1205.89
+XGBoost	1202.75
+
+
+Based on cross-validation RMSE, Random Forest was selected as the final model.
+📈 Model Validation Results
+The final Random Forest model was evaluated on the 100-record test dataset.
+Metric	Result
+MAE	1069.26 kg/ha
+RMSE	1205.67 kg/ha
+R²	-0.0525
+
+
+Additional validation included:
+- Model loading
+- Preprocessor loading
+- Feature compatibility
+- Prediction generation
+- NaN prediction checks
+- Infinite prediction checks
+- Negative prediction checks
+- Repeatability testing
+- Batch prediction performance
+- API-to-model integration
+- Edge-case testing
+⚠️ Model Limitations
+The current dataset shows relatively weak predictive relationships between the available features and crop yield.
+The final model achieved:
+R² = -0.0525
+
+A negative R² indicates that the model does not outperform the mean-baseline prediction on the test set.
+Therefore, the project does not claim an unsupported percentage accuracy.
+The Random Forest model was retained because it achieved the lowest cross-validation RMSE among the evaluated models.
+The limitation is explicitly documented as part of the model validation process.
+📊 Feature Analysis
+Important features observed in the trained Random Forest model include:
+- Longitude
+- Soil moisture
+- Pesticide usage
+- Temperature
+- Rainfall
+- Humidity
+- Sunlight
+- NDVI
+Feature importance indicates model usage within the trained dataset and should not be interpreted as proof of causal agricultural relationships.
+🖥️ Application Modules
+1. Dashboard
+Provides:
+- Yield prediction
+- Prediction trends
+- Soil status
+- Weather impact
+- AI intelligence
+- Environmental intelligence
+- Agricultural alerts
+- Quick actions
+2. Yield Prediction
+Allows users to provide agricultural parameters and obtain predicted yield in kg/hectare.
+3. Weather Analysis
+Analyzes environmental parameters and historical relationships with yield.
+4. Soil Analysis
+Analyzes soil-related parameters and historical relationships with crop yield.
+5. Analytics
+Provides historical prediction analytics and visualization.
+6. Recommendations
+Provides agricultural decision-support recommendations based on available prediction and environmental information.
+7. Reports
+Generates agricultural reports containing prediction and analytical information.
+8. Settings
+Allows users to manage profile information and view system connectivity information.
+9. Notifications
+Provides system and prediction-related notifications.
+10. AI Chatbot
+Provides AI-powered agricultural explanations and answers to agricultural questions.
+👥 User Roles
+The platform supports role-based access.
+Admin
+Administrative access to supported platform functionality.
+Farmer
+Access to agricultural prediction and decision-support functionality.
+Authentication is implemented using JWT-based security.
