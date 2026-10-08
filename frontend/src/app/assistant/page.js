@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import { getToken, getUser } from "@/lib/auth";
+import { useLang } from "@/lib/i18n";
 
 const SUGGESTIONS = [
   "Why is my risk level what it is?",
@@ -25,6 +26,7 @@ export default function AssistantPage() {
   const [lastPrediction, setLastPrediction] = useState(null);
   const bottomRef = useRef(null);
   const router = useRouter();
+  const { t, lang } = useLang();
 
   useEffect(() => {
     if (!getToken()) {
@@ -78,7 +80,7 @@ export default function AssistantPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getToken()}`,
         },
-        body: JSON.stringify({ message, history, last_prediction: lastPrediction }),
+        body: JSON.stringify({ message, history, lang }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
@@ -86,7 +88,11 @@ export default function AssistantPage() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `Sorry - ${err.message}`, isError: true },
+        {
+          role: "assistant",
+          content: t("Sorry - {msg}", { msg: t(err.message) }),
+          isError: true,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -109,30 +115,29 @@ export default function AssistantPage() {
       <div className="flex-1 py-12 px-6">
         <div className="max-w-3xl mx-auto">
           <h1 className="font-heading text-4xl font-bold text-charcoal-900 mb-2">
-            Assistant
+            {t("Assistant")}
           </h1>
           <p className="text-charcoal-900/60 text-lg mb-6">
-            Ask questions about your predictions, soil, and fields.
+            {t("Ask questions about your predictions, soil, and fields.")}
           </p>
 
           <div className="mb-4 rounded-2xl border border-cream-200 bg-white px-4 py-3 text-sm shadow-sm">
             {result ? (
               <p className="text-charcoal-900/70">
-                Talking about your latest prediction:{" "}
+                {t("Talking about your latest prediction:")}{" "}
                 <span className="font-medium text-charcoal-900">
-                  {inputs?.crop_type}, {inputs?.region}, {result.predicted_yield} t/ha
+                  {t(inputs?.crop_type)}, {t(inputs?.region)}, {result.predicted_yield} t/ha
                 </span>
                 {result.risk_level && (
                   <span className="text-charcoal-900/70">
                     {" "}
-                    - {result.risk_level} risk
+                    - {t("{risk} risk", { risk: t(result.risk_level) })}
                   </span>
                 )}
               </p>
             ) : (
               <p className="text-charcoal-900/60">
-                No recent prediction yet. Run one on Predict Yield and I can
-                explain it.
+                {t("No recent prediction yet. Run one on Predict Yield and I can explain it.")}
               </p>
             )}
           </div>
@@ -153,7 +158,7 @@ export default function AssistantPage() {
                         : "bg-white text-charcoal-900 border border-cream-200 rounded-bl-md"
                     }`}
                   >
-                    {m.content}
+                    {m.content === GREETING.content ? t(m.content) : m.content}
                   </div>
                 </div>
               ))}
@@ -161,7 +166,7 @@ export default function AssistantPage() {
               {loading && (
                 <div className="flex justify-start">
                   <div className="rounded-2xl rounded-bl-md bg-white border border-cream-200 px-4 py-3 text-base text-charcoal-900/50">
-                    Thinking...
+                    {t("Thinking...")}
                   </div>
                 </div>
               )}
@@ -171,10 +176,10 @@ export default function AssistantPage() {
                   {SUGGESTIONS.map((s) => (
                     <button
                       key={s}
-                      onClick={() => send(s)}
+                      onClick={() => send(t(s))}
                       className="rounded-full border border-lime-500 bg-lime-300/30 px-4 py-2 text-sm font-medium text-olive-800 hover:bg-lime-300/60 transition-colors"
                     >
-                      {s}
+                      {t(s)}
                     </button>
                   ))}
                 </div>
@@ -194,7 +199,7 @@ export default function AssistantPage() {
                     }
                   }}
                   maxLength={1000}
-                  placeholder="Ask about your farm..."
+                  placeholder={t("Ask about your farm...")}
                   className="flex-1 rounded-full border border-cream-200 bg-white px-5 py-3 text-base text-charcoal-900 placeholder:text-charcoal-900/30 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-500"
                 />
                 <button
@@ -202,7 +207,7 @@ export default function AssistantPage() {
                   disabled={loading || !input.trim()}
                   className="rounded-full bg-lime-400 px-6 py-3 text-base font-semibold text-charcoal-900 shadow-md hover:bg-lime-500 transition-colors disabled:opacity-50"
                 >
-                  Send
+                  {t("Send")}
                 </button>
               </div>
               {messages.length > 1 && (
@@ -210,15 +215,14 @@ export default function AssistantPage() {
                   onClick={clearChat}
                   className="mt-3 text-xs font-medium text-charcoal-900/50 hover:text-charcoal-900/80"
                 >
-                  Clear conversation
+                  {t("Clear conversation")}
                 </button>
               )}
             </div>
           </div>
 
           <p className="text-xs text-charcoal-900/40 mt-3">
-            Answers are based on your saved data and this app&apos;s dataset, not
-            professional agronomy advice.
+            {t("Answers are based on your saved data and this app's dataset, not professional agronomy advice.")}
           </p>
         </div>
       </div>

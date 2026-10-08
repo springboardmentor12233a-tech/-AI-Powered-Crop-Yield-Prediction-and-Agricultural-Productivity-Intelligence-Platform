@@ -4,7 +4,7 @@ Farmer reports.
 GET /reports/compare-fields  (JWT, farmers only)
 Compares all of the farmer's saved fields side by side: each soil value is
 checked against the healthy range for that field's crop, and the latest
-prediction for the same crop + region is attached if one exists.
+prediction made for that field is attached if one exists.
 """
 
 from flask import Blueprint, jsonify
@@ -54,13 +54,24 @@ def compare_fields():
             healthy_count += status == "healthy"
             soil[col] = {"value": value, "status": status, "low": low, "high": high}
 
+        # Match on the field itself, so two fields with the same crop and
+        # region no longer share one "latest prediction".
         latest = (
-            PredictionHistory.query.filter_by(
-                user_id=user_id, crop_type=p.crop_type, region=p.region
-            )
+            PredictionHistory.query.filter_by(user_id=user_id, profile_id=p.id)
             .order_by(PredictionHistory.created_at.desc())
             .first()
         )
+        # Legacy rows (made before profile_id existed) have no link to a
+        # field, so for those only, fall back to the old crop + region match.
+        if latest is None:
+            latest = (
+                PredictionHistory.query.filter_by(
+                    user_id=user_id, profile_id=None,
+                    crop_type=p.crop_type, region=p.region,
+                )
+                .order_by(PredictionHistory.created_at.desc())
+                .first()
+            )
         latest_prediction = None
         estimated_production = None
         if latest and latest.predicted_yield is not None:

@@ -34,7 +34,7 @@ export default function AdminOverview() {
       return;
     }
     if (getRole() !== "admin") {
-      router.push("/");
+      router.push("/dashboard");
       return;
     }
 

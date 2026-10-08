@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import { getToken } from "@/lib/auth";
+import { useLang } from "@/lib/i18n";
 
 const CROP_TYPES = ["Wheat", "Corn", "Rice", "Soybean", "Barley"];
 const REGIONS = ["North", "South", "East", "West", "Central"];
@@ -29,15 +30,16 @@ export default function FarmProfilePage() {
   const [editingId, setEditingId] = useState(null); // null = creating new
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // always an English message, translated when shown
   const router = useRouter();
+  const { t } = useLang();
 
   function loadProfiles(token) {
     fetch("http://127.0.0.1:5000/profiles", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setProfiles(data))
+      .then((data) => setProfiles(Array.isArray(data) ? data : []))
       .catch(() => setError("Could not load saved fields."))
       .finally(() => setLoading(false));
   }
@@ -80,6 +82,7 @@ export default function FarmProfilePage() {
   }
 
   async function handleDelete(id) {
+    if (!window.confirm(t("Delete this field? This cannot be undone."))) return;
     const token = getToken();
     try {
       await fetch(`http://127.0.0.1:5000/profiles/${id}`, {
@@ -138,34 +141,39 @@ export default function FarmProfilePage() {
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-1">
           <h1 className="font-heading text-3xl font-semibold text-charcoal-900">
-            Farm Profile
+            {t("Farm Profile")}
           </h1>
           {!showForm && (
             <button
               onClick={startNew}
               className="rounded-full bg-lime-400 text-charcoal-900 text-sm font-medium px-4 py-2 shadow-md hover:bg-lime-500 transition-all"
             >
-              + Add Field
+              {t("+ Add Field")}
             </button>
           )}
         </div>
         <p className="text-charcoal-900/60 text-lg mb-10">
-          Save details for each field you farm - crop type, region, and
-          soil test results. Pick one on the predict page to pre-fill it.
+          {t("Save details for each field you farm - crop type, region, and soil test results. Pick one on the predict page to pre-fill it.")}
         </p>
 
-        {loading && <p className="text-charcoal-900/50 text-sm">Loading...</p>}
+        {loading && <p className="text-charcoal-900/50 text-sm">{t("Loading...")}</p>}
+
+        {error && !showForm && (
+          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+            {t(error)}
+          </p>
+        )}
 
         {!loading && !showForm && profiles.length === 0 && (
           <div className="bg-white rounded-2xl border border-cream-200 p-8 text-center shadow-lg shadow-charcoal-900/5">
             <p className="text-charcoal-900/60 text-sm mb-4">
-              You haven&apos;t saved any fields yet.
+              {t("You haven't saved any fields yet.")}
             </p>
             <button
               onClick={startNew}
-              className="rounded-lg bg-lime-400 text-white text-sm font-medium px-4 py-2 hover:bg-lime-500 transition-colors"
+              className="rounded-lg bg-lime-400 text-charcoal-900 text-sm font-medium px-4 py-2 hover:bg-lime-500 transition-colors"
             >
-              Add your first field
+              {t("Add your first field")}
             </button>
           </div>
         )}
@@ -182,11 +190,11 @@ export default function FarmProfilePage() {
                     {p.field_name}
                   </h3>
                   <span className="text-xs text-olive-700 bg-lime-300/30 border border-lime-400 rounded-full px-2.5 py-1">
-                    {p.region}
+                    {t(p.region)}
                   </span>
                 </div>
                 <p className="text-sm text-charcoal-900/70 mb-1">
-                  Crop: <span className="font-medium">{p.crop_type}</span>
+                  {t("Crop:")} <span className="font-medium">{t(p.crop_type)}</span>
                   {p.field_size_hectares != null && (
                     <span className="text-charcoal-900/50"> · {p.field_size_hectares} ha</span>
                   )}
@@ -199,13 +207,13 @@ export default function FarmProfilePage() {
                     onClick={() => startEdit(p)}
                     className="text-xs font-medium text-olive-700 hover:text-olive-800"
                   >
-                    Edit
+                    {t("Edit")}
                   </button>
                   <button
                     onClick={() => handleDelete(p.id)}
                     className="text-xs font-medium text-red-600 hover:text-red-700"
                   >
-                    Delete
+                    {t("Delete")}
                   </button>
                 </div>
               </div>
@@ -219,18 +227,18 @@ export default function FarmProfilePage() {
             className="bg-white rounded-2xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5"
           >
             <h2 className="font-heading font-semibold text-charcoal-900 mb-4">
-              {editingId ? "Edit Field" : "New Field"}
+              {editingId ? t("Edit Field") : t("New Field")}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Field Name
+                  {t("Field Name")}
                 </label>
                 <input
                   type="text"
                   name="field_name"
-                  placeholder="e.g. North Field"
+                  placeholder={t("e.g. North Field")}
                   value={form.field_name}
                   onChange={handleChange}
                   required
@@ -240,31 +248,31 @@ export default function FarmProfilePage() {
 
               <div>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Crop Type
+                  {t("Crop Type")}
                 </label>
                 <select name="crop_type" value={form.crop_type} onChange={handleChange} className={INPUT_CLASS}>
-                  {CROP_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {CROP_TYPES.map((c) => <option key={c} value={c}>{t(c)}</option>)}
                 </select>
               </div>
 
               <div>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Region
+                  {t("Region")}
                 </label>
                 <select name="region" value={form.region} onChange={handleChange} className={INPUT_CLASS}>
-                  {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                  {REGIONS.map((r) => <option key={r} value={r}>{t(r)}</option>)}
                 </select>
               </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Field Size (hectares) <span className="text-charcoal-900/40 font-normal">- optional</span>
+                  {t("Field Size (hectares)")} <span className="text-charcoal-900/40 font-normal">{t("- optional")}</span>
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   name="field_size_hectares"
-                  placeholder="e.g. 12.5"
+                  placeholder={t("e.g. 12.5")}
                   value={form.field_size_hectares}
                   onChange={handleChange}
                   className={INPUT_CLASS}
@@ -273,28 +281,28 @@ export default function FarmProfilePage() {
 
               <div>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Soil pH
+                  {t("Soil pH")}
                 </label>
                 <input type="number" step="0.01" name="soil_ph" value={form.soil_ph} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
 
               <div>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Nitrogen Content
+                  {t("Nitrogen Content")}
                 </label>
                 <input type="number" step="0.01" name="nitrogen_content" value={form.nitrogen_content} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
 
               <div>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Phosphorus Content
+                  {t("Phosphorus Content")}
                 </label>
                 <input type="number" step="0.01" name="phosphorus_content" value={form.phosphorus_content} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
 
               <div>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  Potassium Content
+                  {t("Potassium Content")}
                 </label>
                 <input type="number" step="0.01" name="potassium_content" value={form.potassium_content} onChange={handleChange} required className={INPUT_CLASS} />
               </div>
@@ -302,7 +310,7 @@ export default function FarmProfilePage() {
 
             {error && (
               <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-4">
-                {error}
+                {t(error)}
               </p>
             )}
 
@@ -312,14 +320,14 @@ export default function FarmProfilePage() {
                 disabled={saving}
                 className="flex-1 rounded-full bg-lime-400 text-charcoal-900 font-medium py-2.5 shadow-md hover:bg-lime-500 transition-all disabled:opacity-60"
               >
-                {saving ? "Saving..." : editingId ? "Save Changes" : "Add Field"}
+                {saving ? t("Saving...") : editingId ? t("Save Changes") : t("Add Field")}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
                 className="rounded-lg border border-cream-200 text-charcoal-900/70 font-medium px-5 py-2.5 hover:bg-cream-100 transition-colors"
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           </form>

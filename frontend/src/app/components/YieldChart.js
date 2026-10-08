@@ -10,13 +10,16 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
+import { useLang } from "@/lib/i18n";
 
 // predictedYield: result.predicted_yield
 // typicalYield: result.typical_yield_for_crop
 export default function YieldChart({ predictedYield, typicalYield, cropType }) {
+  const { t } = useLang();
+  const crop = t(cropType);
   const data = [
-    { name: `Predicted`, value: predictedYield },
-    { name: `Typical ${cropType}`, value: typicalYield },
+    { name: t("Predicted"), value: predictedYield },
+    { name: t("Typical {crop}", { crop }), value: typicalYield },
   ];
 
   const isAboveAverage = predictedYield >= typicalYield;
@@ -24,7 +27,7 @@ export default function YieldChart({ predictedYield, typicalYield, cropType }) {
   return (
     <div className="w-full h-56 bg-white rounded-2xl border border-cream-200 p-5 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300">
       <h3 className="font-heading text-sm font-semibold text-charcoal-900 mb-2">
-        Predicted yield vs typical {cropType} yield
+        {t("Predicted yield vs typical {crop} yield", { crop })}
       </h3>
       <ResponsiveContainer width="100%" height="80%">
         <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
@@ -40,8 +43,8 @@ export default function YieldChart({ predictedYield, typicalYield, cropType }) {
       </ResponsiveContainer>
       <p className="text-xs text-zinc-500 mt-1">
         {isAboveAverage
-          ? `This field is predicted to yield above the typical average for ${cropType}.`
-          : `This field is predicted to yield below the typical average for ${cropType}.`}
+          ? t("This field is predicted to yield above the typical average for {crop}.", { crop })
+          : t("This field is predicted to yield below the typical average for {crop}.", { crop })}
       </p>
     </div>
   );

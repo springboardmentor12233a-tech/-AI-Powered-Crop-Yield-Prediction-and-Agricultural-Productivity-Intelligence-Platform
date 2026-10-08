@@ -6,6 +6,7 @@ import Link from "next/link";
 import Sidebar from "../components/Sidebar";
 import { getToken, getUser } from "@/lib/auth";
 import { downloadCSV } from "@/lib/csv";
+import { useLang } from "@/lib/i18n";
 
 const STATUS_STYLES = {
   healthy: "bg-green-100 text-green-800 border-green-300",
@@ -40,8 +41,9 @@ function Chip({ text, styles }) {
 export default function ComparePage() {
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // English message, translated when shown
   const router = useRouter();
+  const { t } = useLang();
 
   useEffect(() => {
     const token = getToken();
@@ -68,6 +70,7 @@ export default function ComparePage() {
 
   const bestScore = Math.max(0, ...fields.map((f) => f.healthy_count));
 
+  // CSV stays in English so exported data is consistent in every language.
   function exportCSV() {
     downloadCSV(
       "field-comparison.csv",
@@ -93,6 +96,9 @@ export default function ComparePage() {
     );
   }
 
+  const th = "text-left font-heading font-semibold px-5 py-3.5 min-w-40";
+  const label = "px-5 py-3.5 text-charcoal-900/60";
+
   return (
     <div className="min-h-screen bg-cream-50 flex">
       <Sidebar />
@@ -100,7 +106,7 @@ export default function ComparePage() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-start justify-between gap-4 mb-2">
             <h1 className="font-heading text-4xl font-bold text-charcoal-900">
-              Compare Fields
+              {t("Compare Fields")}
             </h1>
             {fields.length > 0 && (
               <div className="flex gap-2 print:hidden">
@@ -108,39 +114,38 @@ export default function ComparePage() {
                   onClick={exportCSV}
                   className="rounded-full border border-cream-200 bg-white px-4 py-2 text-sm font-medium text-charcoal-900/70 hover:bg-cream-100 transition-colors"
                 >
-                  Download CSV
+                  {t("Download CSV")}
                 </button>
                 <button
                   onClick={() => window.print()}
                   className="rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-charcoal-900 shadow-md hover:bg-lime-500 transition-colors"
                 >
-                  Download PDF
+                  {t("Download PDF")}
                 </button>
               </div>
             )}
           </div>
           <p className="text-charcoal-900/60 text-lg mb-10">
-            Your saved fields side by side, with soil checked against the
-            healthy range for each crop.
+            {t("Your saved fields side by side, with soil checked against the healthy range for each crop.")}
           </p>
 
-          {loading && <p className="text-charcoal-900/50 text-sm">Loading...</p>}
+          {loading && <p className="text-charcoal-900/50 text-sm">{t("Loading...")}</p>}
           {error && (
             <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              {error}
+              {t(error)}
             </p>
           )}
 
           {!loading && !error && fields.length < 2 && (
             <div className="bg-white rounded-2xl border border-cream-200 p-8 text-center shadow-lg shadow-charcoal-900/5">
               <p className="text-charcoal-900/60 text-sm mb-4">
-                Save at least two fields to compare them.
+                {t("Save at least two fields to compare them.")}
               </p>
               <Link
                 href="/profile"
                 className="inline-block rounded-full bg-lime-400 px-5 py-2 text-sm font-semibold text-charcoal-900 hover:bg-lime-500 transition-colors"
               >
-                Go to Farm Profile
+                {t("Go to Farm Profile")}
               </Link>
             </div>
           )}
@@ -153,14 +158,11 @@ export default function ComparePage() {
                     <tr className="bg-olive-700 text-lime-400">
                       <th className="text-left font-heading font-semibold px-5 py-3.5 w-40" />
                       {fields.map((f) => (
-                        <th
-                          key={f.id}
-                          className="text-left font-heading font-semibold px-5 py-3.5 min-w-40"
-                        >
+                        <th key={f.id} className={th}>
                           {f.field_name}
                           {bestScore > 0 && f.healthy_count === bestScore && (
                             <span className="ml-2 rounded-full bg-lime-400 px-2 py-0.5 text-[11px] font-semibold text-charcoal-900">
-                              Best soil
+                              {t("Best soil")}
                             </span>
                           )}
                         </th>
@@ -169,23 +171,23 @@ export default function ComparePage() {
                   </thead>
                   <tbody>
                     <tr className="border-t border-cream-100">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Crop</td>
+                      <td className={label}>{t("Crop")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5 font-medium text-charcoal-900">
-                          {f.crop_type}
+                          {t(f.crop_type)}
                         </td>
                       ))}
                     </tr>
                     <tr className="border-t border-cream-100 bg-cream-100/30">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Region</td>
+                      <td className={label}>{t("Region")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5 text-charcoal-900/80">
-                          {f.region}
+                          {t(f.region)}
                         </td>
                       ))}
                     </tr>
                     <tr className="border-t border-cream-100">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Size</td>
+                      <td className={label}>{t("Size")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5 text-charcoal-900/80">
                           {f.field_size_hectares != null ? `${f.field_size_hectares} ha` : "-"}
@@ -193,12 +195,12 @@ export default function ComparePage() {
                       ))}
                     </tr>
 
-                    {SOIL_ROWS.map(({ key, label }, i) => (
+                    {SOIL_ROWS.map(({ key, label: soilLabel }, i) => (
                       <tr
                         key={key}
                         className={`border-t border-cream-100 ${i % 2 === 0 ? "bg-cream-100/30" : ""}`}
                       >
-                        <td className="px-5 py-3.5 text-charcoal-900/60">{label}</td>
+                        <td className={label}>{t(soilLabel)}</td>
                         {fields.map((f) => {
                           const s = f.soil[key];
                           return (
@@ -207,12 +209,12 @@ export default function ComparePage() {
                                 {s.value ?? "-"}
                               </p>
                               <Chip
-                                text={s.status}
+                                text={t(s.status)}
                                 styles={STATUS_STYLES[s.status] || STATUS_STYLES.unknown}
                               />
                               {s.low != null && (
                                 <p className="text-xs text-charcoal-900/40 mt-1">
-                                  healthy {s.low} – {s.high}
+                                  {t("healthy {low} – {high}", { low: s.low, high: s.high })}
                                 </p>
                               )}
                             </td>
@@ -222,7 +224,7 @@ export default function ComparePage() {
                     ))}
 
                     <tr className="border-t border-cream-100">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Healthy soil values</td>
+                      <td className={label}>{t("Healthy soil values")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5 font-semibold text-olive-700">
                           {f.healthy_count} / {f.checked_count}
@@ -230,7 +232,7 @@ export default function ComparePage() {
                       ))}
                     </tr>
                     <tr className="border-t border-cream-100 bg-cream-100/30">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Typical yield</td>
+                      <td className={label}>{t("Typical yield")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5 text-charcoal-900/80">
                           {f.typical_yield != null ? `${f.typical_yield} t/ha` : "-"}
@@ -238,7 +240,7 @@ export default function ComparePage() {
                       ))}
                     </tr>
                     <tr className="border-t border-cream-100">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Latest prediction</td>
+                      <td className={label}>{t("Latest prediction")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5">
                           {f.latest_prediction ? (
@@ -248,7 +250,7 @@ export default function ComparePage() {
                               </p>
                               {f.latest_prediction.risk_level && (
                                 <Chip
-                                  text={`${f.latest_prediction.risk_level} risk`}
+                                  text={t("{risk} risk", { risk: t(f.latest_prediction.risk_level) })}
                                   styles={
                                     RISK_STYLES[f.latest_prediction.risk_level] ||
                                     STATUS_STYLES.unknown
@@ -257,17 +259,17 @@ export default function ComparePage() {
                               )}
                             </>
                           ) : (
-                            <span className="text-charcoal-900/40">None yet</span>
+                            <span className="text-charcoal-900/40">{t("None yet")}</span>
                           )}
                         </td>
                       ))}
                     </tr>
                     <tr className="border-t border-cream-100 bg-cream-100/30">
-                      <td className="px-5 py-3.5 text-charcoal-900/60">Est. production</td>
+                      <td className={label}>{t("Est. production")}</td>
                       {fields.map((f) => (
                         <td key={f.id} className="px-5 py-3.5 font-medium text-charcoal-900">
                           {f.estimated_production != null
-                            ? `${f.estimated_production} tonnes`
+                            ? `${f.estimated_production} ${t("tonnes")}`
                             : "-"}
                         </td>
                       ))}
@@ -277,9 +279,7 @@ export default function ComparePage() {
               </div>
 
               <p className="text-xs text-charcoal-900/40 mt-3">
-                Soil moisture isn&apos;t saved with a field, so it isn&apos;t compared here. The
-                latest prediction is the most recent one for the same crop and region. Healthy
-                ranges come from this app&apos;s dataset, not universal agronomy standards.
+                {t("Soil moisture isn't saved with a field, so it isn't compared here. The latest prediction is the most recent one made for that field. Healthy ranges come from this app's dataset, not universal agronomy standards.")}
               </p>
             </>
           )}

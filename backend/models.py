@@ -57,6 +57,12 @@ class PredictionHistory(db.Model):
     """
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    # Which saved field this prediction was made for. Nullable: older rows
+    # and predictions made without picking a saved field have no profile.
+    # If the field is deleted, the history row stays (profile_id -> NULL).
+    profile_id = db.Column(
+        db.Integer, db.ForeignKey("farm_profile.id", ondelete="SET NULL"), nullable=True
+    )
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
     crop_type = db.Column(db.String(50))
@@ -72,6 +78,7 @@ class PredictionHistory(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
+            "profile_id": self.profile_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "crop_type": self.crop_type,
             "region": self.region,
@@ -81,3 +88,20 @@ class PredictionHistory(db.Model):
             "risk_level": self.risk_level,
             "details": self.details,
         }
+
+
+class Translation(db.Model):
+    """
+    Cache of auto-translated UI text (see translate.py). One row per
+    (language, English source string). Translations are produced once by the
+    LLM and then reused for every user. To fix a bad translation, edit its
+    `text` column directly.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    lang = db.Column(db.String(5), nullable=False)
+    source_hash = db.Column(db.String(40), nullable=False)  # sha1 of `source`, keeps the unique index small
+    source = db.Column(db.Text, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    __table_args__ = (db.UniqueConstraint("lang", "source_hash", name="uq_translation_lang_source"),)

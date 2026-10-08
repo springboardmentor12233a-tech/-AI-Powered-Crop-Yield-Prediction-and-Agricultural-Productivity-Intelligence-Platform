@@ -4,28 +4,69 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from dotenv import load_dotenv
 from sqlalchemy import text
-from predict_service import predict_and_generate_insight, get_live_temperature, get_all_soil_ranges
-from models import db, PredictionHistory, User
+
+load_dotenv()
+
+from predict_service import (
+    predict_and_generate_insight,
+    get_live_temperature,
+    get_all_soil_ranges,
+    InputValidationError,
+)
+from models import db, PredictionHistory, User, FarmProfile
 from auth import auth_bp, role_required
 from farm_profile import farm_profile_bp
 from chat import chat_bp
 from reports import reports_bp
+from translate import translate_bp
+from extensions import limiter
 
-load_dotenv()
+# ---------------------------------------------------------------
+# Config - everything sensitive comes from the environment (.env)
+# ---------------------------------------------------------------
+DATABASE_URL = os.getenv("DATABASE_URL")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+FRONTEND_ORIGINS = [
+    o.strip()
+    for o in os.getenv("FRONTEND_ORIGIN", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if o.strip()
+]
+DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set. Add it to backend/.env.")
+if not JWT_SECRET_KEY or JWT_SECRET_KEY.startswith("change-this") or len(JWT_SECRET_KEY) < 32:
+    raise RuntimeError(
+        "JWT_SECRET_KEY is missing, still the placeholder, or shorter than 32 characters. "
+        "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
 
 app = Flask(__name__)
-CORS(app)  # allows requests from your Next.js frontend (localhost:3000)
+# Only the frontend's origin(s) may call this API from a browser.
+CORS(app, origins=FRONTEND_ORIGINS)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
+# In-memory counters are fine for one process. For gunicorn with several
+# workers, point this at Redis (e.g. redis://localhost:6379).
+app.config["RATELIMIT_STORAGE_URI"] = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
 
 db.init_app(app)
 jwt = JWTManager(app)
+limiter.init_app(app)
 
 app.register_blueprint(auth_bp, url_prefix="/auth")
 app.register_blueprint(farm_profile_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(reports_bp)
+app.register_blueprint(translate_bp)
+
+
+@app.errorhandler(429)
+def rate_limited(e):
+    # The frontend always calls res.json(), so return JSON rather than HTML.
+    return jsonify({"error": "Too many requests. Please wait a moment and try again."}), 429
+
 
 with app.app_context():
     db.create_all()
@@ -35,6 +76,8 @@ with app.app_context():
     for stmt in [
         "ALTER TABLE farm_profile ADD COLUMN IF NOT EXISTS field_size_hectares FLOAT",
         "ALTER TABLE prediction_history ADD COLUMN IF NOT EXISTS details JSON",
+        "ALTER TABLE prediction_history ADD COLUMN IF NOT EXISTS profile_id INTEGER "
+        "REFERENCES farm_profile(id) ON DELETE SET NULL",
     ]:
         try:
             db.session.execute(text(stmt))
@@ -45,48 +88,65 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    return {"message": "YieldSense AI backend is running"}
+    return {"message": "AgriVantage backend is running"}
 
 
 @app.route("/predict", methods=["POST"])
+@limiter.limit("30 per minute")
 @jwt_required()
 def predict():
-    field = request.get_json()
-    if field is None:
-        return jsonify({"error": "Request body must be JSON"}), 400
+    field = request.get_json(silent=True)
+    if not isinstance(field, dict):
+        return jsonify({"error": "Request body must be a JSON object"}), 400
+
+    user_id = int(get_jwt_identity())
+
+    # profile_id is NOT a model input: it only links this prediction to the
+    # saved field it was made for. Pull it out, and only keep it if that
+    # field really belongs to the logged-in user.
+    raw_profile_id = field.pop("profile_id", None)
+    profile_id = None
+    if isinstance(raw_profile_id, int) and not isinstance(raw_profile_id, bool):
+        owned = FarmProfile.query.filter_by(id=raw_profile_id, user_id=user_id).first()
+        profile_id = owned.id if owned else None
 
     try:
         result = predict_and_generate_insight(field)
-
-        # Save this prediction to history for the logged-in user.
-        # Failing to save history shouldn't block returning the prediction
-        # itself, so this is best-effort.
-        try:
-            history_entry = PredictionHistory(
-                user_id=int(get_jwt_identity()),
-                crop_type=field.get("crop_type"),
-                region=field.get("region"),
-                season=field.get("season"),
-                predicted_yield=result.get("predicted_yield"),
-                typical_yield_for_crop=result.get("typical_yield_for_crop"),
-                risk_level=result.get("risk_level"),
-                details={
-                    "inputs": field,
-                    "soil_flags": result.get("soil_flags"),
-                    "weather_context": result.get("weather_context"),
-                    "llm_insight": result.get("llm_insight"),
-                },
-            )
-            db.session.add(history_entry)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-
-        return jsonify(result)
+    except InputValidationError as e:
+        return jsonify({"error": str(e)}), 400
     except KeyError as e:
         return jsonify({"error": f"Missing required field: {e}"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        app.logger.exception("Prediction failed")
+        return jsonify({"error": "Prediction failed. Please check your inputs and try again."}), 500
+
+    # Save this prediction to history for the logged-in user.
+    # Failing to save history shouldn't block returning the prediction
+    # itself, so this is best-effort.
+    try:
+        history_entry = PredictionHistory(
+            user_id=user_id,
+            profile_id=profile_id,
+            crop_type=field.get("crop_type"),
+            region=field.get("region"),
+            season=field.get("season"),
+            predicted_yield=result.get("predicted_yield"),
+            typical_yield_for_crop=result.get("typical_yield_for_crop"),
+            risk_level=result.get("risk_level"),
+            details={
+                "inputs": field,
+                "soil_flags": result.get("soil_flags"),
+                "weather_context": result.get("weather_context"),
+                "llm_insight": result.get("llm_insight"),
+            },
+        )
+        db.session.add(history_entry)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Could not save prediction history")
+
+    return jsonify(result)
 
 
 @app.route("/live-weather", methods=["GET"])
@@ -125,6 +185,32 @@ def admin_users():
     """Returns every registered user. Admin-only."""
     users = User.query.order_by(User.id).all()
     return jsonify([u.to_dict() for u in users]), 200
+
+
+@app.route("/admin/users/<int:user_id>", methods=["GET"])
+@jwt_required()
+@role_required("admin")
+def admin_user_detail(user_id):
+    """
+    Full picture of one user for the admin drill-down: their account info,
+    every saved field, and their entire prediction history (newest first).
+    """
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    profiles = FarmProfile.query.filter_by(user_id=user_id).order_by(FarmProfile.id).all()
+    predictions = (
+        PredictionHistory.query.filter_by(user_id=user_id)
+        .order_by(PredictionHistory.created_at.desc())
+        .all()
+    )
+
+    return jsonify({
+        "user": user.to_dict(),
+        "profiles": [p.to_dict() for p in profiles],
+        "predictions": [p.to_dict() for p in predictions],
+    }), 200
 
 
 @app.route("/admin/stats", methods=["GET"])
@@ -225,4 +311,6 @@ def soil_ranges():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # debug is OFF unless you set FLASK_DEBUG=1 in your local .env.
+    # In production run:  gunicorn -w 2 -b 0.0.0.0:5000 app:app
+    app.run(debug=DEBUG)

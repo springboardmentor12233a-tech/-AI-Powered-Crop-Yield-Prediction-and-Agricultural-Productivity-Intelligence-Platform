@@ -7,6 +7,7 @@ import SoilChart from "../components/SoilChart";
 import YieldChart from "../components/YieldChart";
 import Sidebar from "../components/Sidebar";
 import { CROP_IMAGES } from "@/lib/cropImages";
+import { useLang } from "@/lib/i18n";
 
 const CROP_TYPES = ["Wheat", "Corn", "Rice", "Soybean", "Barley"];
 const REGIONS = ["North", "South", "East", "West", "Central"];
@@ -60,6 +61,14 @@ const RISK_STYLES = {
 const INPUT_CLASS =
   "w-full rounded-lg border border-cream-200 bg-white px-4 py-3 text-base text-charcoal-900 placeholder:text-charcoal-900/30 shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-500 transition-shadow";
 
+const SOIL_LABELS = {
+  soil_ph: "Soil pH",
+  soil_moisture: "Moisture",
+  nitrogen_content: "Nitrogen",
+  phosphorus_content: "Phosphorus",
+  potassium_content: "Potassium",
+};
+
 export default function Home() {
   const [form, setForm] = useState(initialForm);
   const [result, setResult] = useState(null);
@@ -68,6 +77,7 @@ export default function Home() {
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherNote, setWeatherNote] = useState(null);
   const router = useRouter();
+  const { t } = useLang();
 
   const [savedProfiles, setSavedProfiles] = useState([]);
   const [selectedProfileId, setSelectedProfileId] = useState("");
@@ -127,14 +137,15 @@ export default function Home() {
           ...prev,
           avg_temperature: data.live_temperature,
         }));
-        setWeatherNote(
-          `Live temperature for ${data.city_used}: ${data.live_temperature}°C`
-        );
+        setWeatherNote({
+          text: "Live temperature for {city}: {temp}°C",
+          vars: { city: data.city_used, temp: data.live_temperature },
+        });
       } else {
-        setWeatherNote("Could not fetch live weather - enter it manually.");
+        setWeatherNote({ text: "Could not fetch live weather - enter it manually." });
       }
     } catch (err) {
-      setWeatherNote("Could not fetch live weather - enter it manually.");
+      setWeatherNote({ text: "Could not fetch live weather - enter it manually." });
     } finally {
       setWeatherLoading(false);
     }
@@ -154,6 +165,10 @@ export default function Home() {
     // Field size isn't a model input - it's only used below to turn the
     // per-hectare prediction into an estimated total.
     delete payload.field_size_hectares;
+    // Links this prediction to the saved field it was made for, so Compare
+    // Fields shows the right "latest prediction" per field. The backend
+    // verifies the field belongs to the logged-in user.
+    payload.profile_id = selectedProfileId ? Number(selectedProfileId) : null;
 
     try {
       const token = localStorage.getItem("token");
@@ -185,16 +200,15 @@ export default function Home() {
       <div className="flex-1 py-12 px-6">
       <div className="max-w-3xl mx-auto">
         <h1 className="font-heading text-4xl font-bold text-charcoal-900 mb-2">
-          Predict Yield
+          {t("Predict Yield")}
         </h1>
         <p className="text-charcoal-900/60 text-lg mb-10">
-          Enter your field&apos;s conditions to get a yield prediction and
-          farming insight.
+          {t("Enter your field's conditions to get a yield prediction and farming insight.")}
         </p>
 
         <div className="mb-6">
           <p className="text-base font-medium text-charcoal-900/80 mb-3">
-            Select Crop
+            {t("Select Crop")}
           </p>
           <div className="grid grid-cols-5 gap-3">
             {CROP_TYPES.map((c) => (
@@ -222,7 +236,7 @@ export default function Home() {
                       : "bg-white text-charcoal-900/70"
                   }`}
                 >
-                  {c}
+                  {t(c)}
                 </p>
               </button>
             ))}
@@ -236,17 +250,17 @@ export default function Home() {
           {savedProfiles.length > 0 && (
             <div className="mb-5">
               <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                Apply Saved Field
+                {t("Apply Saved Field")}
               </label>
               <select
                 value={selectedProfileId}
                 onChange={handleApplyProfile}
                 className={INPUT_CLASS}
               >
-                <option value="">— Select a saved field —</option>
+                <option value="">{t("— Select a saved field —")}</option>
                 {savedProfiles.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.field_name} ({p.crop_type}, {p.region})
+                    {p.field_name} ({t(p.crop_type)}, {t(p.region)})
                   </option>
                 ))}
               </select>
@@ -256,7 +270,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                Region
+                {t("Region")}
               </label>
               <select
                 name="region"
@@ -266,7 +280,7 @@ export default function Home() {
               >
                 {REGIONS.map((r) => (
                   <option key={r} value={r}>
-                    {r}
+                    {t(r)}
                   </option>
                 ))}
               </select>
@@ -274,7 +288,7 @@ export default function Home() {
 
             <div>
               <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                Season
+                {t("Season")}
               </label>
               <select
                 name="season"
@@ -284,7 +298,7 @@ export default function Home() {
               >
                 {SEASONS.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {t(s)}
                   </option>
                 ))}
               </select>
@@ -292,7 +306,7 @@ export default function Home() {
 
             <div>
               <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                Harvest Date
+                {t("Harvest Date")}
               </label>
               <input
                 type="date"
@@ -306,7 +320,7 @@ export default function Home() {
             {NUMBER_FIELDS.map(({ name, label, step }) => (
               <div key={name}>
                 <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-                  {label}
+                  {t(label)}
                 </label>
                 <input
                   type="number"
@@ -323,13 +337,13 @@ export default function Home() {
 
           <div className="mt-4">
             <label className="block text-base font-medium text-charcoal-900/80 mb-1.5">
-              Field Size (hectares) <span className="text-charcoal-900/40 font-normal">- optional, for total production estimate</span>
+              {t("Field Size (hectares)")} <span className="text-charcoal-900/40 font-normal">{t("- optional, for total production estimate")}</span>
             </label>
             <input
               type="number"
               step="0.01"
               name="field_size_hectares"
-              placeholder="e.g. 12.5"
+              placeholder={t("e.g. 12.5")}
               value={form.field_size_hectares}
               onChange={handleChange}
               className={INPUT_CLASS}
@@ -344,11 +358,11 @@ export default function Home() {
               className="text-sm font-medium text-green-700 hover:text-green-800 disabled:opacity-60"
             >
               {weatherLoading
-                ? "Fetching..."
-                : "📍 Fetch Live Weather for this Region"}
+                ? t("Fetching...")
+                : t("📍 Fetch Live Weather for this Region")}
             </button>
             {weatherNote && (
-              <p className="text-xs text-zinc-500 mt-1">{weatherNote}</p>
+              <p className="text-xs text-zinc-500 mt-1">{t(weatherNote.text, weatherNote.vars)}</p>
             )}
           </div>
 
@@ -357,7 +371,7 @@ export default function Home() {
             disabled={loading}
             className="mt-6 w-full rounded-full bg-lime-400 text-charcoal-900 font-semibold py-3 shadow-md hover:bg-lime-500 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:hover:translate-y-0"
           >
-            {loading ? "Predicting..." : "Predict Yield"}
+            {loading ? t("Predicting...") : t("Predict Yield")}
           </button>
         </form>
 
@@ -372,7 +386,7 @@ export default function Home() {
             <div className="relative bg-white rounded-3xl border border-cream-200 p-8 shadow-xl shadow-charcoal-900/5 text-center overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-lime-400" />
               <p className="text-charcoal-900/40 mb-1 tracking-wide uppercase text-xs font-medium">
-                Predicted Yield
+                {t("Predicted Yield")}
               </p>
               <p className="text-5xl font-heading font-bold text-charcoal-900">
                 {result.predicted_yield}
@@ -380,11 +394,11 @@ export default function Home() {
               </p>
               {parseFloat(form.field_size_hectares) > 0 && (
                 <p className="mt-3 text-base text-charcoal-900/70">
-                  Estimated total production:{" "}
+                  {t("Estimated total production:")}{" "}
                   <span className="font-semibold text-charcoal-900">
-                    {(result.predicted_yield * parseFloat(form.field_size_hectares)).toFixed(1)} tonnes
+                    {(result.predicted_yield * parseFloat(form.field_size_hectares)).toFixed(1)} {t("tonnes")}
                   </span>{" "}
-                  over {parseFloat(form.field_size_hectares)} ha
+                  {t("over {ha} ha", { ha: parseFloat(form.field_size_hectares) })}
                 </p>
               )}
               {result.risk_level && (
@@ -394,7 +408,7 @@ export default function Home() {
                     "bg-zinc-100 text-zinc-800 border-zinc-300"
                   }`}
                 >
-                  {result.risk_level} Risk
+                  {t("{risk} risk", { risk: t(result.risk_level) })}
                 </span>
               )}
             </div>
@@ -413,7 +427,7 @@ export default function Home() {
 
             <div className="bg-white rounded-2xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300">
               <h2 className="font-heading text-xl font-bold text-charcoal-900 mb-4">
-                Soil Health
+                {t("Soil Health")}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {Object.entries(result.soil_flags).map(([key, value]) => (
@@ -424,9 +438,9 @@ export default function Home() {
                     }`}
                   >
                     <p className="font-medium capitalize">
-                      {key.replace(/_/g, " ")}
+                      {t(SOIL_LABELS[key] || key.replace(/_/g, " "))}
                     </p>
-                    <p className="capitalize">{value}</p>
+                    <p className="capitalize">{t(value)}</p>
                   </div>
                 ))}
               </div>
@@ -434,25 +448,25 @@ export default function Home() {
 
             <div className="bg-white rounded-2xl border border-cream-200 p-6 shadow-lg shadow-charcoal-900/5 hover:shadow-xl transition-shadow duration-300">
               <h2 className="font-heading text-xl font-bold text-charcoal-900 mb-4">
-                Weather Context
+                {t("Weather Context")}
               </h2>
               <div className="grid grid-cols-2 gap-4 text-base">
                 <div>
-                  <p className="text-zinc-500">Your Temperature</p>
+                  <p className="text-zinc-500">{t("Your Temperature")}</p>
                   <p className="font-medium text-zinc-900">
                     {form.avg_temperature} °C
                   </p>
                   <p className="text-zinc-400 text-xs mt-1">
-                    Typical: {result.weather_context.typical_avg_temperature} °C
+                    {t("Typical: {value} °C", { value: result.weather_context?.typical_avg_temperature ?? "-" })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-zinc-500">Your Rainfall</p>
+                  <p className="text-zinc-500">{t("Your Rainfall")}</p>
                   <p className="font-medium text-zinc-900">
                     {form.total_rainfall} mm
                   </p>
                   <p className="text-zinc-400 text-xs mt-1">
-                    Typical: {result.weather_context.typical_total_rainfall} mm
+                    {t("Typical: {value} mm", { value: result.weather_context?.typical_total_rainfall ?? "-" })}
                   </p>
                 </div>
               </div>
@@ -460,7 +474,7 @@ export default function Home() {
 
             <div className="bg-olive-700 rounded-3xl p-6 shadow-xl shadow-charcoal-900/10">
               <h2 className="font-heading text-lg font-semibold text-lime-400 mb-3 flex items-center gap-2">
-                <span>✨</span> AI Insight
+                <span>✨</span> {t("AI Insight")}
               </h2>
 
               {typeof result.llm_insight === "string" ? (
@@ -478,7 +492,7 @@ export default function Home() {
                   {result.llm_insight.strengths?.length > 0 && (
                     <div>
                       <p className="text-xs uppercase tracking-wide text-green-300 mb-1.5 font-semibold">
-                        Strengths
+                        {t("Strengths")}
                       </p>
                       <ul className="space-y-1">
                         {result.llm_insight.strengths.map((s, i) => (
@@ -493,7 +507,7 @@ export default function Home() {
                   {result.llm_insight.concerns?.length > 0 && (
                     <div>
                       <p className="text-xs uppercase tracking-wide text-orange-300 mb-1.5 font-semibold">
-                        Concerns
+                        {t("Concerns")}
                       </p>
                       <ul className="space-y-1">
                         {result.llm_insight.concerns.map((c, i) => (
@@ -508,7 +522,7 @@ export default function Home() {
                   {result.llm_insight.actions?.length > 0 && (
                     <div>
                       <p className="text-xs uppercase tracking-wide text-lime-400 mb-1.5 font-semibold">
-                        Recommended Actions
+                        {t("Recommended Actions")}
                       </p>
                       <ul className="space-y-1">
                         {result.llm_insight.actions.map((a, i) => (
@@ -527,7 +541,7 @@ export default function Home() {
               href="/assistant"
               className="block rounded-2xl border border-lime-500 bg-lime-300/30 px-5 py-4 text-center text-base font-medium text-olive-800 hover:bg-lime-300/60 transition-colors"
             >
-              💬 Ask the assistant about this result
+              {t("💬 Ask the assistant about this result")}
             </Link>
           </div>
         )}

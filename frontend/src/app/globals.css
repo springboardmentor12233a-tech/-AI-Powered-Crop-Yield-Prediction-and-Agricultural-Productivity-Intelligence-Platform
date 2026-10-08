@@ -25,10 +25,88 @@
 }
 
 body {
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-body), var(--font-deva), var(--font-kannada), var(--font-tamil), var(--font-telugu), system-ui, sans-serif;
   background-color: var(--color-cream-50);
+  color: var(--color-charcoal-900);
 }
 
 h1, h2, h3, .font-heading {
-  font-family: var(--font-heading), system-ui, sans-serif;
+  font-family: var(--font-heading), var(--font-deva), var(--font-kannada), var(--font-tamil), var(--font-telugu), system-ui, sans-serif;
+}
+
+/* ================================================================
+   DARK MODE
+   Works by re-pointing the theme colour variables when <html> has the
+   "dark" class, so existing pages need no edits. Wrapped in
+   @media screen so printing / "Download PDF" stays light.
+   ================================================================ */
+@media screen {
+  .dark {
+    color-scheme: dark;
+    --color-cream-50: #12150e;
+    --color-cream-100: #1a1f13;
+    --color-cream-200: #2a3120;
+    --color-charcoal-900: #ece9dc;
+    --color-charcoal-800: #d8d5c6;
+  }
+
+  /* Cards / inputs */
+  .dark .bg-white { background-color: #1b2014; }
+  .dark .bg-white\/80 { background-color: rgb(18 21 14 / 0.85); }
+
+  /* Solid lime buttons keep dark text */
+  .dark .bg-lime-300,
+  .dark .bg-lime-400,
+  .dark .bg-lime-500 { color: #1f2317; }
+
+  /* Olive used as TEXT needs to be lighter on dark */
+  .dark .text-olive-600,
+  .dark .text-olive-700 { color: #b5d08a; }
+  .dark .text-olive-800,
+  .dark .hover\:text-olive-800:hover { color: #cfe3a9; }
+
+  /* Light text that sits on olive cards (hero, AI insight, landing) */
+  .dark .text-cream-50\/90,
+  .dark .text-cream-50\/80 { color: rgb(247 245 238 / 0.88); }
+  .dark .text-cream-100\/60,
+  .dark .text-cream-100\/70,
+  .dark .text-cream-100\/80 { color: rgb(239 236 224 / 0.75); }
+  .dark .text-lime-50 { color: #f7fee7; }
+
+  /* Status chips and panels: translucent tints instead of pastel fills */
+  .dark .bg-green-100  { background-color: rgb(34 197 94 / 0.16); }
+  .dark .bg-yellow-100 { background-color: rgb(234 179 8 / 0.16); }
+  .dark .bg-red-50, .dark .bg-red-100 { background-color: rgb(239 68 68 / 0.16); }
+  .dark .bg-orange-50, .dark .bg-orange-100 { background-color: rgb(249 115 22 / 0.16); }
+  .dark .bg-zinc-100 { background-color: rgb(255 255 255 / 0.08); }
+
+  .dark .text-green-700, .dark .text-green-800 { color: #86efac; }
+  .dark .text-yellow-800 { color: #fde047; }
+  .dark .text-red-600, .dark .text-red-700, .dark .text-red-800 { color: #fca5a5; }
+  .dark .text-orange-700, .dark .text-orange-800, .dark .text-orange-900,
+  .dark .text-orange-900\/80 { color: #fdba74; }
+  .dark .text-zinc-400, .dark .text-zinc-500 { color: #a1a1aa; }
+  .dark .text-zinc-600, .dark .text-zinc-800 { color: #d4d4d8; }
+  .dark .text-zinc-900 { color: #f4f4f5; }
+
+  .dark .border-green-300  { border-color: rgb(34 197 94 / 0.45); }
+  .dark .border-yellow-300 { border-color: rgb(234 179 8 / 0.45); }
+  .dark .border-red-200, .dark .border-red-300 { border-color: rgb(239 68 68 / 0.45); }
+  .dark .border-orange-200, .dark .border-orange-300 { border-color: rgb(249 115 22 / 0.45); }
+  .dark .border-zinc-200, .dark .border-zinc-300 { border-color: #3f3f46; }
+
+  /* Recharts */
+  .dark .recharts-default-tooltip {
+    background-color: #1b2014 !important;
+    border-color: #2a3120 !important;
+  }
+  .dark .recharts-cartesian-axis-tick-value { fill: #b8b5a6; }
+  .dark .recharts-cartesian-grid line { stroke: #2a3120; }
+  .dark .recharts-legend-item-text { color: #d8d5c6 !important; }
+}
+
+/* The header bar (3rem tall) sits above every page, so pages that use
+   min-h-screen must be 3rem shorter or they would scroll by the bar's height. */
+.app-main .min-h-screen {
+  min-height: calc(100vh - 3rem);
 }

@@ -34,7 +34,7 @@ export default function Login() {
       if (data.user?.role === "admin") {
         router.push("/admin");
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (err) {
       setError(err.message);
@@ -47,7 +47,7 @@ export default function Login() {
     <div
       className="min-h-screen bg-cover bg-center relative"
       // PASTE YOUR IMAGE PATH HERE, e.g. /login_bg.jpg (place file in frontend/public/)
-      style={{ backgroundImage: "url('/login_imagee.png')" }}
+      style={{ backgroundImage: "url('/login_bg.jpg')" }}
     >
       <div className="absolute top-8 left-8 sm:top-10 sm:left-16">
         <h1 className="font-heading text-3xl font-bold text-olive-700">

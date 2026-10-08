@@ -2,7 +2,7 @@
 Farmer chatbot endpoint.
 
 POST /chat  (JWT required, farmers only)
-Body: { "message": str, "history": [{role, content}, ...], "last_prediction": {...} | null }
+Body: { "message": str, "history": [{role, content}, ...] }
 Returns: { "reply": str }
 
 The bot is grounded on the user's own data (saved fields, recent predictions,
@@ -16,6 +16,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from auth import role_required
+from extensions import limiter
 from models import PredictionHistory, FarmProfile
 from predict_service import get_all_soil_ranges, GROQ_API_KEY, GROQ_API_URL, GROQ_MODEL
 
@@ -40,7 +41,7 @@ Rules:
 """
 
 
-def build_context(user_id: int, last_prediction) -> str:
+def build_context(user_id: int) -> str:
     profiles = FarmProfile.query.filter_by(user_id=user_id).order_by(FarmProfile.id).all()
     recent = (
         PredictionHistory.query.filter_by(user_id=user_id)
@@ -59,11 +60,22 @@ def build_context(user_id: int, last_prediction) -> str:
         d["soil_flags"] = details.get("soil_flags")
         recent_list.append(d)
 
+    # The most recent prediction comes from the DATABASE, never from the
+    # browser: a client-supplied value could be forged to inject text into
+    # the LLM prompt. Same data the bot used to get, trusted source.
+    latest = None
+    if recent:
+        latest = recent[0].to_dict()
+        latest_details = latest.pop("details", None) or {}
+        latest["inputs"] = latest_details.get("inputs")
+        latest["soil_flags"] = latest_details.get("soil_flags")
+        latest["weather_context"] = latest_details.get("weather_context")
+
     context = {
         "saved_fields": [p.to_dict() for p in profiles],
         "recent_predictions": recent_list,
         "healthy_soil_ranges_by_crop": get_all_soil_ranges(),
-        "prediction_just_made": last_prediction if isinstance(last_prediction, dict) else None,
+        "prediction_just_made": latest,
     }
     return json.dumps(context, default=str)
 
@@ -83,6 +95,7 @@ def clean_history(history) -> list:
 
 
 @chat_bp.route("/chat", methods=["POST"])
+@limiter.limit("20 per minute")
 @jwt_required()
 @role_required("farmer")
 def chat():
@@ -96,7 +109,7 @@ def chat():
     message = message[:MAX_MESSAGE_CHARS]
 
     user_id = int(get_jwt_identity())
-    context = build_context(user_id, data.get("last_prediction"))
+    context = build_context(user_id)
 
     messages = [
         {"role": "system", "content": f"{SYSTEM_PROMPT}\nCONTEXT (JSON):\n{context}"},
@@ -117,6 +130,7 @@ def chat():
         return jsonify({"error": "Could not reach the AI service. Try again."}), 502
 
     if response.status_code != 200:
+        print(f"[chat] Groq returned {response.status_code}: {response.text[:200]}")
         return jsonify({"error": "The AI service returned an error. Try again."}), 502
 
     reply = response.json()["choices"][0]["message"].get("content", "").strip()

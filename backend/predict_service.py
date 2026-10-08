@@ -18,6 +18,7 @@ By: Shivani
 import os
 import re
 import json
+import math
 import pandas as pd
 import joblib
 import requests
@@ -219,8 +220,9 @@ def _extract_json(raw: str):
         return None
 
 
-def get_llm_insight(field: dict, predicted_yield: float, soil_flags: dict, weather_context: dict, typical_yield: float) -> dict:
+def _get_llm_insight_unsafe(field: dict, predicted_yield: float, soil_flags: dict, weather_context: dict, typical_yield: float) -> dict:
     """
+    (Wrapped by get_llm_insight below, which guarantees it never raises.)
     Returns a structured recommendation instead of one paragraph:
     { summary, strengths: [...], concerns: [...], actions: [...] }
     Falls back to a summary-only shape if the model doesn't return valid
@@ -277,7 +279,7 @@ Weather:
         timeout=30,
     )
     if response.status_code != 200:
-        return fallback(f"LLM insight unavailable: {response.text}")
+        return fallback("AI insight is temporarily unavailable. Your yield prediction above is still valid.")
 
     raw = response.json()["choices"][0]["message"]["content"].strip()
 
@@ -296,9 +298,71 @@ Weather:
     }
 
 
+def get_llm_insight(field: dict, predicted_yield: float, soil_flags: dict, weather_context: dict, typical_yield: float) -> dict:
+    """
+    The AI insight is a nice-to-have on top of the ML prediction, so a Groq
+    timeout, network error, rate limit or odd response must never turn a
+    successful prediction into a 500. Any failure returns the summary-only
+    fallback shape the frontend already handles.
+    """
+    try:
+        return _get_llm_insight_unsafe(field, predicted_yield, soil_flags, weather_context, typical_yield)
+    except Exception as e:
+        print(f"[warning] LLM insight failed: {type(e).__name__}: {e}")
+        return {
+            "summary": "AI insight is temporarily unavailable. Your yield prediction above is still valid.",
+            "strengths": [],
+            "concerns": [],
+            "actions": [],
+        }
+
+
+class InputValidationError(ValueError):
+    """Raised for bad user input; the API turns it into a 400 with this message."""
+
+
+REQUIRED_NUMERIC_FIELDS = [
+    "soil_ph", "soil_moisture", "avg_temperature", "total_rainfall",
+    "fertilizer_amount", "pesticide_usage", "sunlight_hours",
+    "nitrogen_content", "phosphorus_content", "potassium_content",
+    "irrigation_frequency",
+]
+
+
+def validate_field(field: dict) -> None:
+    """Checks the raw /predict input before any model code touches it."""
+    if not isinstance(field, dict):
+        raise InputValidationError("Request body must be a JSON object.")
+
+    valid_crops = list(_soil_ranges.index)
+    valid_regions = list(REGION_TO_CITY.keys())
+    valid_seasons = sorted(_weather_summary["season"].dropna().unique())
+
+    for name, valid in (("crop_type", valid_crops), ("region", valid_regions), ("season", valid_seasons)):
+        if field.get(name) not in valid:
+            raise InputValidationError(f"{name} must be one of: {', '.join(map(str, valid))}.")
+
+    try:
+        pd.to_datetime(field.get("harvest_date"))
+    except Exception:
+        raise InputValidationError("harvest_date must be a valid date (YYYY-MM-DD).")
+    if not field.get("harvest_date"):
+        raise InputValidationError("harvest_date is required.")
+
+    for name in REQUIRED_NUMERIC_FIELDS:
+        value = field.get(name)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise InputValidationError(f"{name} is required and must be a number.")
+
+    # rainfall_to_temp_ratio divides by this
+    if field["avg_temperature"] == 0:
+        raise InputValidationError("avg_temperature cannot be 0.")
+
+
 def predict_and_generate_insight(field: dict) -> dict:
     """Main entry point: takes a raw field input dict, returns the full
     combined result the frontend will display."""
+    validate_field(field)
     X = preprocess_input(field)
     predicted_yield = float(_model.predict(X)[0])
 

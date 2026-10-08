@@ -4,27 +4,29 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getUser, logout } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 
 const FARMER_LINKS = [
-  { href: "/", label: "Overview", icon: "🏠" },
-  { href: "/predict", label: "Predict Yield", icon: "🌾" },
-  { href: "/soil-reference", label: "Soil Reference", icon: "📖" },
-  { href: "/history", label: "History", icon: "📜" },
-  { href: "/profile", label: "Farm Profile", icon: "🧑‍🌾" },
-  { href: "/compare", label: "Compare Fields", icon: "📊" },
-  { href: "/assistant", label: "Assistant", icon: "💬" },
+  { href: "/dashboard", key: "Overview", icon: "🏠" },
+  { href: "/predict", key: "Predict Yield", icon: "🌾" },
+  { href: "/soil-reference", key: "Soil Reference", icon: "📖" },
+  { href: "/history", key: "History", icon: "📜" },
+  { href: "/profile", key: "Farm Profile", icon: "🧑‍🌾" },
+  { href: "/compare", key: "Compare Fields", icon: "📊" },
+  { href: "/assistant", key: "Assistant", icon: "💬" },
 ];
 
 const ADMIN_LINKS = [
-  { href: "/admin", label: "Overview", icon: "📊" },
-  { href: "/admin/reports", label: "Reports", icon: "📈" },
-  { href: "/admin/users", label: "Users", icon: "👥" },
+  { href: "/admin", key: "Overview", icon: "📊" },
+  { href: "/admin/reports", key: "Reports", icon: "📈" },
+  { href: "/admin/users", key: "Users", icon: "👥" },
 ];
 
 export default function Sidebar() {
   const [user, setUser] = useState(null);
   const pathname = usePathname();
   const router = useRouter();
+  const t = useT();
 
   useEffect(() => {
     setUser(getUser());
@@ -36,6 +38,7 @@ export default function Sidebar() {
   }
 
   const links = user?.role === "admin" ? ADMIN_LINKS : FARMER_LINKS;
+  const roleLabel = user?.role ? t(user.role.charAt(0).toUpperCase() + user.role.slice(1)) : "";
 
   return (
     <aside className="w-64 shrink-0 min-h-screen bg-cream-50 border-r border-cream-200 flex flex-col print:hidden">
@@ -47,9 +50,7 @@ export default function Sidebar() {
           <h1 className="font-heading text-lg font-bold text-charcoal-900 leading-tight">
             AgriVantage
           </h1>
-          <p className="text-[11px] text-charcoal-900/50">
-            Agricultural Intelligence
-          </p>
+          <p className="text-[11px] text-charcoal-900/50">{t("Agricultural Intelligence")}</p>
         </div>
       </div>
 
@@ -73,7 +74,7 @@ export default function Sidebar() {
               >
                 {link.icon}
               </span>
-              {link.label}
+              {t(link.key)}
             </Link>
           );
         })}
@@ -86,19 +87,15 @@ export default function Sidebar() {
               {user.name?.[0]?.toUpperCase() || "?"}
             </div>
             <div className="leading-tight min-w-0">
-              <p className="text-sm font-medium text-charcoal-900 truncate">
-                {user.name}
-              </p>
-              <p className="text-xs text-charcoal-900/50 capitalize">
-                {user.role}
-              </p>
+              <p className="text-sm font-medium text-charcoal-900 truncate">{user.name}</p>
+              <p className="text-xs text-charcoal-900/50">{roleLabel}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
             className="w-full rounded-full border border-cream-200 bg-cream-100 px-3 py-2 text-sm font-medium text-charcoal-900/70 hover:bg-cream-200 transition-colors"
           >
-            Log out
+            {t("Log out")}
           </button>
         </div>
       )}

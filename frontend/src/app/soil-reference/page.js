@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import { getToken } from "@/lib/auth";
 import { CROP_IMAGES } from "@/lib/cropImages";
+import { useLang } from "@/lib/i18n";
 
 const PARAM_LABELS = {
   soil_ph: "Soil pH",
@@ -17,8 +18,9 @@ const PARAM_LABELS = {
 export default function SoilReferencePage() {
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // English message, translated when shown
   const router = useRouter();
+  const { t } = useLang();
 
   useEffect(() => {
     const token = getToken();
@@ -48,17 +50,16 @@ export default function SoilReferencePage() {
       <div className="flex-1 py-12 px-6">
       <div className="max-w-5xl mx-auto">
         <h1 className="font-heading text-4xl font-bold text-charcoal-900 mb-2">
-          Soil Reference
+          {t("Soil Reference")}
         </h1>
         <p className="text-charcoal-900/60 text-lg mb-10">
-          Healthy soil ranges for each crop, derived from historical
-          above-average yield fields.
+          {t("Healthy soil ranges for each crop, derived from historical above-average yield fields.")}
         </p>
 
-        {loading && <p className="text-charcoal-900/50 text-base">Loading...</p>}
+        {loading && <p className="text-charcoal-900/50 text-base">{t("Loading...")}</p>}
         {error && (
           <p className="text-base text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            {error}
+            {t(error)}
           </p>
         )}
 
@@ -75,7 +76,7 @@ export default function SoilReferencePage() {
               <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-heading text-xl font-bold text-charcoal-900">
-                    {crop.crop_type}
+                    {t(crop.crop_type)}
                   </h2>
                   <span className="text-sm text-olive-700 bg-lime-300/40 border border-lime-500 rounded-full px-3 py-1 font-semibold">
                     {crop.avg_yield} t/ha
@@ -89,7 +90,7 @@ export default function SoilReferencePage() {
                       className="flex items-center justify-between text-base py-1 border-b border-cream-100 last:border-0"
                     >
                       <span className="text-charcoal-900/60">
-                        {PARAM_LABELS[param] || param}
+                        {t(PARAM_LABELS[param] || param)}
                       </span>
                       <span className="font-medium text-charcoal-900">
                         {range.low} – {range.high}
