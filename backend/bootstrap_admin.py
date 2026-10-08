@@ -4,10 +4,9 @@ from getpass import getpass
 from uuid import uuid4
 
 from passlib.context import CryptContext
-import psycopg2
 from dotenv import load_dotenv
 
-from database import ensure_schema
+from database import ensure_schema, get_connection
 
 load_dotenv()
 
@@ -30,16 +29,6 @@ def get_admin_values():
         raise ValueError("Name, email, and password are required.")
 
     return name.strip(), email.strip().lower(), password
-
-
-def get_connection():
-    return psycopg2.connect(
-        host=os.getenv("YIELDSENSE_DB_HOST", "localhost"),
-        dbname=os.getenv("YIELDSENSE_DB_NAME", "yieldsense"),
-        user=os.getenv("YIELDSENSE_DB_USER", "postgres"),
-        password=os.getenv("YIELDSENSE_DB_PASSWORD", ""),
-        port=os.getenv("YIELDSENSE_DB_PORT", "5432"),
-    )
 
 
 def ensure_admin_exists():

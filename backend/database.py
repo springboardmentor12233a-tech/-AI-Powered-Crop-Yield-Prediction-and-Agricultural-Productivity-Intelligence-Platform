@@ -7,7 +7,11 @@ from psycopg2.extras import Json, RealDictCursor
 load_dotenv()
 
 
-def _connection():
+def get_connection():
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return psycopg2.connect(database_url, sslmode="require")
+
     return psycopg2.connect(
         host=os.getenv("YIELDSENSE_DB_HOST", "localhost"),
         database=os.getenv("YIELDSENSE_DB_NAME", "yieldsense"),
@@ -15,6 +19,10 @@ def _connection():
         password=os.getenv("YIELDSENSE_DB_PASSWORD", ""),
         port=os.getenv("YIELDSENSE_DB_PORT", "5432"),
     )
+
+
+def _connection():
+    return get_connection()
 
 
 @contextmanager
