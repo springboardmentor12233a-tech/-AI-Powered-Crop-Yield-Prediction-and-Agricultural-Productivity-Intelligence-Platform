@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cropcast-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MONGODB_URL=${MONGODB_URL:-mongodb+srv://lohithakodani_db_user:rKTu7uTGMT5y03cH@cropcast.rxtbzxt.mongodb.net/}
+      - DATABASE_NAME=${DATABASE_NAME:-CropCast}
+      - SECRET_KEY=${SECRET_KEY:-cropcast-secret-key-change-in-production}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - cropcast-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cropcast-frontend
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - cropcast-network
+
+networks:
+  cropcast-network:
+    driver: bridge
