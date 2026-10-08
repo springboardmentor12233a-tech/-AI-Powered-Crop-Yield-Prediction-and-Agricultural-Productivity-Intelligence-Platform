@@ -17,13 +17,15 @@ const AgriculturalReport = React.lazy(() => import('./pages/AgriculturalReport')
 
 
 
-const RoleBasedDashboard = () => {
+import { Navigate } from 'react-router-dom';
+
+const RoleBasedRedirect = () => {
   const { user } = useAuth();
   const role = user?.role?.role_name || user?.role;
   if (role === 'admin') {
-    return <AdminDashboard />;
+    return <Navigate to="/admin" replace />;
   }
-  return <Dashboard />; // Default to Farmer Dashboard
+  return <Navigate to="/dashboard" replace />;
 };
 
 function App() {
@@ -38,11 +40,12 @@ function App() {
           
           <Route element={<ProtectedRoute allowedRoles={['admin', 'user', 'farmer']} />}>
             <Route path="/" element={<AppShell />}>
-              <Route index element={<RoleBasedDashboard />} />
+              <Route index element={<RoleBasedRedirect />} />
               <Route path="settings" element={<Settings />} />
               
               {/* Farmer Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'user', 'farmer']} />}>
+                <Route path="dashboard" element={<Dashboard />} />
                 <Route path="predict" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><YieldPrediction /></Suspense>} />
                 <Route path="weather" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><WeatherAnalysis /></Suspense>} />
                 <Route path="soil" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><SoilAnalysis /></Suspense>} />

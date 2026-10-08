@@ -15,7 +15,7 @@ import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 
 const farmerNavigation = [
-  { name: 'Dashboard', to: '/', icon: LayoutDashboard },
+  { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { name: 'Yield Prediction', to: '/predict', icon: Sprout },
   { name: 'Weather Analysis', to: '/weather', icon: CloudRain },
   { name: 'Soil Analysis', to: '/soil', icon: TestTube },
