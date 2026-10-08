@@ -188,13 +188,20 @@ def get_user_by_id(user_id: str):
 
 
 def update_user_password(user_id: str, new_hashed_password: str):
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET hashed_password = ? WHERE id = ?", (new_hashed_password, user_id))
-    updated = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
-    return updated
+    if use_mongo:
+        res = mongo_db["users"].update_one(
+            {"id": user_id},
+            {"$set": {"hashed_password": new_hashed_password}}
+        )
+        return res.modified_count > 0 or res.matched_count > 0
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET hashed_password = ? WHERE id = ?", (new_hashed_password, user_id))
+        updated = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return updated
 
 
 
@@ -324,131 +331,220 @@ def delete_agricultural_record(record_id: str, user_id: str = None):
 
 
 # Profile Management Operations (Linked via Foreign Key user_id)
+# Profile Management Operations (Linked via Foreign Key user_id)
 def get_farmer_profile(user_id: str):
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM farmer_profiles WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return dict(row)
-    return {
-        "user_id": user_id,
-        "farm_name": "Green Valley Agriculture",
-        "region": "Punjab",
-        "soil_type": "Alluvial / Loamy",
-        "crop_preferences": "Wheat, Rice, Maize",
-        "farm_size_hectares": 50.0,
-        "updated_at": datetime.utcnow().isoformat()
-    }
+    if use_mongo:
+        profile = mongo_db["farmer_profiles"].find_one({"user_id": user_id})
+        if profile:
+            profile.pop("_id", None)
+            return profile
+        return {
+            "user_id": user_id,
+            "farm_name": "Green Valley Agriculture",
+            "region": "Punjab",
+            "soil_type": "Alluvial / Loamy",
+            "crop_preferences": "Wheat, Rice, Maize",
+            "farm_size_hectares": 50.0,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM farmer_profiles WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return dict(row)
+        return {
+            "user_id": user_id,
+            "farm_name": "Green Valley Agriculture",
+            "region": "Punjab",
+            "soil_type": "Alluvial / Loamy",
+            "crop_preferences": "Wheat, Rice, Maize",
+            "farm_size_hectares": 50.0,
+            "updated_at": datetime.utcnow().isoformat()
+        }
 
 
 def save_farmer_profile(user_id: str, profile_data: dict):
     updated_at = datetime.utcnow().isoformat()
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO farmer_profiles (user_id, farm_name, region, soil_type, crop_preferences, farm_size_hectares, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET
-            farm_name=excluded.farm_name,
-            region=excluded.region,
-            soil_type=excluded.soil_type,
-            crop_preferences=excluded.crop_preferences,
-            farm_size_hectares=excluded.farm_size_hectares,
-            updated_at=excluded.updated_at
-    """, (
-        user_id,
-        profile_data.get("farm_name", "Green Valley Agriculture"),
-        profile_data.get("region", "Punjab"),
-        profile_data.get("soil_type", "Alluvial / Loamy"),
-        profile_data.get("crop_preferences", "Wheat, Rice"),
-        float(profile_data.get("farm_size_hectares") or 50.0),
-        updated_at
-    ))
-    conn.commit()
-    conn.close()
-    return get_farmer_profile(user_id)
+    data = {
+        "user_id": user_id,
+        "farm_name": profile_data.get("farm_name", "Green Valley Agriculture"),
+        "region": profile_data.get("region", "Punjab"),
+        "soil_type": profile_data.get("soil_type", "Alluvial / Loamy"),
+        "crop_preferences": profile_data.get("crop_preferences", "Wheat, Rice"),
+        "farm_size_hectares": float(profile_data.get("farm_size_hectares") or 50.0),
+        "updated_at": updated_at
+    }
+    if use_mongo:
+        mongo_db["farmer_profiles"].replace_one({"user_id": user_id}, data, upsert=True)
+        return get_farmer_profile(user_id)
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO farmer_profiles (user_id, farm_name, region, soil_type, crop_preferences, farm_size_hectares, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                farm_name=excluded.farm_name,
+                region=excluded.region,
+                soil_type=excluded.soil_type,
+                crop_preferences=excluded.crop_preferences,
+                farm_size_hectares=excluded.farm_size_hectares,
+                updated_at=excluded.updated_at
+        """, (
+            user_id,
+            data["farm_name"],
+            data["region"],
+            data["soil_type"],
+            data["crop_preferences"],
+            data["farm_size_hectares"],
+            updated_at
+        ))
+        conn.commit()
+        conn.close()
+        return get_farmer_profile(user_id)
 
 
 def get_consultant_profile(user_id: str):
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM consultant_profiles WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return dict(row)
-    return {
-        "user_id": user_id,
-        "expertise": "Agronomy, Soil Chemistry, Micro-Irrigation & Yield Optimization",
-        "regions_served": "Punjab, Haryana, Uttar Pradesh",
-        "organization_name": "CropCast AgTech Advisory Lead",
-        "updated_at": datetime.utcnow().isoformat()
-    }
+    if use_mongo:
+        profile = mongo_db["consultant_profiles"].find_one({"user_id": user_id})
+        if profile:
+            profile.pop("_id", None)
+            return profile
+        return {
+            "user_id": user_id,
+            "expertise": "Agronomy, Soil Chemistry, Micro-Irrigation & Yield Optimization",
+            "regions_served": "Punjab, Haryana, Uttar Pradesh",
+            "organization_name": "CropCast AgTech Advisory Lead",
+            "updated_at": datetime.utcnow().isoformat()
+        }
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM consultant_profiles WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return dict(row)
+        return {
+            "user_id": user_id,
+            "expertise": "Agronomy, Soil Chemistry, Micro-Irrigation & Yield Optimization",
+            "regions_served": "Punjab, Haryana, Uttar Pradesh",
+            "organization_name": "CropCast AgTech Advisory Lead",
+            "updated_at": datetime.utcnow().isoformat()
+        }
 
 
 def save_consultant_profile(user_id: str, profile_data: dict):
     updated_at = datetime.utcnow().isoformat()
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO consultant_profiles (user_id, expertise, regions_served, organization_name, updated_at)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET
-            expertise=excluded.expertise,
-            regions_served=excluded.regions_served,
-            organization_name=excluded.organization_name,
-            updated_at=excluded.updated_at
-    """, (
-        user_id,
-        profile_data.get("expertise", "Agronomy & Soil Chemistry"),
-        profile_data.get("regions_served", "Punjab, Haryana"),
-        profile_data.get("organization_name", "AgTech Advisory"),
-        updated_at
-    ))
-    conn.commit()
-    conn.close()
-    return get_consultant_profile(user_id)
+    data = {
+        "user_id": user_id,
+        "expertise": profile_data.get("expertise", "Agronomy & Soil Chemistry"),
+        "regions_served": profile_data.get("regions_served", "Punjab, Haryana"),
+        "organization_name": profile_data.get("organization_name", "AgTech Advisory"),
+        "updated_at": updated_at
+    }
+    if use_mongo:
+        mongo_db["consultant_profiles"].replace_one({"user_id": user_id}, data, upsert=True)
+        return get_consultant_profile(user_id)
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO consultant_profiles (user_id, expertise, regions_served, organization_name, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                expertise=excluded.expertise,
+                regions_served=excluded.regions_served,
+                organization_name=excluded.organization_name,
+                updated_at=excluded.updated_at
+        """, (
+            user_id,
+            data["expertise"],
+            data["regions_served"],
+            data["organization_name"],
+            updated_at
+        ))
+        conn.commit()
+        conn.close()
+        return get_consultant_profile(user_id)
 
 
 # Admin User Governance
 def get_all_users_with_profiles():
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT u.id, u.email, u.username, u.full_name, u.role, u.created_at,
-               fp.farm_name, fp.region as farmer_region, fp.soil_type, fp.crop_preferences, fp.farm_size_hectares,
-               cp.expertise, cp.regions_served as consultant_regions, cp.organization_name
-        FROM users u
-        LEFT JOIN farmer_profiles fp ON u.id = fp.user_id
-        LEFT JOIN consultant_profiles cp ON u.id = cp.user_id
-        ORDER BY u.created_at DESC
-    """)
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    if use_mongo:
+        users = list(mongo_db["users"].find().sort("created_at", -1))
+        result = []
+        for u in users:
+            uid = u.get("id") or str(u.get("_id"))
+            fp = mongo_db["farmer_profiles"].find_one({"user_id": uid}) or {}
+            cp = mongo_db["consultant_profiles"].find_one({"user_id": uid}) or {}
+            result.append({
+                "id": uid,
+                "email": u.get("email"),
+                "username": u.get("username"),
+                "full_name": u.get("full_name"),
+                "role": u.get("role"),
+                "created_at": u.get("created_at"),
+                "farm_name": fp.get("farm_name"),
+                "farmer_region": fp.get("region"),
+                "soil_type": fp.get("soil_type"),
+                "crop_preferences": fp.get("crop_preferences"),
+                "farm_size_hectares": fp.get("farm_size_hectares"),
+                "expertise": cp.get("expertise"),
+                "consultant_regions": cp.get("regions_served"),
+                "organization_name": cp.get("organization_name")
+            })
+        return result
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT u.id, u.email, u.username, u.full_name, u.role, u.created_at,
+                   fp.farm_name, fp.region as farmer_region, fp.soil_type, fp.crop_preferences, fp.farm_size_hectares,
+                   cp.expertise, cp.regions_served as consultant_regions, cp.organization_name
+            FROM users u
+            LEFT JOIN farmer_profiles fp ON u.id = fp.user_id
+            LEFT JOIN consultant_profiles cp ON u.id = cp.user_id
+            ORDER BY u.created_at DESC
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
 
 
 def update_user_role(user_id: str, new_role: str):
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
-    updated = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
-    return updated
+    if use_mongo:
+        res = mongo_db["users"].update_one({"id": user_id}, {"$set": {"role": new_role}})
+        return res.modified_count > 0 or res.matched_count > 0
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+        updated = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return updated
 
 
 def delete_user_account(user_id: str):
-    conn = sqlite3.connect(SQLITE_DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA foreign_keys = ON;")
-    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    deleted = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
-    return deleted
+    if use_mongo:
+        res = mongo_db["users"].delete_one({"id": user_id})
+        mongo_db["farmer_profiles"].delete_one({"user_id": user_id})
+        mongo_db["consultant_profiles"].delete_one({"user_id": user_id})
+        mongo_db["agricultural_records"].delete_many({"user_id": user_id})
+        return res.deleted_count > 0
+    else:
+        conn = sqlite3.connect(SQLITE_DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys = ON;")
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        deleted = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return deleted
