@@ -77,39 +77,8 @@ Key Features & Implemented Work
 
 ---
 
-yieldsense-ai/
-├── backend/                        -- FastAPI Application
-│   ├── app/
-│   │   ├── database/               -- Database connection and SQLAlchemy models
-│   │   │   ├── database.py
-│   │   │   └── models.py
-│   │   ├── routes/                 -- API route handlers
-│   │   │   ├── auth.py             -- User registration & JWT authentication
-│   │   │   ├── crops.py            -- Crop metadata & MSP baselines
-│   │   │   ├── prediction.py       -- ML inference endpoints
-│   │   │   ├── dashboard.py        -- Analytics & summary KPI feeds
-│   │   │   ├── weather.py          -- Agro-climatic weather advisory
-│   │   │   └── recommendations.py  -- Agronomic input recommendations
-│   │   ├── utils/
-│   │   │   └── security.py         -- Password hashing & verification
-│   │   └── main.py                 -- FastAPI initialization & account seeders
-│   └── requirements.txt            -- Python backend dependencies
-│
-├── frontend/                       -- Vite React Frontend
-│   ├── src/
-│   │   ├── App.jsx                 -- Unified application (Auth, Predictor, Ledger, Admin)
-│   │   └── main.jsx                -- React DOM entry point
-│   ├── public/                     -- Static assets
-│   ├── index.html                  -- HTML5 application template
-│   ├── vite.config.js              -- Vite server & build configuration
-│   └── package.json                -- NPM packages and build scripts
-│
-├── ml/                             -- Machine Learning Resources
-│   ├── data/                       -- Agricultural datasets & historical records
-│   ├── training/                   -- Model training scripts
-│   └── saved_models/               -- Serialized Random Forest model (.pkl / .joblib)
-│
-└── README.md                       -- Comprehensive Project Documentation
+
+
 API Docs-
 GET / — Health check & system status.
 
