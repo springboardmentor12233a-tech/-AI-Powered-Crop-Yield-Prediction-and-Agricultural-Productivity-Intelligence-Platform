@@ -77,29 +77,6 @@ Key Features & Implemented Work
 
 ---
 
-🏗 System Architecture
-                ┌──────────────────────────────────────────────┐
-                │          YieldSense AI Web Client            │
-                │   (React 18 + Vite + Responsive Tailwind/UI) │
-                └──────────────────────┬───────────────────────┘
-                                       │
-                    RESTful HTTP API   │  HTTP / JSON
-                    JSON Payloads      │
-                                       ▼
-                ┌──────────────────────────────────────────────┐
-                │               FastAPI Backend                │
-                │            (Uvicorn ASGI Server)             │
-                └──────┬───────────────┬────────────────┬──────┘
-                       │               │                │
-        Authentication │               │ ML Inference   │ Data Persistence
-                       ▼               ▼                ▼
-                ┌────────────┐  ┌─────────────┐  ┌──────────────┐
-                │ Passlib    │  │ Scikit-Learn│  │ SQLite DB    │
-                │ Password   │  │ Random      │  │ SQLAlchemy   │
-                │ Hashing    │  │ Forest Model│  │ Models       │
-                └────────────┘  └─────────────┘  └──────────────┘
-
-
 yieldsense-ai/
 ├── backend/                        -- FastAPI Application
 │   ├── app/
