@@ -42,7 +42,7 @@ function App() {
               <Route path="settings" element={<Settings />} />
               
               {/* Farmer Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['user', 'farmer']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'user', 'farmer']} />}>
                 <Route path="predict" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><YieldPrediction /></Suspense>} />
                 <Route path="weather" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><WeatherAnalysis /></Suspense>} />
                 <Route path="soil" element={<Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Module...</div>}><SoilAnalysis /></Suspense>} />

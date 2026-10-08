@@ -1,11 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Sprout, 
-  CloudRain, 
-  TestTube, 
-  FileText, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Sprout,
+  CloudRain,
+  TestTube,
+  FileText,
+  Settings,
   LogOut,
   LineChart,
   Lightbulb,
@@ -40,11 +40,37 @@ export function Sidebar({ onMenuClick }) {
     navigate('/login');
   };
 
-  const navItems = isAdmin ? adminNavigation : farmerNavigation;
+  const renderNavItems = (items) => (
+    items.map((item) => (
+      <NavLink
+        key={item.name}
+        to={item.to}
+        onClick={onMenuClick}
+        className={({ isActive }) => cn(
+          "flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group relative",
+          isActive
+            ? "bg-[#1F6B45] text-[#FCFCF8] shadow-md shadow-[#081a13]/20"
+            : "text-[#c6dfcd] hover:bg-[#1F6B45]/50 hover:text-[#FCFCF8]"
+        )}
+      >
+        {({ isActive }) => (
+          <>
+            <item.icon
+              className={cn(
+                "flex-shrink-0 w-5 h-5 mr-3 transition-colors",
+                isActive ? "text-[#A8C957]" : "text-[#5BAE65] group-hover:text-[#A8C957]"
+              )}
+            />
+            {item.name}
+          </>
+        )}
+      </NavLink>
+    ))
+  );
 
   return (
     <div className="flex flex-col w-64 bg-[#12372A] border-r border-[#0d291e] h-screen sticky top-0 shadow-xl z-20">
-      
+
       {/* Brand Header */}
       <div className="p-6 flex items-center space-x-3 mb-2">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#A8C957] to-[#5BAE65] flex items-center justify-center shadow-md">
@@ -55,34 +81,18 @@ export function Sidebar({ onMenuClick }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
+        {isAdmin && (
+          <>
+            <div className="px-3 pb-2 pt-2 text-xs font-semibold text-[#5BAE65]/70 uppercase tracking-wider">
+              Administration
+            </div>
+            {renderNavItems(adminNavigation)}
+          </>
+        )}
         <div className="px-3 pb-2 pt-2 text-xs font-semibold text-[#5BAE65]/70 uppercase tracking-wider">
-          {isAdmin ? 'Administration' : 'Overview'}
+          Overview
         </div>
-        {navItems.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.to}
-            onClick={onMenuClick}
-            className={({ isActive }) => cn(
-              "flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group relative",
-              isActive 
-                ? "bg-[#1F6B45] text-[#FCFCF8] shadow-md shadow-[#081a13]/20" 
-                : "text-[#c6dfcd] hover:bg-[#1F6B45]/50 hover:text-[#FCFCF8]"
-            )}
-          >
-            {({ isActive }) => (
-              <>
-                <item.icon 
-                  className={cn(
-                    "flex-shrink-0 w-5 h-5 mr-3 transition-colors",
-                    isActive ? "text-[#A8C957]" : "text-[#5BAE65] group-hover:text-[#A8C957]"
-                  )} 
-                />
-                {item.name}
-              </>
-            )}
-          </NavLink>
-        ))}
+        {renderNavItems(farmerNavigation)}
       </nav>
 
       {/* Footer / User Settings */}
@@ -92,8 +102,8 @@ export function Sidebar({ onMenuClick }) {
           onClick={onMenuClick}
           className={({ isActive }) => cn(
             "flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors group",
-            isActive 
-              ? "bg-[#1F6B45] text-[#FCFCF8]" 
+            isActive
+              ? "bg-[#1F6B45] text-[#FCFCF8]"
               : "text-[#c6dfcd] hover:bg-[#1F6B45]/50 hover:text-[#FCFCF8]"
           )}
         >
@@ -104,7 +114,7 @@ export function Sidebar({ onMenuClick }) {
           <LogOut className="flex-shrink-0 w-5 h-5 mr-3 text-[#5BAE65] group-hover:text-red-400" />
           Logout
         </button>
-        
+
         {/* User Profile Mini */}
         <div className="mt-4 px-3 py-3 bg-[#0d291e] rounded-xl flex items-center shadow-inner border border-[#1F6B45]/20">
           <div className="w-8 h-8 rounded-full bg-[#1F6B45] flex items-center justify-center text-[#A8C957] font-bold text-sm border border-[#5BAE65]/30">
