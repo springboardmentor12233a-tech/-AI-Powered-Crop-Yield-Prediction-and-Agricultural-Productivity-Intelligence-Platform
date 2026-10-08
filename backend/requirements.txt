@@ -12,3 +12,4 @@ pydantic
 PyJWT
 passlib[bcrypt]
 reportlab
+dotenv 
