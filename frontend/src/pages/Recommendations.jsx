@@ -69,7 +69,7 @@ export default function Recommendations() {
         <p className="text-lg text-[#1F6B45]/80 mt-2 font-medium">Prescriptive, AI-driven actions based on your latest prediction context.</p>
       </div>
 
-      <div className="bg-gradient-to-br from-[#12372A] to-[#1F6B45] rounded-[2rem] shadow-card p-8 md:p-10 relative overflow-hidden border border-[#2E8B57]/30">
+      <div className="bg-gradient-to-br from-[#12372A] to-[#1F6B45] rounded-[2rem] shadow-card p-6 md:p-10 relative overflow-hidden border border-[#2E8B57]/30">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#5BAE65]/10 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
         <div className="flex items-start relative z-10">
           <div className="p-3.5 bg-gradient-to-br from-[#A8C957] to-[#5BAE65] rounded-2xl shadow-lg mr-5">
@@ -103,7 +103,7 @@ export default function Recommendations() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* PRIORITY ACTIONS */}
-        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8 flex flex-col h-full">
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8 flex flex-col h-full">
           <h3 className="text-xl font-bold text-[#12372A] mb-6 flex items-center">
             <AlertTriangle className="w-6 h-6 mr-3 text-amber-500" />
             Priority Actions & Alerts
@@ -165,7 +165,7 @@ export default function Recommendations() {
         </div>
 
         {/* WEATHER STRATEGIES */}
-        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8 flex flex-col h-full">
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8 flex flex-col h-full">
           <h3 className="text-xl font-bold text-[#12372A] mb-6 flex items-center">
             <CloudRain className="w-6 h-6 mr-3 text-cyan-600" />
             Weather-Based Strategies
@@ -203,7 +203,7 @@ export default function Recommendations() {
         </div>
 
         {/* SOIL MANAGEMENT */}
-        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8 flex flex-col h-full lg:col-span-2">
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8 flex flex-col h-full lg:col-span-2">
           <h3 className="text-xl font-bold text-[#12372A] mb-6 flex items-center">
             <TestTube className="w-6 h-6 mr-3 text-[#5BAE65]" />
             Soil Management & Agronomy
@@ -241,7 +241,7 @@ export default function Recommendations() {
         </div>
 
         {/* LIMITATIONS */}
-        <div className="bg-slate-50 rounded-[2rem] border border-slate-200 p-8 lg:col-span-2">
+        <div className="bg-slate-50 rounded-[2rem] border border-slate-200 p-5 md:p-8 lg:col-span-2">
           <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center">
             <Info className="w-5 h-5 mr-3 text-slate-400" />
             Model Considerations & Limitations

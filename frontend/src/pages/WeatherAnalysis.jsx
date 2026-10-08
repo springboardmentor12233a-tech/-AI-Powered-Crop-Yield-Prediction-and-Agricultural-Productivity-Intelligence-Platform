@@ -64,7 +64,7 @@ export default function WeatherAnalysis() {
 
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-8 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-6 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#0284c7]/20 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#A8C957]/10 rounded-full blur-[80px] -mb-20 -ml-20 pointer-events-none"></div>
         <div className="relative z-10">
@@ -76,8 +76,8 @@ export default function WeatherAnalysis() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="bg-white rounded-3xl p-4 md:p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Thermometer className="w-24 h-24" /></div>
           <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
             <Thermometer className="w-6 h-6 text-red-500" />
@@ -86,7 +86,7 @@ export default function WeatherAnalysis() {
           <p className="text-3xl font-extrabold text-[#12372A]">{recentPrediction.input.temperature_C}°C</p>
         </div>
         
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 md:p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><CloudRain className="w-24 h-24" /></div>
           <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
             <CloudRain className="w-6 h-6 text-blue-500" />
@@ -95,7 +95,7 @@ export default function WeatherAnalysis() {
           <p className="text-3xl font-extrabold text-[#12372A]">{recentPrediction.input.rainfall_mm}<span className="text-xl text-slate-400 ml-1">mm</span></p>
         </div>
         
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 md:p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Droplets className="w-24 h-24" /></div>
           <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center mb-4">
             <Droplets className="w-6 h-6 text-cyan-500" />
@@ -104,7 +104,7 @@ export default function WeatherAnalysis() {
           <p className="text-3xl font-extrabold text-[#12372A]">{recentPrediction.input["humidity_%"]}%</p>
         </div>
         
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 md:p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Sun className="w-24 h-24" /></div>
           <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
             <Sun className="w-6 h-6 text-amber-500" />
@@ -116,11 +116,11 @@ export default function WeatherAnalysis() {
 
       <div className="grid grid-cols-1 gap-8">
         <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
-          <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+          <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-xl font-bold text-[#12372A]">Climatological Assessment</h3>
             <p className="text-sm text-slate-500 font-medium mt-1">AI-driven analysis of current weather parameters.</p>
           </div>
-          <div className="p-8 space-y-8">
+          <div className="p-5 md:p-8 space-y-8">
             <div className="bg-[#f0f9ff] p-6 rounded-2xl border border-[#bae6fd]">
               <h4 className="text-xs font-black text-[#0284c7] uppercase tracking-widest mb-4">Strategic Insights</h4>
               <ul className="space-y-3">
@@ -166,11 +166,11 @@ export default function WeatherAnalysis() {
         </div>
 
         <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
-          <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+          <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-xl font-bold text-[#12372A]">Historical Weather Trends</h3>
             <p className="text-sm text-slate-500 font-medium mt-1">Weather conditions used in previous predictions.</p>
           </div>
-          <div className="p-8">
+          <div className="p-5 md:p-8">
             {history.length === 0 ? (
               <div className="flex-1 flex items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 py-16">
                 <EmptyState 

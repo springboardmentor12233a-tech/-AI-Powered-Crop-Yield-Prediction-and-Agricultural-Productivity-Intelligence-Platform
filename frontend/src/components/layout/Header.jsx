@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, Search, User, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
+import { Bell, Search, User, LogOut, Settings as SettingsIcon, Check, Menu } from 'lucide-react';
 import { healthCheck, getNotifications, getUnreadNotificationCount, markNotificationRead, markAllNotificationsRead } from '../../services/api';
 import { Badge } from '../common/Badge';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +17,7 @@ const SEARCH_PAGES = [
   { name: 'Settings', path: '/settings', roles: ['admin', 'user', 'farmer'] }
 ];
 
-export function Header({ title }) {
+export function Header({ title, onMenuToggle }) {
   const [backendStatus, setBackendStatus] = useState('loading');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -121,11 +121,19 @@ export function Header({ title }) {
   const displayTitle = getPageTitle();
 
   return (
-    <header className="bg-surface/90 backdrop-blur-md border-b border-slate-200 h-[72px] px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all">
-      <div className="flex items-center">
-        <h1 className="text-xl font-bold text-slate-800 tracking-tight">{displayTitle}</h1>
+    <header className="bg-surface/90 backdrop-blur-md border-b border-slate-200 h-[72px] px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm transition-all">
+      <div className="flex items-center min-w-0">
+        <button 
+          onClick={onMenuToggle}
+          className="mr-3 md:hidden p-1.5 -ml-2 text-slate-600 rounded-lg hover:bg-slate-100 focus:outline-none flex-shrink-0"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight truncate max-w-[120px] xs:max-w-[160px] sm:max-w-sm md:max-w-none">
+          {displayTitle}
+        </h1>
         
-        <div className="ml-6 flex items-center hidden md:flex">
+        <div className="ml-4 md:ml-6 flex items-center hidden lg:flex">
           {backendStatus === 'loading' && (
              <Badge variant="neutral" className="animate-pulse">Connecting...</Badge>
           )}
@@ -138,19 +146,19 @@ export function Header({ title }) {
         </div>
       </div>
 
-      <div className="flex items-center space-x-5">
+      <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-5 flex-shrink-0">
         {/* SEARCH */}
-        <div className="relative hidden sm:block">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 hidden sm:block" />
           <input 
             type="text" 
-            placeholder={(user?.role?.role_name || user?.role) === 'admin' ? "Search admin modules..." : "Search modules..."}
+            placeholder={(user?.role?.role_name || user?.role) === 'admin' ? "Search..." : "Search modules..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#5BAE65]/50 focus:bg-white w-64 transition-all shadow-inner"
+            className="sm:pl-9 px-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-full text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#5BAE65]/50 focus:bg-white w-24 xs:w-32 sm:w-48 md:w-64 transition-all shadow-inner placeholder-slate-400"
           />
           {searchQuery.trim() !== '' && (
-            <div className="absolute top-full left-0 mt-3 w-64 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
+            <div className="absolute top-full right-0 sm:left-0 mt-3 w-48 sm:w-64 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
               <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-50">Results</div>
               {searchResults.length > 0 ? (
                 searchResults.map((res, idx) => (
@@ -175,17 +183,17 @@ export function Header({ title }) {
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative flex-shrink-0"
           >
-            <Bell className="w-5 h-5" />
+            <Bell className="w-5 h-5 sm:w-5 sm:h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-[#EF4444] rounded-full border-2 border-white shadow-sm ring-2 ring-white animate-pulse"></span>
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#EF4444] rounded-full border-2 border-white shadow-sm ring-2 ring-white animate-pulse"></span>
             )}
           </button>
           
           {showNotifications && (
-            <div className="absolute top-full right-0 mt-3 w-80 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
-              <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <div className="absolute top-full right-[-40px] sm:right-0 mt-3 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
+              <div className="p-3 sm:p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800">Notifications</h3>
                 {unreadCount > 0 && (
                   <button onClick={handleMarkAllRead} className="text-xs text-[#5BAE65] hover:text-[#1F6B45] font-semibold flex items-center transition-colors">

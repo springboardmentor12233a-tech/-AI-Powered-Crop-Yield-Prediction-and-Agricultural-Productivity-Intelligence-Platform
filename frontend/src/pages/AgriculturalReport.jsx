@@ -23,7 +23,7 @@ export default function AgriculturalReport() {
 
   if (!recentPrediction) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-8 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm max-w-4xl mx-auto mt-8">
+      <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-6 md:p-8 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm max-w-4xl mx-auto mt-8">
         <div className="w-24 h-24 bg-[#e8f0ea] text-[#1F6B45] rounded-full flex items-center justify-center mb-6 shadow-inner border border-[#c6dfcd]">
           <FileText className="w-10 h-10" />
         </div>
@@ -210,33 +210,33 @@ export default function AgriculturalReport() {
       <div id="report-content" className="bg-white rounded-[2rem] shadow-card border border-slate-200/50 overflow-hidden print:shadow-none print:border-none print:rounded-none">
         
         {/* Cover Section */}
-        <div className="bg-gradient-to-br from-[#12372A] to-[#1F6B45] py-16 px-12 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#12372A] to-[#1F6B45] py-12 px-6 md:py-16 md:px-12 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-64 h-64 bg-[#A8C957]/10 rounded-full blur-[80px] -mt-20 -ml-20"></div>
           <div className="relative z-10">
             <FileText className="w-12 h-12 text-[#A8C957] mx-auto mb-6 opacity-80" />
-            <h1 className="text-4xl md:text-5xl font-black text-[#F7F8F2] tracking-tight">YieldSense AI Forecast</h1>
-            <p className="text-[#c6dfcd] mt-4 font-bold text-lg tracking-wide uppercase">Generated on {new Date().toLocaleDateString()}</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#F7F8F2] tracking-tight">YieldSense AI Forecast</h1>
+            <p className="text-[#c6dfcd] mt-4 font-bold text-base md:text-lg tracking-wide uppercase">Generated on {new Date().toLocaleDateString()}</p>
           </div>
         </div>
         
-        <div className="p-10 md:p-14 space-y-12">
+        <div className="p-6 sm:p-10 md:p-14 space-y-10 md:space-y-12">
           
           {/* Section 1 */}
           <section>
             <div className="flex items-center mb-6">
               <div className="w-8 h-8 rounded-full bg-[#1F6B45] text-white flex items-center justify-center font-bold mr-4">1</div>
-              <h3 className="text-2xl font-bold text-[#12372A]">Yield Context</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-[#12372A]">Yield Context</h3>
             </div>
-            <div className="grid grid-cols-2 gap-6 pl-12">
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pl-0 sm:pl-12">
+              <div className="p-5 md:p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Region</p>
                 <p className="font-extrabold text-slate-800 text-xl">{recentReport.region || 'Not available'}</p>
               </div>
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
+              <div className="p-5 md:p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Crop Type</p>
                 <p className="font-extrabold text-slate-800 text-xl">{recentReport.crop_type || 'Not available'}</p>
               </div>
-              <div className="col-span-2 p-8 bg-gradient-to-r from-[#F7F8F2] to-white rounded-2xl border border-[#5BAE65]/30 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm">
+              <div className="col-span-1 sm:col-span-2 p-6 md:p-8 bg-gradient-to-r from-[#F7F8F2] to-white rounded-2xl border border-[#5BAE65]/30 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm">
                 <div className="flex items-center mb-4 md:mb-0">
                   <Sprout className="w-8 h-8 text-[#1F6B45] mr-4" />
                   <span className="font-bold text-[#1F6B45] text-lg uppercase tracking-wider">Predicted Yield</span>
@@ -257,10 +257,10 @@ export default function AgriculturalReport() {
           <section>
             <div className="flex items-center mb-6">
               <div className="w-8 h-8 rounded-full bg-[#0284c7] text-white flex items-center justify-center font-bold mr-4">2</div>
-              <h3 className="text-2xl font-bold text-[#12372A]">Weather Impact Assessment</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-[#12372A]">Weather Impact Assessment</h3>
             </div>
-            <div className="pl-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="pl-0 sm:pl-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {recentReport.historical_weather_context?.weather_assessment ? (
                   Object.entries(recentReport.historical_weather_context.weather_assessment).map(([key, data], idx) => (
                     <div key={idx} className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
@@ -305,10 +305,10 @@ export default function AgriculturalReport() {
           <section>
             <div className="flex items-center mb-6">
               <div className="w-8 h-8 rounded-full bg-[#d97706] text-white flex items-center justify-center font-bold mr-4">3</div>
-              <h3 className="text-2xl font-bold text-[#12372A]">Soil Suitability Assessment</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-[#12372A]">Soil Suitability Assessment</h3>
             </div>
-            <div className="pl-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="pl-0 sm:pl-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {recentReport.historical_soil_context?.soil_suitability_assessment ? (
                   Object.entries(recentReport.historical_soil_context.soil_suitability_assessment).map(([key, data], idx) => (
                     <div key={idx} className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
@@ -341,9 +341,9 @@ export default function AgriculturalReport() {
           <section>
             <div className="flex items-center mb-6">
               <div className="w-8 h-8 rounded-full bg-[#9333ea] text-white flex items-center justify-center font-bold mr-4">4</div>
-              <h3 className="text-2xl font-bold text-[#12372A]">Strategic Forecasting Summary</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-[#12372A]">Strategic Forecasting Summary</h3>
             </div>
-            <div className="pl-12 space-y-6">
+            <div className="pl-0 sm:pl-12 space-y-6">
               {recentReport.overall_agricultural_forecasting_summary ? (
                 <>
                   <div className="bg-[#f3e8ff] p-8 rounded-2xl border border-[#d8b4fe] shadow-sm">

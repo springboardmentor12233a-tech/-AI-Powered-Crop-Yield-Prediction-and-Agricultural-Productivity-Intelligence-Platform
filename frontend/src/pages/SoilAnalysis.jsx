@@ -145,7 +145,7 @@ export default function SoilAnalysis() {
 
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-8 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-6 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#d97706]/20 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#10b981]/20 rounded-full blur-[80px] -mb-20 -ml-20 pointer-events-none"></div>
         <div className="relative z-10">
@@ -158,7 +158,7 @@ export default function SoilAnalysis() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm relative overflow-hidden group">
+        <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-slate-200/60 shadow-sm relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 bg-blue-50 w-32 h-32 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 ease-out"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
@@ -174,7 +174,7 @@ export default function SoilAnalysis() {
           </div>
         </div>
         
-        <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm relative overflow-hidden group">
+        <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-slate-200/60 shadow-sm relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 bg-emerald-50 w-32 h-32 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 ease-out"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
@@ -192,11 +192,11 @@ export default function SoilAnalysis() {
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+        <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-slate-50/50">
           <h3 className="text-xl font-bold text-[#12372A]">AI Soil Insights</h3>
           <p className="text-sm text-slate-500 font-medium mt-1">Machine learning interpretations of soil viability.</p>
         </div>
-        <div className="p-8">
+        <div className="p-5 md:p-8">
           <ul className="space-y-4">
             {soilData.historical_yield_context && (
               <li className="flex items-start bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100/50">
@@ -221,13 +221,13 @@ export default function SoilAnalysis() {
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+        <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-slate-50/50">
           <h3 className="text-xl font-bold text-[#12372A]">Historical Analysis & Distribution</h3>
           <p className="text-sm text-slate-500 font-medium mt-1">
             Historical soil conditions and their relationship with crop yield.
           </p>
         </div>
-        <div className="p-8">
+        <div className="p-5 md:p-8">
           {datasetLoading ? (
             <div className="flex-1 flex items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 py-16">
               <LoadingState message="Loading historical dataset..." />
@@ -245,7 +245,7 @@ export default function SoilAnalysis() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Soil Moisture Distribution */}
-              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+              <div className="border border-slate-100 rounded-2xl p-4 md:p-6 bg-slate-50/30 shadow-sm">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Moisture Frequency Distribution</h4>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -261,7 +261,7 @@ export default function SoilAnalysis() {
               </div>
 
               {/* Soil pH Distribution */}
-              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+              <div className="border border-slate-100 rounded-2xl p-4 md:p-6 bg-slate-50/30 shadow-sm">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">pH Level Frequency Distribution</h4>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -277,7 +277,7 @@ export default function SoilAnalysis() {
               </div>
 
               {/* Soil Moisture vs Yield */}
-              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+              <div className="border border-slate-100 rounded-2xl p-4 md:p-6 bg-slate-50/30 shadow-sm">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Moisture vs Yield Scatter</h4>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -293,7 +293,7 @@ export default function SoilAnalysis() {
               </div>
 
               {/* Soil pH vs Yield */}
-              <div className="border border-slate-100 rounded-2xl p-6 bg-slate-50/30 shadow-sm">
+              <div className="border border-slate-100 rounded-2xl p-4 md:p-6 bg-slate-50/30 shadow-sm">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">pH vs Yield Scatter</h4>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">

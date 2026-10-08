@@ -28,7 +28,7 @@ const adminNavigation = [
   { name: 'Admin Dashboard', to: '/admin', icon: Shield },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onMenuClick }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
@@ -62,6 +62,7 @@ export function Sidebar() {
           <NavLink
             key={item.name}
             to={item.to}
+            onClick={onMenuClick}
             className={({ isActive }) => cn(
               "flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group relative",
               isActive 
@@ -88,6 +89,7 @@ export function Sidebar() {
       <div className="p-4 border-t border-[#1F6B45]/30 space-y-1.5">
         <NavLink
           to="/settings"
+          onClick={onMenuClick}
           className={({ isActive }) => cn(
             "flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors group",
             isActive 

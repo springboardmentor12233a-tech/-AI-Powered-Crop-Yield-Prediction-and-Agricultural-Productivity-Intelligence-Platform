@@ -160,7 +160,7 @@ export default function YieldPrediction() {
           <form id="prediction-form" onSubmit={handleSubmit} className="space-y-8">
             
             {/* 01. Farm Information */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 sm:p-8">
               <div className="flex items-center mb-6 border-b border-slate-100 pb-4">
                 <div className="w-10 h-10 rounded-full bg-[#e8f0ea] text-[#1F6B45] flex items-center justify-center font-bold text-lg mr-4">01</div>
                 <div>
@@ -176,7 +176,7 @@ export default function YieldPrediction() {
             </div>
 
             {/* 02. Environmental Conditions */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 sm:p-8">
               <div className="flex items-center mb-6 border-b border-slate-100 pb-4">
                 <div className="w-10 h-10 rounded-full bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center font-bold text-lg mr-4">02</div>
                 <div>
@@ -193,7 +193,7 @@ export default function YieldPrediction() {
             </div>
 
             {/* 03. Soil & Crop Data */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 sm:p-8">
               <div className="flex items-center mb-6 border-b border-slate-100 pb-4">
                 <div className="w-10 h-10 rounded-full bg-[#fef3c7] text-[#d97706] flex items-center justify-center font-bold text-lg mr-4">03</div>
                 <div>
@@ -235,7 +235,7 @@ export default function YieldPrediction() {
 
         {/* Right Sidebar - Result & Actions */}
         <div className="xl:col-span-1 space-y-6">
-          <div className="bg-[#12372A] rounded-[2rem] border border-[#1F6B45]/50 shadow-card p-8 sticky top-24">
+          <div className="bg-[#12372A] rounded-[2rem] border border-[#1F6B45]/50 shadow-card p-5 sm:p-8 sticky top-24">
             <div className="flex items-center mb-6 border-b border-[#1F6B45] pb-4">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A8C957] to-[#5BAE65] text-[#12372A] flex items-center justify-center font-bold text-lg mr-4">04</div>
               <div>

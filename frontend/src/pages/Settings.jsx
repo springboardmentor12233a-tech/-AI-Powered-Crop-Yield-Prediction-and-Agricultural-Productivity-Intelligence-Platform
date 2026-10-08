@@ -33,13 +33,13 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-8 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-6 md:p-10 rounded-[2rem] shadow-card border border-[#2E8B57]/30 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#A8C957]/10 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
         <div className="relative z-10">
           <h2 className="text-3xl font-extrabold text-[#FCFCF8] tracking-tight">Account Settings</h2>
           <p className="text-[#c6dfcd] mt-2 font-medium">Manage your profile, preferences, and account security.</p>
         </div>
-        <div className="relative z-10 flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+        <div className="relative z-10 flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 hidden sm:flex">
           <SettingsIcon className="w-8 h-8 text-[#A8C957]" />
         </div>
       </div>
@@ -49,13 +49,13 @@ export default function Settings() {
         {/* PROFILE SETTINGS */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden h-full">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center bg-slate-50/50">
+            <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 flex items-center bg-slate-50/50">
               <div className="p-2 bg-[#e8f0ea] rounded-xl mr-3">
                 <User className="w-5 h-5 text-[#1F6B45]" />
               </div>
               <h3 className="text-xl font-bold text-[#12372A]">Profile Information</h3>
             </div>
-            <div className="p-8">
+            <div className="p-5 md:p-8">
               <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-md">
                 {successMsg && (
                   <div className="flex items-center p-4 text-sm font-bold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-100">
@@ -119,13 +119,13 @@ export default function Settings() {
         <div className="space-y-6 flex flex-col">
           {/* APPLICATION SETTINGS */}
           <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden flex-1">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center bg-slate-50/50">
+            <div className="px-5 py-4 md:px-6 border-b border-slate-100 flex items-center bg-slate-50/50">
               <div className="p-2 bg-blue-50 rounded-xl mr-3">
                 <Server className="w-5 h-5 text-blue-600" />
               </div>
               <h3 className="text-lg font-bold text-[#12372A]">System Status</h3>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-5 md:p-6 space-y-4">
               <div className="flex justify-between items-center py-3 border-b border-slate-50">
                 <span className="text-sm font-bold text-slate-500">Platform Version</span>
                 <span className="text-sm font-black text-slate-800">YieldSense 3.0</span>
@@ -145,13 +145,13 @@ export default function Settings() {
 
           {/* ACCOUNT MANAGEMENT */}
           <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden border-t-4 border-t-red-500">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center">
+            <div className="px-5 py-4 md:px-6 border-b border-slate-100 flex items-center">
               <div className="p-2 bg-red-50 rounded-xl mr-3">
                 <LogOut className="w-5 h-5 text-red-600" />
               </div>
               <h3 className="text-lg font-bold text-slate-800">Security</h3>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-5 md:p-6 space-y-6">
               <p className="text-sm font-medium text-slate-500 leading-relaxed">
                 Securely log out of your YieldSense AI account. This will clear your active session on this device immediately.
               </p>

@@ -5,6 +5,7 @@ The objective of this phase is to validate the currently deployed Random Forest 
 
 ## 2. Model Used
 - **Algorithm**: Random Forest Regressor
+- **Selection Criteria**: Model selected based on lowest cross-validation RMSE among the tested models.
 
 ## 3. Model File
 - `models/random_forest_yield_model.joblib`

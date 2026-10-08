@@ -124,12 +124,12 @@ export default function Dashboard() {
     <div className="space-y-8 pb-16 max-w-7xl mx-auto">
       
       {/* 1. HERO SECTION */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-10 md:p-14 shadow-card border border-[#2E8B57]/30">
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#12372A] to-[#1F6B45] p-6 sm:p-10 md:p-14 shadow-card border border-[#2E8B57]/30">
         <div className="absolute -top-24 -right-24 opacity-10 pointer-events-none transform rotate-12">
           <Sprout className="w-[400px] h-[400px] text-[#A8C957]" />
         </div>
         <div className="relative z-10 max-w-2xl">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#FCFCF8] tracking-tight mb-5 leading-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#FCFCF8] tracking-tight mb-5 leading-tight">
             Your farm intelligence <br className="hidden md:block"/> at a glance.
           </h2>
           <p className="text-lg md:text-xl text-[#c6dfcd] mb-8 font-medium leading-relaxed max-w-xl">
@@ -225,7 +225,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Yield Performance Area Chart */}
-        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 sm:p-8">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-bold text-slate-800 tracking-tight">Yield Performance</h3>
             <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#A8C957] outline-none appearance-none cursor-pointer">
@@ -271,7 +271,7 @@ export default function Dashboard() {
         </div>
 
         {/* AI Intelligence Card */}
-        <div className="bg-gradient-to-b from-[#12372A] to-[#0d291e] rounded-[2rem] shadow-card p-8 relative overflow-hidden flex flex-col h-full border border-[#1F6B45]/50">
+        <div className="bg-gradient-to-b from-[#12372A] to-[#0d291e] rounded-[2rem] shadow-card p-5 sm:p-8 relative overflow-hidden flex flex-col h-full border border-[#1F6B45]/50">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#5BAE65]/10 rounded-full blur-[80px] -mt-20 -mr-20 pointer-events-none"></div>
           
           <div className="flex items-center mb-8 relative z-10">
@@ -335,7 +335,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Farm Health Visuals */}
-        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 sm:p-8">
           <h3 className="text-xl font-bold text-slate-800 mb-8">Environmental Intelligence</h3>
           
           {!hasData ? (
@@ -398,7 +398,7 @@ export default function Dashboard() {
         </div>
 
         {/* Agricultural Alerts */}
-        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8 flex flex-col">
+        <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 sm:p-8 flex flex-col">
           <h3 className="text-xl font-bold text-slate-800 mb-6">Agricultural Alerts</h3>
           
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">

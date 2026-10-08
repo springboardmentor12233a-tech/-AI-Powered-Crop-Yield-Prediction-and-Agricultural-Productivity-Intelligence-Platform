@@ -154,7 +154,7 @@ export default function Analytics() {
       
       {/* 1. KEY METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
+        <div className="p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-[#e8f0ea] rounded-xl text-[#1F6B45]">
               <Layers className="w-5 h-5" />
@@ -163,8 +163,7 @@ export default function Analytics() {
           <h3 className="text-slate-500 font-bold text-xs mb-1 uppercase tracking-widest">Total Predictions</h3>
           <p className="text-3xl font-extrabold text-[#12372A]">{history.length}</p>
         </div>
-        
-        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
+        <div className="p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
               <TrendingUp className="w-5 h-5" />
@@ -176,8 +175,7 @@ export default function Analytics() {
             <span className="text-sm font-medium text-slate-500 ml-1">kg/ha</span>
           </p>
         </div>
-
-        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
+        <div className="p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
               <Sprout className="w-5 h-5" />
@@ -188,8 +186,7 @@ export default function Analytics() {
             {new Set(history.map(h => h.crop_type || h.input_data?.crop_type)).size}
           </p>
         </div>
-
-        <div className="p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
+        <div className="p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
               <Calendar className="w-5 h-5" />
@@ -216,7 +213,7 @@ export default function Analytics() {
       ) : (
         <>
           {/* 2. YIELD TRENDS */}
-          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8">
             <h3 className="text-xl font-bold text-[#12372A] mb-8">Prediction Yield Trends</h3>
             <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -250,7 +247,7 @@ export default function Analytics() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 3. FEATURE CORRELATION */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8">
               <div className="flex justify-between items-start mb-8">
                 <div>
                   <h3 className="text-xl font-bold text-[#12372A]">Yield Correlators</h3>
@@ -275,7 +272,7 @@ export default function Analytics() {
             </div>
 
             {/* 4. ENVIRONMENTAL ANALYSIS (SCATTER) */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8">
               <div className="flex justify-between items-start mb-8">
                 <div>
                   <h3 className="text-xl font-bold text-[#12372A]">Temperature vs Rainfall</h3>
@@ -298,7 +295,7 @@ export default function Analytics() {
           </div>
 
           {/* 5. HISTORICAL TABLE */}
-          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-8 overflow-hidden">
+          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm p-5 md:p-8 overflow-hidden">
             <h3 className="text-xl font-bold text-[#12372A] mb-6">Historical Predictions</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">

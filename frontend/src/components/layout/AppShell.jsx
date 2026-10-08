@@ -8,6 +8,7 @@ import { useAppContext } from '../../context/AppContext';
 import { getPredictionHistory } from '../../services/api';
 
 export function AppShell() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
   
@@ -70,11 +71,26 @@ export function AppShell() {
   };
 
   return (
-    <div className="flex h-screen bg-surface-50 overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header title={getPageTitle(location.pathname)} />
-        <main className="flex-1 overflow-y-auto p-8">
+    <div className="flex h-screen bg-surface-50 overflow-hidden relative">
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar with responsive classes */}
+      <div className={`fixed inset-y-0 left-0 z-30 transform md:relative md:translate-x-0 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <Sidebar onMenuClick={() => setIsMobileMenuOpen(false)} />
+      </div>
+
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <Header 
+          title={getPageTitle(location.pathname)} 
+          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
