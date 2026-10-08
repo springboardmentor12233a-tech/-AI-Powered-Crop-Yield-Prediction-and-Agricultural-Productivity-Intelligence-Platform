@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { fetchWeather } from "./services/weatherService";
+import { API_BASE_URL } from "./services/apiConfig";
 import { getSoilData, loadSoilData, loadSoilTest, saveSoilTest } from "./services/soilService";
 import { analyzeSoil, classifyParameter } from "./utils/soilAnalysis";
 import { generateAIInsights } from "./services/aiInsightService";
@@ -35,7 +36,6 @@ const PREDICTION_CROPS = [
 ];
 const AUTH_TOKEN_KEY = "yieldsense-auth-token";
 const AUTH_USER_KEY = "yieldsense-user";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 let verifiedSession = null;
 const WeatherContext = createContext(null);
 const AuthUserContext = createContext(null);

@@ -72,6 +72,9 @@ if configured_origins:
     ]
 else:
     allowed_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+production_frontend_origin = "https://yieldsenseai.vercel.app"
+if production_frontend_origin not in allowed_origins:
+    allowed_origins.append(production_frontend_origin)
 if "*" in allowed_origins:
     raise RuntimeError("YIELDSENSE_CORS_ORIGINS must not contain a wildcard origin.")
 

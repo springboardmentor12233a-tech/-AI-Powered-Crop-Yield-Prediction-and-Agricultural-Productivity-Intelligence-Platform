@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { downloadPdfReport } from "../services/analyticsService";
+import { API_BASE_URL } from "../services/apiConfig";
 import {
   AnalyticsBarChart,
   AnalyticsFilters,
@@ -8,7 +9,6 @@ import {
 } from "../components/AnalyticsCharts";
 import ThemeToggle from "../components/ThemeToggle";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const pendingAdminGets = new Map();
 const sections = [
   ["dashboard", "Overview"],
