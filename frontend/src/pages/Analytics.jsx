@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { getPredictionHistory } from '../services/api';
+import { useAppContext } from '../context/AppContext';
 import { cn } from '../utils/cn';
 
 // Simple Pearson correlation
@@ -66,25 +67,11 @@ const CustomBarTooltip = ({ active, payload, label }) => {
 };
 
 export default function Analytics() {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { predictionHistory } = useAppContext();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const data = await getPredictionHistory();
-        const sortedData = [...data].sort((a, b) => new Date(a.input_data?.observation_date || a.created_at) - new Date(b.input_data?.observation_date || b.created_at));
-        setHistory(sortedData);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load analytics data.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  const history = predictionHistory;
 
   const timeSeriesData = useMemo(() => history.map((item) => ({
     date: new Date(item.input_data?.observation_date || item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),

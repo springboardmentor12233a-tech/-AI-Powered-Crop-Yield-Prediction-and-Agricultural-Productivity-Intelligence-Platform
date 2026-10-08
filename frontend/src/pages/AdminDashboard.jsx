@@ -26,7 +26,7 @@ export default function AdminDashboard() {
     try {
       const [usersData, rolesData] = await Promise.all([
         getAllUsers(),
-        getAllRoles()
+        rolesList.length === 0 ? getAllRoles() : Promise.resolve(rolesList)
       ]);
       setUsersList(usersData);
       setRolesList(rolesData);

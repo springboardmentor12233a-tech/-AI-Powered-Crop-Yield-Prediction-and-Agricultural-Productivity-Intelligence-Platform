@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/common/Button';
-import { predictYield, getPredictionHistory } from '../services/api';
+import { predictYield } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { 
   Sprout, 
@@ -96,7 +96,7 @@ export default function YieldPrediction() {
   const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
-  const { setRecentPrediction } = useAppContext();
+  const { setRecentPrediction, setPredictionHistory } = useAppContext();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -124,22 +124,37 @@ export default function YieldPrediction() {
     setError(null);
     try {
       const predictionResult = await predictYield(formData);
-      
-      const hist = await getPredictionHistory();
-      const sorted = [...hist].sort((a, b) => (a.id || 0) - (b.id || 0));
-      const latest = sorted[sorted.length - 1];
-      
-      if (latest) {
-        localStorage.setItem('currentPredictionId', latest.id.toString());
+
+      const newRecord = {
+        id: predictionResult.prediction_id,
+        region: formData.region,
+        crop_type: formData.crop_type,
+        input_data: formData,
+        predicted_yield: predictionResult.predicted_yield_kg_per_hectare,
+        created_at: new Date().toISOString()
+      };
+
+      setPredictionHistory(prev => {
+        const updated = [...prev, newRecord];
+        return updated.sort((a, b) => {
+          const dateA = new Date(a.input_data?.observation_date || a.created_at).getTime();
+          const dateB = new Date(b.input_data?.observation_date || b.created_at).getTime();
+          if (dateA !== dateB) return dateA - dateB;
+          return (a.id || 0) - (b.id || 0);
+        });
+      });
+
+      if (predictionResult.prediction_id) {
+        localStorage.setItem('currentPredictionId', predictionResult.prediction_id.toString());
         setRecentPrediction({ 
-          id: latest.id,
+          id: predictionResult.prediction_id,
           input: formData, 
           result: predictionResult 
         });
       } else {
         setRecentPrediction({ input: formData, result: predictionResult });
       }
-      
+
       setResult(predictionResult);
     } catch (err) {
       setError(err.response?.data?.detail || "An error occurred during prediction.");
@@ -185,7 +200,7 @@ export default function YieldPrediction() {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField label="Temperature (°C)" type="number" step="0.1" name="temperature_C" value={formData.temperature_C} onChange={handleChange} icon={CloudRain} />
+                <InputField label="Temperature (Â°C)" type="number" step="0.1" name="temperature_C" value={formData.temperature_C} onChange={handleChange} icon={CloudRain} />
                 <InputField label="Rainfall (mm)" type="number" step="0.1" name="rainfall_mm" value={formData.rainfall_mm} onChange={handleChange} icon={CloudRain} />
                 <InputField label="Humidity (%)" type="number" step="0.1" name="humidity_%" value={formData["humidity_%"]} onChange={handleChange} icon={CloudRain} />
                 <InputField label="Sunlight (hours/day)" type="number" step="0.1" name="sunlight_hours" value={formData.sunlight_hours} onChange={handleChange} icon={CloudRain} />
@@ -253,7 +268,7 @@ export default function YieldPrediction() {
             {!result && !loading && !error && (
               <div className="text-center py-10">
                 <Brain className="w-16 h-16 text-[#1F6B45] mx-auto mb-4 opacity-50" />
-                <p className="text-sm text-[#c6dfcd] leading-relaxed">Ready to process parameters.<br/>Click generate below to begin.</p>
+                <p className="text-sm text-[#c6dfcd] leading-relaxed">Ready to analyze your farm data.<br/>Click below to generate your yield prediction.</p>
               </div>
             )}
 
@@ -276,7 +291,7 @@ export default function YieldPrediction() {
                 
                 <div className="space-y-3">
                   <button 
-                    onClick={() => navigate('/')} 
+                    onClick={() => navigate('/dashboard')}
                     className="w-full flex items-center justify-center px-4 py-3 bg-[#A8C957] text-[#12372A] font-bold rounded-xl hover:bg-[#5BAE65] hover:text-white transition-colors"
                   >
                     View AI Analysis <ArrowRight className="w-4 h-4 ml-2" />
@@ -298,7 +313,7 @@ export default function YieldPrediction() {
                 disabled={loading}
                 className="w-full flex items-center justify-center px-4 py-4 mt-6 bg-gradient-to-r from-[#A8C957] to-[#5BAE65] text-[#12372A] font-bold rounded-xl hover:shadow-lg hover:shadow-[#A8C957]/20 transition-all transform hover:-translate-y-1"
               >
-                ✨ Generate Yield Prediction
+                Generate Prediction
               </button>
             )}
           </div>

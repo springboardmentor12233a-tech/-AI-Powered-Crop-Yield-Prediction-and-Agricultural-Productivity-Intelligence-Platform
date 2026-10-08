@@ -15,7 +15,7 @@ export function AppShell() {
   const userRole = user?.role?.role_name || user?.role;
   const isAdmin = userRole === 'admin';
 
-  const { recentPrediction, setRecentPrediction, fetchAnalysis } = useAppContext();
+  const { recentPrediction, setRecentPrediction, setPredictionHistory, fetchAnalysis } = useAppContext();
 
   useEffect(() => {
     // Always clear context first when user ID changes to prevent stale data visibility
@@ -29,13 +29,19 @@ export function AppShell() {
             const savedId = localStorage.getItem('currentPredictionId');
             let latest;
 
+            const sorted = [...hist].sort((a, b) => {
+              const dateA = new Date(a.input_data?.observation_date || a.created_at).getTime();
+              const dateB = new Date(b.input_data?.observation_date || b.created_at).getTime();
+              if (dateA !== dateB) return dateA - dateB;
+              return (a.id || 0) - (b.id || 0);
+            });
+            setPredictionHistory(sorted);
+
             if (savedId) {
-              latest = hist.find(h => h.id.toString() === savedId);
+              latest = sorted.find(h => h.id.toString() === savedId);
             }
 
             if (!latest) {
-              // Fallback to highest ID (most recently created)
-              const sorted = [...hist].sort((a, b) => (a.id || 0) - (b.id || 0));
               latest = sorted[sorted.length - 1];
             }
 

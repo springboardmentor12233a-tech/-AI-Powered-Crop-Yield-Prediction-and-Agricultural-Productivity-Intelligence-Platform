@@ -137,6 +137,7 @@ def predict(request: PredictionRequest, current_user=Depends(get_current_user), 
         )
         db.add(history_record)
         db.commit()
+        db.refresh(history_record)
         
         # Create a notification
         from backend.app.services.notification import create_notification
@@ -145,6 +146,7 @@ def predict(request: PredictionRequest, current_user=Depends(get_current_user), 
         create_notification(db, current_user.id, title, message, type="success")
         
         return {
+            "prediction_id": history_record.id,
             "predicted_yield_kg_per_hectare": round(predicted_yield, 2),
             "unit": "kg/hectare"
         }

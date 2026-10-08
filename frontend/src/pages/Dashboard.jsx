@@ -52,29 +52,13 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
-  const { recentPrediction, analysisState, fetchAnalysis, retryInsights } = useAppContext();
+  const { recentPrediction, predictionHistory: history, analysisState, fetchAnalysis, retryInsights } = useAppContext();
   const navigate = useNavigate();
-  const [history, setHistory] = useState([]);
   
   useEffect(() => {
     if (recentPrediction) {
       fetchAnalysis(recentPrediction);
     }
-    const loadHistory = async () => {
-      try {
-        const hist = await getPredictionHistory();
-        const sorted = [...hist].sort((a, b) => {
-          const dateA = new Date(a.input_data?.observation_date || a.created_at).getTime();
-          const dateB = new Date(b.input_data?.observation_date || b.created_at).getTime();
-          if (dateA !== dateB) return dateA - dateB;
-          return (a.id || 0) - (b.id || 0);
-        });
-        setHistory(sorted);
-      } catch (err) {
-        console.error("Failed to load prediction history", err);
-      }
-    };
-    loadHistory();
   }, [recentPrediction, fetchAnalysis]);
 
   const weatherData = analysisState?.weatherData;

@@ -6,6 +6,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const [recentPrediction, setRecentPrediction] = useState(null);
+  const [predictionHistory, setPredictionHistory] = useState([]);
   
   const [reportState, setReportState] = useState({
     status: 'idle',
@@ -118,6 +119,8 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       recentPrediction,
       setRecentPrediction,
+      predictionHistory,
+      setPredictionHistory,
       reportState,
       fetchReport,
       analysisState,
