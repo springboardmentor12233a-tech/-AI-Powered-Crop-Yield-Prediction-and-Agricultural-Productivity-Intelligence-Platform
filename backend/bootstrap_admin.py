@@ -14,6 +14,10 @@ load_dotenv()
 BOOTSTRAP_LOCK_ID = 7246013302472185001
 
 
+class BootstrapConfigurationError(ValueError):
+    pass
+
+
 def get_admin_values():
     name = os.getenv("YIELDSENSE_ADMIN_NAME", "").strip()
     email = os.getenv("YIELDSENSE_ADMIN_EMAIL", "").strip().lower()
@@ -29,11 +33,17 @@ def get_admin_values():
         if not value
     ]
     if missing:
-        raise ValueError(f"Required environment variables are missing: {', '.join(missing)}.")
+        raise BootstrapConfigurationError(
+            f"Required environment variables are missing: {', '.join(missing)}."
+        )
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
-        raise ValueError("YIELDSENSE_ADMIN_EMAIL must be a valid email address.")
+        raise BootstrapConfigurationError(
+            "YIELDSENSE_ADMIN_EMAIL must be a valid email address."
+        )
     if len(password) < 12:
-        raise ValueError("YIELDSENSE_ADMIN_PASSWORD must contain at least 12 characters.")
+        raise BootstrapConfigurationError(
+            "YIELDSENSE_ADMIN_PASSWORD must contain at least 12 characters."
+        )
 
     return name, email, password
 
@@ -104,6 +114,9 @@ def main():
             print("ACTIVE_ADMIN_EXISTS" if count else "NO_ACTIVE_ADMIN")
         else:
             print(ensure_admin_exists())
+    except BootstrapConfigurationError as error:
+        print(f"ADMIN_BOOTSTRAP_FAILED: {error}", file=sys.stderr)
+        return 1
     except Exception as error:
         error_type = type(error).__name__
         print(f"ADMIN_BOOTSTRAP_FAILED ({error_type})", file=sys.stderr)
