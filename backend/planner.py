@@ -2,29 +2,13 @@
 Farm Planner.
 
 GET  /planner/defaults   (JWT, farmers only)
-    Placeholder price / cost per crop. The farmer edits them in the UI.
+    Fetches admin-configured default market price & cost per crop.
 
 POST /planner            (JWT, farmers only)
-    Body: { "profile_id": int,
-            "previous_crop": str | null,         (defaults to the saved field's crop)
-            "prices": { "Wheat": 22750, ... },   (Rs per tonne, optional)
-            "costs":  { "Wheat": 35000, ... } }  (Rs per hectare, optional)
-
-For the chosen saved field it predicts the yield of EVERY crop in EVERY season
-with the same XGBoost model used on the Predict page (using the field's own
-region and soil values, and typical weather / inputs from the dataset), turns
-that into an expected profit, and ranks the crops.
+    Predicts yield across crops & seasons using XGBoost, computes profit.
 
 POST /planner/timeline   (JWT, farmers only)
-    Body: { "profile_id": int, "crop_type": str, "sowing_date": "YYYY-MM-DD",
-            "previous_crop": str | null }
-    Returns a dated activity timeline (land preparation to harvest) for that crop,
-    with warnings on the steps your field's soil values affect.
-
-Honest limits (also shown in the UI):
-  - Prices and costs are editable placeholders, not live market data.
-  - Crop rotation is simple rule-based advice. The model does not know the
-    previous crop, so rotation only affects the ranking order, not the yield.
+    Returns dated activity timeline for chosen crop.
 """
 
 from datetime import datetime, timedelta
@@ -34,7 +18,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from auth import role_required
-from models import FarmProfile
+from models import FarmProfile, MarketPrice
 import predict_service as ps
 
 planner_bp = Blueprint("planner", __name__)
@@ -42,8 +26,7 @@ planner_bp = Blueprint("planner", __name__)
 SEASONS = ["Spring", "Summer", "Autumn"]
 SEASON_FALLBACK_MONTH = {"Spring": 5, "Summer": 8, "Autumn": 11}
 
-# PLACEHOLDER numbers (roughly Indian support prices / typical costs). Replace
-# them with local prices in the UI. They are NOT live market data.
+# Baseline defaults (Indian MSP support prices / standard costs)
 DEFAULT_PRICE_PER_TONNE = {"Wheat": 22750, "Corn": 22250, "Rice": 23000, "Soybean": 48900, "Barley": 18500}
 DEFAULT_COST_PER_HA = {"Wheat": 35000, "Corn": 40000, "Rice": 50000, "Soybean": 30000, "Barley": 30000}
 FALLBACK_PRICE = 20000
@@ -52,10 +35,6 @@ FALLBACK_COST = 35000
 LEGUMES = {"Soybean"}
 CEREALS = {"Wheat", "Corn", "Rice", "Barley"}
 
-# General crop calendars used by the timeline. Each step is an offset in days from
-# the start date (day 0). This is general guidance, NOT from your dataset: real
-# timing depends on the variety, weather and region. "params" lists the soil
-# values that affect a step, so it can show a warning if that value is off.
 CROP_CALENDAR = {
     "Wheat": {
         "duration_days": 130,
@@ -157,18 +136,14 @@ SOIL_LABELS = {
     "potassium_content": "Potassium",
 }
 
-# Training data, used only to get typical values for inputs the saved field
-# does not store (moisture, fertilizer, sunlight...).
 _train = pd.read_csv(ps.TRAIN_PROCESSED_PATH)
-
 
 def _median(col, fallback):
     try:
         v = float(_train[col].median())
-        return v if v == v else fallback  # v == v is False for NaN
+        return v if v == v else fallback
     except Exception:
         return fallback
-
 
 _DEFAULTS = {
     "soil_ph": _median("soil_ph", 6.5),
@@ -184,9 +159,7 @@ _DEFAULTS = {
     "irrigation_frequency": round(_median("irrigation_frequency", 3)),
 }
 
-
 def _harvest_month(season):
-    """Most typical harvest month for a season in the dataset."""
     try:
         m = _train.loc[_train[f"season_{season}"] == 1, "harvest_month"].median()
         if m == m:
@@ -195,9 +168,7 @@ def _harvest_month(season):
         pass
     return SEASON_FALLBACK_MONTH[season]
 
-
 _MONTHS = {s: _harvest_month(s) for s in SEASONS}
-
 
 def _weather(region, season):
     ctx = ps.get_weather_context({"region": region, "season": season})
@@ -208,9 +179,7 @@ def _weather(region, season):
         rain if rain is not None else _DEFAULTS["total_rainfall"],
     )
 
-
 def _soil_check(profile, crop):
-    """Checks the field's saved soil values against the healthy range of `crop`."""
     issues, healthy, checked = [], 0, 0
     for col, label in SOIL_LABELS.items():
         value = getattr(profile, col)
@@ -227,28 +196,31 @@ def _soil_check(profile, crop):
             healthy += 1
     return healthy, checked, issues
 
-
 def _rotation(previous, crop):
-    """Simple rule-based rotation advice. Returns (tag, note)."""
     if previous and crop == previous:
-        return "avoid", (
-            "Same crop as last season. Repeating it can build up pests and diseases, "
-            "so rotating is usually safer."
-        )
+        return "avoid", "Same crop as last season. Repeating it can build up pests and diseases, so rotating is usually safer."
     if crop in LEGUMES and previous not in LEGUMES:
         return "good", "Soybean fixes nitrogen in the soil, which helps the crops that follow it."
     if previous in LEGUMES and crop in CEREALS:
         return "good", "Follows soybean, which leaves extra nitrogen in the soil for cereal crops."
     if previous in CEREALS and crop in CEREALS:
-        return "neutral", (
-            "A cereal after a cereal is acceptable, but a legume such as soybean "
-            "in between is better for the soil."
-        )
+        return "neutral", "A cereal after a cereal is acceptable, but a legume such as soybean in between is better for the soil."
     return "neutral", ""
 
+def get_current_market_prices():
+    """Reads prices set by admin from DB, falling back to static defaults."""
+    prices = dict(DEFAULT_PRICE_PER_TONNE)
+    costs = dict(DEFAULT_COST_PER_HA)
+    try:
+        records = MarketPrice.query.all()
+        for r in records:
+            prices[r.crop_type] = r.price_per_tonne
+            costs[r.crop_type] = r.cost_per_ha
+    except Exception:
+        pass
+    return prices, costs
 
 def _numbers(raw, defaults, fallback, crops):
-    """Reads a {crop: number} dict from the request, falling back to defaults."""
     raw = raw if isinstance(raw, dict) else {}
     out = {}
     for crop in crops:
@@ -260,23 +232,22 @@ def _numbers(raw, defaults, fallback, crops):
             out[crop] = default
     return out
 
-
 @planner_bp.route("/planner/defaults", methods=["GET"])
 @jwt_required()
 @role_required("farmer")
 def planner_defaults():
     crops = list(ps._soil_ranges.index)
+    prices, costs = get_current_market_prices()
     return jsonify({
         "crops": [
             {
                 "crop_type": c,
-                "price_per_tonne": DEFAULT_PRICE_PER_TONNE.get(c, FALLBACK_PRICE),
-                "cost_per_ha": DEFAULT_COST_PER_HA.get(c, FALLBACK_COST),
+                "price_per_tonne": prices.get(c, FALLBACK_PRICE),
+                "cost_per_ha": costs.get(c, FALLBACK_COST),
             }
             for c in crops
         ]
     }), 200
-
 
 @planner_bp.route("/planner", methods=["POST"])
 @jwt_required()
@@ -299,10 +270,12 @@ def plan():
 
         crops = list(ps._soil_ranges.index)
         previous = data.get("previous_crop") or profile.crop_type
-        prices = _numbers(data.get("prices"), DEFAULT_PRICE_PER_TONNE, FALLBACK_PRICE, crops)
-        costs = _numbers(data.get("costs"), DEFAULT_COST_PER_HA, FALLBACK_COST, crops)
 
-        # Soil values come from the saved field; missing ones use dataset medians.
+        # Use current admin prices as base
+        base_prices, base_costs = get_current_market_prices()
+        prices = _numbers(data.get("prices"), base_prices, FALLBACK_PRICE, crops)
+        costs = _numbers(data.get("costs"), base_costs, FALLBACK_COST, crops)
+
         soil, soil_assumed = {}, []
         for col, label in SOIL_LABELS.items():
             value = getattr(profile, col)
@@ -312,7 +285,6 @@ def plan():
             else:
                 soil[col] = float(value)
 
-        # One prediction per (crop, season) combination, in a single model call.
         combos, frames = [], []
         for crop in crops:
             for season in SEASONS:
@@ -354,8 +326,6 @@ def plan():
         for crop, seasons in by_crop.items():
             seasons.sort(key=lambda s: -s["profit_per_ha"])
             best = seasons[0]
-            # If the three seasons predict (almost) the same yield, the model has no
-            # real basis to prefer one, so the UI should not claim a "best season".
             yields = [s["predicted_yield"] for s in seasons]
             spread = (max(yields) - min(yields)) / max(yields) if max(yields) > 0 else 0.0
             healthy, checked, issues = _soil_check(profile, crop)
@@ -378,7 +348,6 @@ def plan():
                 "rotation_note": note,
             })
 
-        # Crops that repeat last season's crop go to the bottom; otherwise by profit.
         options.sort(key=lambda o: (o["rotation"] == "avoid", -o["profit_per_ha"]))
         for i, o in enumerate(options, 1):
             o["rank"] = i
@@ -400,7 +369,6 @@ def plan():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @planner_bp.route("/planner/timeline", methods=["POST"])
 @jwt_required()
@@ -437,10 +405,7 @@ def timeline():
             for param in s.get("params", []):
                 issue = issue_by_param.get(param)
                 if issue:
-                    warning = (
-                        f"{param} is {issue['status']} for {crop}. "
-                        "Ask a local agricultural officer what to apply."
-                    )
+                    warning = f"{param} is {issue['status']} for {crop}. Ask a local agricultural officer what to apply."
                     break
             steps.append({
                 "day": s["day"],

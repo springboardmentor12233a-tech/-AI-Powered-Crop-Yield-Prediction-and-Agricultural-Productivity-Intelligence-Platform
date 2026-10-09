@@ -1,25 +1,5 @@
 """
 Notifications (the bell) and active crop plans.
-
-Notifications are created by the server, not by the user:
-  - soil : a saved field has a soil value outside the healthy range for its crop
-  - risk : a prediction made in the last 7 days came out High risk
-  - task : a step of an active crop plan is due yesterday, today or tomorrow
-
-They are generated ("synced") whenever the bell asks for the list. Each one is
-stored once (unique per user + key), so nothing repeats. Soil alerts disappear
-by themselves once the soil value is fixed on the Farm Profile page.
-
-GET    /notifications              list (newest first) + unread count
-POST   /notifications/read-all     mark everything as read
-POST   /notifications/<id>/read    mark one as read
-
-POST   /planner/start              start a plan for a field (replaces that field's plan)
-GET    /planner/plans              the farmer's active plans
-DELETE /planner/plans/<id>         stop a plan (also removes its reminders)
-
-The two tables (notification, crop_plan) are created automatically by
-db.create_all() in app.py. No manual SQL is needed.
 """
 
 from datetime import date, datetime, timedelta
@@ -28,7 +8,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from auth import role_required
-from models import db, FarmProfile, PredictionHistory
+from models import db, FarmProfile, PredictionHistory, Announcement
 from predict_service import get_all_soil_ranges, _soil_ranges
 from planner import CROP_CALENDAR, GENERIC_CALENDAR
 
@@ -43,17 +23,13 @@ SOIL_LABELS = {
 MAX_LIST = 50
 
 
-# ---------------------------------------------------------------
-# Tables
-# ---------------------------------------------------------------
 class CropPlan(db.Model):
-    """A crop the farmer has decided to grow, with its sowing date."""
     __tablename__ = "crop_plan"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     profile_id = db.Column(db.Integer, db.ForeignKey("farm_profile.id", ondelete="SET NULL"))
-    field_name = db.Column(db.String(100))  # copied, so it survives deleting the field
+    field_name = db.Column(db.String(100))
     crop_type = db.Column(db.String(50), nullable=False)
     sowing_date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
@@ -65,9 +41,9 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    kind = db.Column(db.String(20), nullable=False)  # soil | risk | task
-    key = db.Column(db.String(200), nullable=False)  # used to avoid duplicates
-    data = db.Column(db.JSON)  # the facts; the frontend turns them into translated text
+    kind = db.Column(db.String(20), nullable=False)  # soil | risk | task | announcement
+    key = db.Column(db.String(200), nullable=False)
+    data = db.Column(db.JSON)
     link = db.Column(db.String(100))
     is_read = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
@@ -83,9 +59,6 @@ class Notification(db.Model):
         }
 
 
-# ---------------------------------------------------------------
-# Generating notifications
-# ---------------------------------------------------------------
 def _add(user_id, kind, key, data, link):
     if Notification.query.filter_by(user_id=user_id, key=key).first():
         return
@@ -118,7 +91,6 @@ def _sync_soil(user_id):
                 "status": status, "value": value, "low": low, "high": high,
             }, "/profile")
 
-    # Remove soil alerts that are no longer true (value fixed, field deleted...).
     for n in Notification.query.filter_by(user_id=user_id, kind="soil").all():
         if n.key not in current:
             db.session.delete(n)
@@ -163,21 +135,29 @@ def _sync_tasks(user_id):
                 }, "/planner")
 
 
+def _sync_announcements(user_id):
+    """Syncs recent admin broadcasts to the farmer's notification bell."""
+    announcements = Announcement.query.order_by(Announcement.created_at.desc()).limit(20).all()
+    for a in announcements:
+        _add(user_id, "announcement", f"announcement:{a.id}", {
+            "title": a.title,
+            "message": a.message,
+            "category": a.category,
+        }, "/dashboard")
+
+
 def _sync(user_id):
-    """Best effort: a problem here must never stop the bell from loading."""
     try:
         _sync_soil(user_id)
         _sync_risk(user_id)
         _sync_tasks(user_id)
+        _sync_announcements(user_id)
         db.session.commit()
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Notification sync failed")
 
 
-# ---------------------------------------------------------------
-# Notification endpoints
-# ---------------------------------------------------------------
 @notifications_bp.route("/notifications", methods=["GET"])
 @jwt_required()
 @role_required("farmer")
@@ -217,11 +197,7 @@ def read_one(notification_id):
     return jsonify({"message": "ok"}), 200
 
 
-# ---------------------------------------------------------------
-# Crop plan endpoints (the "Start this plan" button on the Farm Planner)
-# ---------------------------------------------------------------
 def _drop_plan(plan):
-    """Deletes a plan and its reminders."""
     Notification.query.filter(
         Notification.user_id == plan.user_id,
         Notification.key.like(f"task:{plan.id}:%"),
@@ -271,7 +247,6 @@ def start_plan():
     except ValueError:
         return jsonify({"error": "sowing_date must look like 2026-11-15"}), 400
 
-    # One plan per field: a new plan replaces the old one.
     replaced = False
     for old in CropPlan.query.filter_by(user_id=user_id, profile_id=profile.id).all():
         _drop_plan(old)
@@ -284,7 +259,7 @@ def start_plan():
     db.session.add(plan)
     db.session.commit()
 
-    _sync(user_id)  # so reminders that are already due show up straight away
+    _sync(user_id)
     return jsonify({"message": "Plan started", "replaced": replaced, "plan": _plan_to_dict(plan)}), 201
 
 

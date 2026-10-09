@@ -20,6 +20,12 @@ const FARMER_LINKS = [
 
 const ADMIN_LINKS = [
   { href: "/admin", key: "Overview", icon: "📊" },
+  { href: "/admin/predictions", key: "Predictions", icon: "🌾" },
+  { href: "/admin/model-performance", key: "Model Performance", icon: "🤖" },
+  { href: "/admin/announcements", key: "Announcements", icon: "📢" },
+  { href: "/admin/fields", key: "Fields", icon: "🌱" },
+  { href: "/admin/market-prices", key: "Market Prices", icon: "💰" },
+  { href: "/admin/system-status", key: "System Status", icon: "⚡" },
   { href: "/admin/reports", key: "Reports", icon: "📈" },
   { href: "/admin/users", key: "Users", icon: "👥" },
 ];

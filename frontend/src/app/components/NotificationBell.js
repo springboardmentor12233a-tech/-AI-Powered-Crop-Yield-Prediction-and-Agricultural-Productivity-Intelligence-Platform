@@ -6,7 +6,7 @@ import { getToken, getUser } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
-const POLL_MS = 60000; // check for new notifications every minute
+const POLL_MS = 60000;
 const REFRESH_EVENT = "agrivantage:notifications-refresh";
 
 function formatDate(iso) {
@@ -16,16 +16,30 @@ function formatDate(iso) {
   });
 }
 
-// Whole days from today to the given date (negative = in the past).
 function dayDiff(iso) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((new Date(`${iso}T00:00:00`) - today) / 86400000);
 }
 
-// Turns the facts stored by the server into translated text.
 function describe(n, t) {
   const d = n.data || {};
+
+  if (n.kind === "announcement") {
+    const icon =
+      d.category === "Weather"
+        ? "🌧️"
+        : d.category === "Alert"
+        ? "🚨"
+        : d.category === "Feature"
+        ? "✨"
+        : "📢";
+    return {
+      icon,
+      title: d.title || t("Platform Announcement"),
+      body: d.message || "",
+    };
+  }
 
   if (n.kind === "soil") {
     return {
@@ -87,13 +101,9 @@ export default function NotificationBell({ btnClass = "" }) {
       const data = await res.json();
       setItems(data.notifications || []);
       setUnread(data.unread || 0);
-    } catch {
-      // Backend unreachable: keep showing what we have.
-    }
+    } catch {}
   }, []);
 
-  // The header lives in the layout and is not remounted on login/logout, so
-  // check who is logged in again on every page change. Farmers only.
   useEffect(() => {
     const ok = !!getToken() && getUser()?.role !== "admin";
     setEnabled(ok);
@@ -117,7 +127,6 @@ export default function NotificationBell({ btnClass = "" }) {
     };
   }, [enabled, refresh]);
 
-  // Close on outside click or Escape.
   useEffect(() => {
     if (!open) return;
     const onClick = (e) => {

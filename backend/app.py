@@ -13,19 +13,20 @@ from predict_service import (
     get_all_soil_ranges,
     InputValidationError,
 )
-from models import db, PredictionHistory, User, FarmProfile
+from models import db, PredictionHistory, User, FarmProfile, MarketPrice
 from auth import auth_bp, role_required
 from farm_profile import farm_profile_bp
 from chat import chat_bp
 from reports import reports_bp
 from translate import translate_bp
-from planner import planner_bp
+from planner import planner_bp, DEFAULT_PRICE_PER_TONNE, DEFAULT_COST_PER_HA
 from vision import vision_bp
 from notifications import notifications_bp, CropPlan, _plan_to_dict
+from admin import admin_bp
 from extensions import limiter
 
 # ---------------------------------------------------------------
-# Config - everything sensitive comes from the environment (.env)
+# Config - environment variables (.env)
 # ---------------------------------------------------------------
 DATABASE_URL = os.getenv("DATABASE_URL")
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
@@ -40,18 +41,14 @@ if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set. Add it to backend/.env.")
 if not JWT_SECRET_KEY or JWT_SECRET_KEY.startswith("change-this") or len(JWT_SECRET_KEY) < 32:
     raise RuntimeError(
-        "JWT_SECRET_KEY is missing, still the placeholder, or shorter than 32 characters. "
-        "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        "JWT_SECRET_KEY is missing, still the placeholder, or shorter than 32 characters."
     )
 
 app = Flask(__name__)
-# Only the frontend's origin(s) may call this API from a browser.
 CORS(app, origins=FRONTEND_ORIGINS)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
-# In-memory counters are fine for one process. For gunicorn with several
-# workers, point this at Redis (e.g. redis://localhost:6379).
 app.config["RATELIMIT_STORAGE_URI"] = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
 
 db.init_app(app)
@@ -66,19 +63,16 @@ app.register_blueprint(translate_bp)
 app.register_blueprint(planner_bp)
 app.register_blueprint(vision_bp)
 app.register_blueprint(notifications_bp)
+app.register_blueprint(admin_bp)
 
 
 @app.errorhandler(429)
 def rate_limited(e):
-    # The frontend always calls res.json(), so return JSON rather than HTML.
     return jsonify({"error": "Too many requests. Please wait a moment and try again."}), 429
 
 
 with app.app_context():
     db.create_all()
-    # create_all() doesn't add columns to tables that already exist, so add the
-    # newer columns here. Safe to run every time (IF NOT EXISTS). For a larger
-    # project, use Flask-Migrate instead.
     for stmt in [
         "ALTER TABLE farm_profile ADD COLUMN IF NOT EXISTS field_size_hectares FLOAT",
         "ALTER TABLE prediction_history ADD COLUMN IF NOT EXISTS details JSON",
@@ -90,6 +84,21 @@ with app.app_context():
             db.session.commit()
         except Exception:
             db.session.rollback()
+
+    # Seed default market prices if empty
+    try:
+        if MarketPrice.query.count() == 0:
+            for crop, price in DEFAULT_PRICE_PER_TONNE.items():
+                cost = DEFAULT_COST_PER_HA.get(crop, 35000)
+                db.session.add(MarketPrice(
+                    crop_type=crop,
+                    price_per_tonne=price,
+                    cost_per_ha=cost,
+                    updated_by="System Default",
+                ))
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 @app.route("/")
@@ -106,10 +115,6 @@ def predict():
         return jsonify({"error": "Request body must be a JSON object"}), 400
 
     user_id = int(get_jwt_identity())
-
-    # profile_id is NOT a model input: it only links this prediction to the
-    # saved field it was made for. Pull it out, and only keep it if that
-    # field really belongs to the logged-in user.
     raw_profile_id = field.pop("profile_id", None)
     profile_id = None
     if isinstance(raw_profile_id, int) and not isinstance(raw_profile_id, bool):
@@ -126,9 +131,6 @@ def predict():
         app.logger.exception("Prediction failed")
         return jsonify({"error": "Prediction failed. Please check your inputs and try again."}), 500
 
-    # Save this prediction to history for the logged-in user.
-    # Failing to save history shouldn't block returning the prediction
-    # itself, so this is best-effort.
     try:
         history_entry = PredictionHistory(
             user_id=user_id,
@@ -158,23 +160,15 @@ def predict():
 @app.route("/live-weather", methods=["GET"])
 @jwt_required()
 def live_weather():
-    """
-    Returns the current live temperature for the city representing the
-    given dataset region (see REGION_TO_CITY in predict_service.py).
-    Used by the frontend's "Fetch Live Weather" button.
-    """
     region = request.args.get("region")
     if not region:
         return jsonify({"error": "region query param is required"}), 400
-
-    result = get_live_temperature(region)
-    return jsonify(result), 200
+    return jsonify(get_live_temperature(region)), 200
 
 
 @app.route("/history", methods=["GET"])
 @jwt_required()
 def history():
-    """Returns the logged-in user's past predictions, most recent first."""
     user_id = int(get_jwt_identity())
     records = (
         PredictionHistory.query.filter_by(user_id=user_id)
@@ -188,13 +182,7 @@ def history():
 @jwt_required()
 @role_required("admin")
 def admin_users():
-    """
-    Returns every registered user, with how many fields and predictions they
-    have and when they last made a prediction (used by the admin Users table).
-    Admin-only.
-    """
     users = User.query.order_by(User.id).all()
-
     field_counts = dict(
         db.session.query(FarmProfile.user_id, db.func.count(FarmProfile.id))
         .group_by(FarmProfile.user_id)
@@ -226,10 +214,6 @@ def admin_users():
 @jwt_required()
 @role_required("admin")
 def admin_user_detail(user_id):
-    """
-    Full picture of one user for the admin drill-down: their account info,
-    every saved field, and their entire prediction history (newest first).
-    """
     user = db.session.get(User, user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -240,7 +224,6 @@ def admin_user_detail(user_id):
         .order_by(PredictionHistory.created_at.desc())
         .all()
     )
-
     plans = CropPlan.query.filter_by(user_id=user_id).order_by(CropPlan.id.desc()).all()
 
     return jsonify({
@@ -255,15 +238,8 @@ def admin_user_detail(user_id):
 @jwt_required()
 @role_required("admin")
 def admin_stats():
-    """
-    Returns real, computed platform-wide stats - no fabricated numbers.
-    total_users / total_predictions are simple counts. avg_predicted_yield
-    and risk_breakdown are computed from actual PredictionHistory rows,
-    and are None / empty if no predictions exist yet.
-    """
     total_users = User.query.count()
     total_predictions = PredictionHistory.query.count()
-
     avg_yield = db.session.query(db.func.avg(PredictionHistory.predicted_yield)).scalar()
 
     risk_counts = (
@@ -307,48 +283,15 @@ def admin_stats():
 @jwt_required()
 @role_required("admin")
 def admin_seasonal_report():
-    """
-    Returns average temperature and rainfall by region and season, from
-    the dataset's weather_summary (Step 6). Dataset-wide reference data,
-    not tied to any individual user.
-    """
     from predict_service import _weather_summary
-    records = _weather_summary.to_dict(orient="records")
-    return jsonify(records), 200
-
-
-@app.route("/admin/seasonal-yield", methods=["GET"])
-@jwt_required()
-@role_required("admin")
-def admin_seasonal_yield():
-    """
-    Average predicted yield by season and crop, from real predictions made
-    on the platform (unlike /admin/seasonal-report, which is dataset weather).
-    """
-    rows = (
-        db.session.query(
-            PredictionHistory.season,
-            PredictionHistory.crop_type,
-            db.func.avg(PredictionHistory.predicted_yield),
-            db.func.count(PredictionHistory.id),
-        )
-        .group_by(PredictionHistory.season, PredictionHistory.crop_type)
-        .all()
-    )
-    return jsonify([
-        {"season": s, "crop_type": c, "avg_yield": round(avg, 2), "predictions": n}
-        for s, c, avg, n in rows if s and c and avg is not None
-    ]), 200
+    return jsonify(_weather_summary.to_dict(orient="records")), 200
 
 
 @app.route("/soil-ranges", methods=["GET"])
 @jwt_required()
 def soil_ranges():
-    """Returns healthy soil ranges for every crop type (Soil Reference page)."""
     return jsonify(get_all_soil_ranges()), 200
 
 
 if __name__ == "__main__":
-    # debug is OFF unless you set FLASK_DEBUG=1 in your local .env.
-    # In production run:  gunicorn -w 2 -b 0.0.0.0:5000 app:app
     app.run(debug=DEBUG)
