@@ -59,7 +59,7 @@ A fully deployed, scalable web application featuring a Next.js client and a Pyth
 - Vercel (Hosting & Deployment)
 
 **Backend & Machine Learning**
-- Python 3.10+
+- Python 3.12.2-amd64.exe
 - FastAPI & Uvicorn (API Framework & Server)
 - Scikit-learn (Model Training)
 - Pandas & NumPy (Data Manipulation)
