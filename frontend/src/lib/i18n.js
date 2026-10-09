@@ -17,6 +17,10 @@ export const LANGS = [
   { code: "en", label: "English" },
   { code: "hi", label: "हिन्दी" },
   { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "te", label: "తెలుగు" },
+  { code: "ta", label: "தமிழ்" },
+  { code: "ml", label: "മലയാളം" },
+  { code: "mr", label: "मराठी" },
 ];
 
 const LangContext = createContext({

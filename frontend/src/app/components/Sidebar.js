@@ -14,6 +14,8 @@ const FARMER_LINKS = [
   { href: "/profile", key: "Farm Profile", icon: "🧑‍🌾" },
   { href: "/compare", key: "Compare Fields", icon: "📊" },
   { href: "/assistant", key: "Assistant", icon: "💬" },
+  { href: "/planner", key: "Farm Planner", icon: "🗓️" },
+  { href: "/diagnose", key: "Crop Doctor", icon: "🩺" },
 ];
 
 const ADMIN_LINKS = [

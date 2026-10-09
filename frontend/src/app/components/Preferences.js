@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLang, LANGS } from "@/lib/i18n";
+import { Toaster } from "@/lib/toast";
+import NotificationBell from "./NotificationBell";
 
 // Slim header bar rendered once from layout.js (so every page, including
 // Login/Register/landing, gets it). It sits in the normal page flow above the
@@ -48,6 +50,12 @@ export default function Preferences() {
 
   return (
     <div className="relative z-40 flex h-12 items-center justify-end gap-2 border-b border-cream-200 bg-cream-50 px-4 print:hidden">
+      {/* Pop-up messages ("Field saved"...) are drawn here, once for the whole app. */}
+      <Toaster />
+
+      {/* Shows only for logged-in farmers. */}
+      <NotificationBell btnClass={btn} />
+
       <button
         type="button"
         onClick={toggleTheme}

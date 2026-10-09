@@ -19,6 +19,9 @@ from farm_profile import farm_profile_bp
 from chat import chat_bp
 from reports import reports_bp
 from translate import translate_bp
+from planner import planner_bp
+from vision import vision_bp
+from notifications import notifications_bp, CropPlan, _plan_to_dict
 from extensions import limiter
 
 # ---------------------------------------------------------------
@@ -60,6 +63,9 @@ app.register_blueprint(farm_profile_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(translate_bp)
+app.register_blueprint(planner_bp)
+app.register_blueprint(vision_bp)
+app.register_blueprint(notifications_bp)
 
 
 @app.errorhandler(429)
@@ -182,9 +188,38 @@ def history():
 @jwt_required()
 @role_required("admin")
 def admin_users():
-    """Returns every registered user. Admin-only."""
+    """
+    Returns every registered user, with how many fields and predictions they
+    have and when they last made a prediction (used by the admin Users table).
+    Admin-only.
+    """
     users = User.query.order_by(User.id).all()
-    return jsonify([u.to_dict() for u in users]), 200
+
+    field_counts = dict(
+        db.session.query(FarmProfile.user_id, db.func.count(FarmProfile.id))
+        .group_by(FarmProfile.user_id)
+        .all()
+    )
+    prediction_rows = (
+        db.session.query(
+            PredictionHistory.user_id,
+            db.func.count(PredictionHistory.id),
+            db.func.max(PredictionHistory.created_at),
+        )
+        .group_by(PredictionHistory.user_id)
+        .all()
+    )
+    predictions = {uid: (n, last) for uid, n, last in prediction_rows}
+
+    result = []
+    for u in users:
+        n, last = predictions.get(u.id, (0, None))
+        row = u.to_dict()
+        row["fields"] = field_counts.get(u.id, 0)
+        row["predictions"] = n
+        row["last_active"] = last.isoformat() if last else None
+        result.append(row)
+    return jsonify(result), 200
 
 
 @app.route("/admin/users/<int:user_id>", methods=["GET"])
@@ -206,10 +241,13 @@ def admin_user_detail(user_id):
         .all()
     )
 
+    plans = CropPlan.query.filter_by(user_id=user_id).order_by(CropPlan.id.desc()).all()
+
     return jsonify({
         "user": user.to_dict(),
         "profiles": [p.to_dict() for p in profiles],
         "predictions": [p.to_dict() for p in predictions],
+        "plans": [_plan_to_dict(p) for p in plans],
     }), 200
 
 

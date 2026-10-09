@@ -2,7 +2,7 @@
 Auto-translation for the UI (Groq, cached in Postgres).
 
 POST /translate   (public: the login page needs it too, so it is rate limited)
-Body:    { "lang": "hi" | "kn", "strings": ["Predict Yield", "{n} fields", ...] }
+Body:    { "lang": "hi" | "kn" | "ta" | "te" | "ml" | "mr", "strings": ["Predict Yield", "{n} fields", ...] }
 Returns: { "translations": { "<english>": "<translated>", ... },
            "failed": [ "<english strings that could not be translated>" ] }
 
@@ -23,7 +23,14 @@ from predict_service import GROQ_API_KEY, GROQ_API_URL, GROQ_MODEL, _extract_jso
 
 translate_bp = Blueprint("translate", __name__)
 
-LANGUAGES = {"hi": "Hindi", "kn": "Kannada", "ta": "Tamil", "te": "Telugu"}
+LANGUAGES = {
+    "hi": "Hindi",
+    "kn": "Kannada",
+    "ta": "Tamil",
+    "te": "Telugu",
+    "ml": "Malayalam",
+    "mr": "Marathi",
+}
 
 # Optional: use a different Groq model for translating, so it does not share a
 # rate limit with the chatbot / AI insight (set GROQ_TRANSLATE_MODEL in .env).
@@ -45,6 +52,12 @@ GLOSSARY["ta"] = ("yield=விளைச்சல், field=வயல், soil=�
 GLOSSARY["te"] = ("yield=దిగుబడి, field=పొలం, soil=నేల, prediction=అంచనా, risk=ప్రమాదం, "
                   "nitrogen=నైట్రోజన్, phosphorus=ఫాస్పరస్, potassium=పొటాషియం, harvest=కోత, "
                   "rainfall=వర్షపాతం, fertilizer=ఎరువు, pesticide=పురుగుమందు, irrigation=నీటిపారుదల")
+GLOSSARY["ml"] = ("yield=വിളവ്, field=വയൽ, soil=മണ്ണ്, prediction=പ്രവചനം, risk=അപകടസാധ്യത, "
+                  "nitrogen=നൈട്രജൻ, phosphorus=ഫോസ്ഫറസ്, potassium=പൊട്ടാസ്യം, harvest=വിളവെടുപ്പ്, "
+                  "rainfall=മഴ, fertilizer=വളം, pesticide=കീടനാശിനി, irrigation=ജലസേചനം")
+GLOSSARY["mr"] = ("yield=उत्पादन, field=शेत, soil=माती, prediction=अंदाज, risk=जोखीम, "
+                  "nitrogen=नायट्रोजन, phosphorus=स्फुरद, potassium=पालाश, harvest=कापणी, "
+                  "rainfall=पाऊस, fertilizer=खत, pesticide=कीटकनाशक, irrigation=सिंचन")
 
 MAX_STRINGS = 80
 MAX_CHARS_EACH = 300
