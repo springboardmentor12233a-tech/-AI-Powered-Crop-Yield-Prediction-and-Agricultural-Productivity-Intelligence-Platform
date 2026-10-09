@@ -6,7 +6,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 
-**YieldSense AI** is a full-stack, machine learning-driven agricultural intelligence platform developed as part of the **Infosys Springboard Pragati & AI Virtual Internship**. It leverages environmental data telemetry to deliver highly accurate crop yield estimations and tactical execution plans, bridging the gap between raw agricultural data and actionable farming intelligence.
+**YieldSense AI** is a full-stack, machine learning-driven agricultural intelligence platform developed as part of the **Infosys Springboard AI Virtual Internship**. It leverages environmental data telemetry to deliver highly accurate crop yield estimations and tactical execution plans, bridging the gap between raw agricultural data and actionable farming intelligence.
 
 ---
 
