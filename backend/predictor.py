@@ -1,9 +1,11 @@
 import json
-
 import joblib
 import pandas as pd
 
-from .config import METADATA_PATH, MODEL_PATH
+try:
+    from .config import METADATA_PATH, MODEL_PATH
+except ImportError:
+    from config import METADATA_PATH, MODEL_PATH
 
 
 class YieldPredictor:

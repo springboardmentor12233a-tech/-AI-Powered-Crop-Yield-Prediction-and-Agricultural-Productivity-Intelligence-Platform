@@ -1,0 +1,23 @@
+{
+  "notifications": [
+    {
+      "id": "notice_33ea5f4230",
+      "message": "new fertilizers are centers u can collect",
+      "audience": "all",
+      "author": "Ram",
+      "created_at": 1791548707.0675936
+    }
+  ],
+  "audits": [
+    {
+      "id": "audit_77a010b008",
+      "action": "Published announcement",
+      "subject": "all",
+      "details": "new fertilizers are centers u can collect",
+      "admin_email": "ram1234@gmail.com",
+      "created_at": 1791548707.068361
+    }
+  ],
+  "feedback": [],
+  "dataset_versions": []
+}

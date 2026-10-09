@@ -1,0 +1,68 @@
+[
+  {
+    "id": "usr_b92a4b38e9",
+    "email": "annapoorna1234@gmail.com",
+    "password_hash": "$2b$12$xP7Wi.74oad0QhDS.KONk.CEI7B7NBXHeweCpHBtt45IxeUzWzglK",
+    "full_name": "Annapoorna",
+    "role": "farmer",
+    "farm_location": "Guntur, Andhrapradesh",
+    "created_at": 1790609026.7018578
+  },
+  {
+    "id": "usr_62b5a7f3b3",
+    "email": "ram123@gmail.com",
+    "password_hash": "$2b$12$LIdOKyv7MRMfkww4ViPGAOfDFHidLgGL4OTeJ0xAeChxpnQFcRJme",
+    "full_name": "Ram",
+    "role": "farmer",
+    "farm_location": "Guntur, Andhrapradesh",
+    "created_at": 1791547594.9443638
+  },
+  {
+    "id": "usr_97eaa8c98a",
+    "email": "varun123@gmail.com",
+    "password_hash": "$2b$12$lVrocXJ8R8eDgsgQBPqfB.h0yBot55tnJI2QWetKRiOQ4eyau5NMe",
+    "full_name": "Varun",
+    "role": "farmer",
+    "farm_location": "Hyderabad, Telangana",
+    "created_at": 1791547965.5612686
+  },
+  {
+    "id": "usr_0489a02bad",
+    "email": "ram1234@gmail.com",
+    "password_hash": "$2b$12$.5StN1dnulZ4JKtMQuF7cuMqP1VR41Aoc57NLv9jZWrsTHtPQlROW",
+    "full_name": "Ram",
+    "role": "admin",
+    "farm_location": "Hyderabad, Telangana",
+    "created_at": 1791548291.9441586
+  },
+  {
+    "id": "usr_fd47975de6",
+    "email": "user123@gmail.com",
+    "password_hash": "$2b$12$1IgjmWvPwTCU/pcsfcymBuW3aM4bGy3XJOD0uJAPtMWc0WsNw6IKO",
+    "full_name": "User",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "Chennai, Tamilnadu",
+    "created_at": 1791550646.243901
+  },
+  {
+    "id": "usr_7436171c65",
+    "email": "usera123@gmail.com",
+    "password_hash": "$2b$12$CfpbWg4HFGc1fPj6fd6G6.bgmRBcOXY8PgRUDeUXatB1ARGhNByHe",
+    "full_name": "User A",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "Chennai, Tamilnadu",
+    "created_at": 1791553994.5808659
+  },
+  {
+    "id": "usr_540f413d5d",
+    "email": "user1238@gmail.com",
+    "password_hash": "$2b$12$3dyjSfL1ewuJ8Wpt8AbLYuHBVBunmtEgs.JYyIdX2v27mzAscpHQK",
+    "full_name": "user",
+    "role": "admin",
+    "account_status": "active",
+    "farm_location": "chennai,tamilnadu",
+    "created_at": 1791554506.0832381
+  }
+]
