@@ -37,10 +37,30 @@ export const AuthProvider = ({ children }) => {
     const { access_token } = await loginUser(email, password);
     localStorage.setItem('token', access_token);
     
-    // Fetch user details immediately after login
-    const userData = await getCurrentUser();
-    setUser(userData);
+    // Decode token for immediate state update to unblock UI
+    try {
+      const base64Url = access_token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const payload = JSON.parse(jsonPayload);
+      
+      // Provide basic user info immediately from token
+      setUser({ id: payload.sub, role: { role_name: payload.role } });
+    } catch (e) {
+      console.error("Error parsing JWT token:", e);
+    }
+    
     setIsAuthenticated(true);
+
+    // Fetch full user details in the background without blocking login
+    getCurrentUser().then(userData => {
+      setUser(userData);
+    }).catch(err => {
+      console.error("Failed to fetch user details after login:", err);
+    });
+    
     return true;
   };
 

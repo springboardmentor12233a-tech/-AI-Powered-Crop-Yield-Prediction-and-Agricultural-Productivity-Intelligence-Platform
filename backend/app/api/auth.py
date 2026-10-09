@@ -22,8 +22,7 @@ from ..schemas import (
 from ..models import User, Role
 from ..services import AuthService
 import os
-import smtplib
-from email.message import EmailMessage
+import requests
 from ..core.security import (
     create_access_token,
     get_current_user_from_token,
@@ -386,35 +385,54 @@ def delete_user_by_admin(
     return None
 
 def send_reset_email(email: str, token: str) -> bool:
-    """Send reset password email using SMTP"""
-    smtp_server = os.getenv("SMTP_SERVER")
-    smtp_port = os.getenv("SMTP_PORT")
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    smtp_from = os.getenv("SMTP_FROM_EMAIL")
+    """Send reset password email using Brevo HTTPS API"""
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    brevo_from = os.getenv("BREVO_FROM_EMAIL")
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-    if not all([smtp_server, smtp_port, smtp_user, smtp_password, smtp_from]):
-        print(f"SMTP not configured. Would have sent token {token} to {email}")
+    if not all([brevo_api_key, brevo_from]):
+        print(f"Email service not configured. Cannot send password reset email to {email}.")
         return False
 
-    msg = EmailMessage()
-    msg['Subject'] = 'Password Reset - YieldSense AI'
-    msg['From'] = smtp_from
-    msg['To'] = email
-    
     reset_url = f"{frontend_url}/reset-password?token={token}"
     
-    msg.set_content(f"You requested a password reset. Click the following link to reset your password:\n\n{reset_url}\n\nIf you did not request this, please ignore this email.")
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <h2 style="color: #1F6B45;">YieldSense AI</h2>
+        <p>You recently requested to reset your password for your YieldSense AI account.</p>
+        <p>Click the button below to reset it:</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{reset_url}" style="background-color: #A8C957; color: #12372A; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="font-size: 14px; color: #555;">Or copy and paste this link into your browser:</p>
+        <p style="font-size: 12px; word-break: break-all; color: #0066cc;">{reset_url}</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #888;">This link will expire in 24 hours. If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
+    </div>
+    """
 
     try:
-        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=10) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={
+                "api-key": brevo_api_key,
+                "Content-Type": "application/json",
+                "accept": "application/json"
+            },
+            json={
+                "sender": {"email": brevo_from},
+                "to": [{"email": email}],
+                "subject": "Reset your YieldSense AI password",
+                "htmlContent": html_content
+            },
+            timeout=10
+        )
+        response.raise_for_status()
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email via Brevo: {str(e)}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Brevo API Error Details: {e.response.text}")
         return False
 
 

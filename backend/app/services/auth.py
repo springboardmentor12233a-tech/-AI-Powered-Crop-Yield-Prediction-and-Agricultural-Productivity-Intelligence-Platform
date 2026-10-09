@@ -27,7 +27,8 @@ class AuthService:
         Returns:
             User object or None if not found
         """
-        return db.query(User).filter(User.email == email).first()
+        from sqlalchemy.orm import joinedload
+        return db.query(User).options(joinedload(User.role)).filter(User.email == email).first()
 
     @staticmethod
     def user_email_exists(db: Session, email: str) -> bool:
