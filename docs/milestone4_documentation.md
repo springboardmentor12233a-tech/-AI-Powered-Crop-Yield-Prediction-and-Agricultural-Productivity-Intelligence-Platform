@@ -162,5 +162,5 @@ The project is ready for controlled local demonstration and mentor review. The b
 
 Milestone 4 completed the final project documentation and deployment-readiness review. YieldSense AI presents an integrated workflow from cleaned agricultural datasets to machine learning predictions, recommendations, analytics, reports, and a farmer-facing dashboard. The deployment plan and remaining limitations are stated transparently, and the numbered placeholders make the document ready for final screenshot insertion.
 
-**Submitted by:**  
+**Submitted by:**
 **Maniraj Kyatham**
