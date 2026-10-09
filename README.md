@@ -1,6 +1,6 @@
 # 🌱 YieldSense AI: Crop Yield Prediction & Agricultural Productivity Platform
 
-[![Deploy with Vercel](https://vercel.com/button)](https://[yieldsense-ai-frontend-plum.vercel.app](https://yieldsense-ai-frontend-54592cabx-sanghavi21.vercel.app/)/)
+[![Deploy with Vercel](https://vercel.com/button)(https://yieldsense-ai-frontend-git-sanghavi-s-avadhani-sanghavi21.vercel.app/)]
 [![Backend Status](https://img.shields.io/badge/Render-Live-success?logo=render)](https://ai-powered-crop-yield-prediction-and-2gyv.onrender.com/docs)
 [![Python](https://img.shields.io/badge/Python-3.12.2amd64.exe-blue?logo=python)](https://www.python.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js)](https://nextjs.org/)
