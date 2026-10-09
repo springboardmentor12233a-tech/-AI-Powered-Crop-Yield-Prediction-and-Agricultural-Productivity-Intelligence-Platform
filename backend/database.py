@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb+srv://lohithakodani_db_user:rKTu7uTGMT5y03cH@cropcast.rxtbzxt.mongodb.net/")
+MONGODB_URL = os.getenv("MONGODB_URL","")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "CropCast")
 
 SQLITE_DB_FILE = os.path.join(os.path.dirname(__file__), "cropcast.db")
