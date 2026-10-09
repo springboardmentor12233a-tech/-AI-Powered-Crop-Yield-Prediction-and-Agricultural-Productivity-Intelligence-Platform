@@ -17,6 +17,57 @@ import {
 
 const formatCurrency = (num: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 
+// Resolve the backend URL once. A missing/invalid NEXT_PUBLIC_API_URL must never
+// produce requests such as /undefined/login or /undefined/predict.
+// Local development defaults to FastAPI on port 8000. Production deliberately
+// has NO localhost fallback: a deployed browser cannot reach your own computer.
+const configuredApiUrl = (process.env.NEXT_PUBLIC_API_URL || "").trim();
+const API_BASE_URL = /^https?:\/\//i.test(configuredApiUrl)
+  ? configuredApiUrl.replace(/\/+$/, "")
+  : process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "";
+
+/** Return a valid configured backend URL or fail before issuing a bad request. */
+function requireApiBaseUrl(): string {
+  if (!API_BASE_URL) {
+    throw new Error(
+      "Backend URL is not configured. Set NEXT_PUBLIC_API_URL to your deployed FastAPI URL in Vercel and redeploy."
+    );
+  }
+  return API_BASE_URL;
+}
+
+// Keep numerical guardrails shared by prediction and offline-safe UI calculations.
+const clampNumber = (value: number, min: number, max: number) => Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
+
+// Stable prediction cache: repeating an identical analysis request in this browser
+// reuses the last verified backend result instead of displaying a different value.
+// The cache is keyed by every numeric input sent to FastAPI; changing any input
+// triggers a fresh request. This is not a fabricated/offline prediction fallback.
+const verifiedPredictionCache = new Map<string, number>();
+const MAX_VERIFIED_PREDICTION_CACHE_ENTRIES = 100;
+
+function getPredictionSignature(payload: Record<string, number>): string {
+  return JSON.stringify(Object.keys(payload).sort().reduce((stable, key) => {
+    stable[key] = Number(payload[key]);
+    return stable;
+  }, {} as Record<string, number>));
+}
+
+function rememberVerifiedPrediction(signature: string, value: number): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error("The prediction API returned an invalid yield value.");
+  }
+  if (verifiedPredictionCache.has(signature)) verifiedPredictionCache.delete(signature);
+  verifiedPredictionCache.set(signature, value);
+  while (verifiedPredictionCache.size > MAX_VERIFIED_PREDICTION_CACHE_ENTRIES) {
+    const oldestKey = verifiedPredictionCache.keys().next().value;
+    if (oldestKey === undefined) break;
+    verifiedPredictionCache.delete(oldestKey);
+  }
+}
+
 const ALL_LANGUAGES = [
   { code: "en", label: "English" }, { code: "kn", label: "ಕನ್ನಡ" }, { code: "hi", label: "हिन्दी" },
   { code: "te", label: "తెలుగు" }, { code: "ta", label: "தமிழ்" }, { code: "ml", label: "മലയാളം" },
@@ -44,7 +95,6 @@ const translations: Record<string, Record<string, string>> = {
   or: { appName: "ୟିଲ୍ଡସେନ୍ସ ଏଆଇ", tagline: "କୃଷି ବୁଦ୍ଧିମତ୍ତା", overview: "ସମୀକ୍ଷା", forecast: "ଅମଳ ପୂର୍ବାନୁମାନ", planner: "ଫାର୍ମ ପ୍ଲାନର୍", vision: "ଭିଜନ୍ ଡାଏଗ୍ନୋଷ୍ଟିକ୍ସ", registry: "ଫିଲ୍ଡ ରେଜିଷ୍ଟ୍ରି", dataset: "ଡାଟା ମଡେଲ୍", system: "ସିଷ୍ଟମ୍ ଆର୍କିଟେକ୍ଚର୍", drones: "ଡ୍ରୋନ୍ ସ୍ପ୍ରେୟାର୍", irrigation: "ଜଳସେଚନ ପମ୍ପ", seeds: "ପ୍ରମାଣିତ ମଞ୍ଜି", expert: "ବିଶେଷଜ୍ଞ ପରାମର୍ଶ", activeZone: "ସକ୍ରିୟ ଜୋନ୍", liveMarket: "ଲାଇଭ୍ ମାର୍କେଟ୍", runForecast: "ପୂର୍ବାନୁମାନ କରନ୍ତୁ", expectedTonnes: "ଆଶା କରାଯାଉଥିବା ଟନ୍", fieldHealth: "କ୍ଷେତ୍ର ସ୍ୱାସ୍ଥ୍ୟ", activeCrops: "ସକ୍ରିୟ ଫସଲ", totalArea: "ମୋଟ ଏକର", register: "ପଞ୍ଜିକରଣ କରନ୍ତୁ", yourFields: "ଆପଣଙ୍କ କ୍ଷେତ", greeting: "ନମସ୍କାର", grower: "କୃଷକ.", welcome: "ସ୍ଵାଗତମ୍!", noFields: "କୌଣସି କ୍ଷେତ୍ର ନାହିଁ" },
   ur: { appName: "ییلڈسینس اے آئی", tagline: "زرعی ذہانت", overview: "جائزہ", forecast: "پیداوار کی پیش گوئی", planner: "فارم منصوبہ ساز", vision: "وژن تشخیص", registry: "فیلڈ رجسٹری", dataset: "ڈیٹا ماڈل", system: "سسٹم فن تعمیر", drones: "ڈرون اسپرے کرنے والے", irrigation: "آبپاشی کے پمپ", seeds: "تصدیق شدہ بیج", expert: "ماہر کا مشورہ", activeZone: "فعال زون", liveMarket: "لائیو مارکیٹ", runForecast: "پیش گوئی چلائیں", expectedTonnes: "توقع شدہ ٹن", fieldHealth: "کھیت کی صحت", activeCrops: "فعال فصلیں", totalArea: "کل ایکڑ", register: "رجسٹر کریں", yourFields: "آپ کے کھیت", greeting: "سلام", grower: "کسان.", welcome: "خوش آمدید!", noFields: "کوئی فیلڈ نہیں" }
 };
-
 
 const NAV_LABELS: Record<string, Record<string,string>> = {
   en:{intelligence:"Farm Intelligence",history:"History & Analytics",market:"Mandi & Buyers",alerts:"Alerts",operations:"Operations Center"},
@@ -330,7 +380,6 @@ const getMarketCoverageForCrop = (cropName:string) => marketCoverageReport.find(
   crop:cropName, marketRecords:0, buyerRecords:0, marketCovered:false, buyerCovered:false, source:"No directory record available."
 };
 
-
 // ============================================================================
 // ALL-CROP MARKET INTELLIGENCE LAYER
 // ============================================================================
@@ -467,7 +516,6 @@ const plannerStageActionTemplates: Record<string,string> = {
   maturity:"Check crop-specific maturity indicators, quality and harvest readiness while preparing logistics.",
   harvest:"Confirm maturity, weather window, labor/equipment readiness and post-harvest handling before harvest."
 };
-
 
 // ============================================================================
 // FARM PLANNER SAFETY + MULTILINGUAL ACTION LAYER
@@ -696,7 +744,6 @@ const cropLifecycleFocus: Record<string,string[]> = Object.fromEntries(cropCatal
 
 const lifecycleProfiles: Record<string, any> = { Cereal:{stages:[]}, Pulse:{stages:[]}, Vegetable:{stages:[]}, Fruit:{stages:[]}, Fiber:{stages:[]}, Cash:{stages:[]}, Oilseed:{stages:[]}, Plantation:{stages:[]}, Spice:{stages:[]} };
 
-
 // ============================================================================
 // PLANNER DATA CONTRACT CHECKS
 // ============================================================================
@@ -761,7 +808,6 @@ const plannerSupportedLanguages = ALL_LANGUAGES.map(item=>item.code);
 // Supported crops must have an independent catalogue row, independent baseline,
 // lifecycle stages, language name, and planner knowledge object.
 const PLANNER_CONTRACT_VERSION = "2026.10-safe-planner-v2";
-
 
 // ============================================================================
 // YIELDSENSE AI — FARM COMMERCE, TRACEABILITY & OPERATIONS EXTENSION
@@ -868,8 +914,6 @@ const laborTaskCatalog = [
 ];
 
 const localSeoKeywords = ["farm inputs near me","certified seeds Karnataka","fertilizer supplier near me","agronomist consultation","soil testing near me","mandi buyers near me","farm logistics service"];
-
-
 
 // ============================================================================
 // YIELDSENSE AI — COMPLETE PAGE LANGUAGE BRIDGE
@@ -1248,7 +1292,6 @@ export default function YieldSenseApp() {
   const [cropRecommendation, setCropRecommendation] = useState<any>(null);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
   const [inquiryModal, setInquiryModal] = useState<any>({isOpen: false, buyer: null, message: ""});
-
 
   // --- ADVANCED FARM OPERATIONS STATE ---
   const [cartQuantities, setCartQuantities] = useState<Record<string, number>>({});
@@ -1672,9 +1715,9 @@ export default function YieldSenseApp() {
     e.preventDefault(); setApiError(""); setApiSuccess("");
     if (isLoginMode) {
       try {
-        const response = await fetch("http://localhost:8000/login", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({username: loginEmail, password: loginPassword}) });
+        const response = await fetch(`${requireApiBaseUrl()}/login`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({username: loginEmail, password: loginPassword}) });
         if (response.ok) { const data = await response.json(); setToken(data.access_token); setIsLoggedIn(true); } else throw new Error("API Offline");
-      } catch (error) { setToken("mock_token_123"); setIsLoggedIn(true); }
+      } catch (error) { setApiError("Backend unavailable. Login requires the FastAPI service at " + API_BASE_URL + ". Start the backend and try again."); }
     } else {
       setApiSuccess("Account created locally (offline fallback)!"); setIsLoginMode(true); setLoginPassword("");
     }
@@ -1743,7 +1786,7 @@ export default function YieldSenseApp() {
 
     let riskStatus = "Optimal / Good to Grow"; let riskColor = "text-[#B5F140] border-[#B5F140]"; 
     let riskMsg = "Current conditions map perfectly to historical success metrics.";
-    let alignmentScore = (94 + Math.random() * 5).toFixed(0);
+    let alignmentScore = String(Math.round(clampNumber(96 - (tDiff * 1.8) - (rDiff * 0.035) - (phDiff * 7) - (Math.abs(moistureDeficit) * 0.12) - stressFactors * 2, 5, 99)));
 
     if (stressFactors > 2) {
       riskStatus = "Critical Alert"; riskColor = "text-[#EF476F] border-[#EF476F]"; 
@@ -1752,17 +1795,13 @@ export default function YieldSenseApp() {
     } else if (stressFactors > 0) {
       riskStatus = "Moderate Risk"; riskColor = "text-[#FFD166] border-[#FFD166]"; 
       riskMsg = "Conditions are outside optimal ranges. Follow the instructions below.";
-      alignmentScore = (70 + Math.random() * 15).toFixed(0);
+      alignmentScore = String(Math.round(clampNumber(82 - stressFactors * 4 - phDiff * 2, 5, 99)));
     }
 
-    const generateNDVIGrid = (score: number) => {
-      const grid = [];
-      for (let i = 0; i < 128; i++) { 
-        const rand = Math.random() * 100;
-        if (rand < score - 15) grid.push('bg-[#1B3B2B]'); else if (rand < score + 10) grid.push('bg-[#B5F140]'); else if (rand < score + 20) grid.push('bg-[#FFD166]'); else grid.push('bg-[#EF476F]'); 
-      }
-      return grid;
-    };
+    const generateNDVIGrid = (score: number) => Array.from({ length: 128 }, (_, i) => {
+      const cellScore = (score + ((i * 37 + Math.round(score) * 13) % 41) - 20);
+      return cellScore < score - 15 ? 'bg-[#1B3B2B]' : cellScore < score + 10 ? 'bg-[#B5F140]' : cellScore < score + 20 ? 'bg-[#FFD166]' : 'bg-[#EF476F]';
+    });
 
     const pesticidePenalty = currentPesticide > 0 ? currentPesticide * 2 : 0; 
     let calculatedEcoScore = Math.max(0, Math.min(100, Math.round(100 - (pesticidePenalty + (excessN * 0.1)))));
@@ -1808,11 +1847,59 @@ export default function YieldSenseApp() {
     e.preventDefault(); setIsPredicting(true); setApiError("");
     if (isSpeaking) { window.speechSynthesis.cancel(); setIsSpeaking(false); }
     try {
-      const response = await fetch("http://localhost:8000/predict", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ rainfall: parseFloat(forecastForm.rainfall), temperature: parseFloat(forecastForm.temp), pesticide: parseFloat(forecastForm.pesticide), area: parseFloat(forecastForm.area), nitrogen: parseFloat(forecastForm.nitrogen), phosphorus: parseFloat(forecastForm.phosphorus), potassium: parseFloat(forecastForm.potassium), ph: parseFloat(forecastForm.ph), moisture: parseFloat(forecastForm.moisture) }) });
-      if (!response.ok) throw new Error("API Offline");
-      const data = await response.json(); processForecastData(parseFloat(data.predicted_crop_yield)); addHistory("forecast", "Yield forecast generated", {crop:forecastForm.crop});
+      // Validate the inputs before contacting the backend. Never generate random
+      // replacement values when the service is offline or returns an error.
+      const requestPayload: Record<string, number> = {
+        rainfall: Number(forecastForm.rainfall),
+        temperature: Number(forecastForm.temp),
+        pesticide: Number(forecastForm.pesticide),
+        area: Number(forecastForm.area),
+        nitrogen: Number(forecastForm.nitrogen),
+        phosphorus: Number(forecastForm.phosphorus),
+        potassium: Number(forecastForm.potassium),
+        ph: Number(forecastForm.ph),
+        moisture: Number(forecastForm.moisture),
+      };
+      const invalidInput = Object.entries(requestPayload).find(([, value]) => !Number.isFinite(value));
+      if (invalidInput) throw new Error(`Please enter a valid numeric value for ${invalidInput[0]}.`);
+      if (requestPayload.area <= 0) throw new Error("Total area must be greater than zero.");
+
+      const signature = getPredictionSignature(requestPayload);
+      const cachedYield = verifiedPredictionCache.get(signature);
+      if (cachedYield !== undefined) {
+        processForecastData(cachedYield);
+        addHistory("forecast", "Yield forecast reused for identical inputs", { crop: forecastForm.crop, cached: true });
+        return;
+      }
+
+      const apiBaseUrl = requireApiBaseUrl();
+      const response = await fetch(`${apiBaseUrl}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(requestPayload),
+      });
+      if (!response.ok) {
+        const responseMessage = await response.text().catch(() => "");
+        throw new Error(responseMessage || `Prediction API returned HTTP ${response.status}.`);
+      }
+      const data = await response.json();
+      const predictedYield = Number(data?.predicted_crop_yield);
+      if (!Number.isFinite(predictedYield) || predictedYield < 0) {
+        throw new Error("The prediction API response did not contain a valid predicted_crop_yield number.");
+      }
+      rememberVerifiedPrediction(signature, predictedYield);
+      processForecastData(predictedYield);
+      addHistory("forecast", "Yield forecast generated", { crop: forecastForm.crop, cached: false });
     } catch (error) {
-      console.warn("Backend offline. Generating mock forecast data."); processForecastData(parseFloat((Math.random() * 3 + 2).toFixed(2))); addHistory("forecast", "Yield forecast generated in offline mode", {crop:forecastForm.crop});
+      // Never present a locally fabricated estimate as a successful AI prediction.
+      // Keep the last valid result visible and clearly explain how to restore the API.
+      const message = error instanceof Error ? error.message : "Unknown backend connection error.";
+      console.error("Yield forecast request failed:", message);
+      setApiError(
+        message.includes("not configured")
+          ? message
+          : "Prediction service is unavailable. Check that FastAPI is running and NEXT_PUBLIC_API_URL points to it. No new forecast was generated."
+      );
     } finally { setIsPredicting(false); }
   };
 
@@ -1831,7 +1918,7 @@ export default function YieldSenseApp() {
   const handleRegisterField = async (e: any) => {
     e.preventDefault(); if (!newField.name || !newField.area) return;
     try {
-      const response = await fetch("http://localhost:8000/fields", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ name: newField.name, location: newField.location, area: parseFloat(newField.area), soil: newField.soil, crop:newField.crop || null, nitrogen:Number(newField.nitrogen)||null, phosphorus:Number(newField.phosphorus)||null, potassium:Number(newField.potassium)||null, ph:Number(newField.ph)||null, moisture:Number(newField.moisture)||null }) });
+      const response = await fetch(`${requireApiBaseUrl()}/fields`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ name: newField.name, location: newField.location, area: parseFloat(newField.area), soil: newField.soil, crop:newField.crop || null, nitrogen:Number(newField.nitrogen)||null, phosphorus:Number(newField.phosphorus)||null, potassium:Number(newField.potassium)||null, ph:Number(newField.ph)||null, moisture:Number(newField.moisture)||null }) });
       if (!response.ok) throw new Error("API Offline");
       const savedField = await response.json(); setFields([...fields, savedField]); addHistory("field", "Field registered", {name:savedField.name}); setNewField({ name: "", location: "", area: "", soil: "Loamy", crop: "", nitrogen: "", phosphorus: "", potassium: "", ph: "", moisture: "" }); 
     } catch (error) { 
@@ -1842,7 +1929,7 @@ export default function YieldSenseApp() {
   const handleRemoveField = async (fieldToRemove: any, indexToRemove: number) => {
     const updatedFields = fields.filter((_, index) => index !== indexToRemove);
     setFields(updatedFields);
-    try { await fetch(`http://localhost:8000/fields/${fieldToRemove.id || fieldToRemove.name}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }); } catch (error) { }
+    try { await fetch(`${requireApiBaseUrl()}/fields/${fieldToRemove.id || fieldToRemove.name}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }); } catch (error) { }
     if (activeFieldIndex === indexToRemove) setActiveFieldIndex(0); else if (activeFieldIndex > indexToRemove) setActiveFieldIndex(activeFieldIndex - 1);
   };
 
@@ -2003,7 +2090,6 @@ export default function YieldSenseApp() {
     },450);
   };
 
-
   // Keep the Farm Planner recommendation visible and current whenever the farmer
   // opens the planner or switches the active field. This does not replace the
   // manual Generate Recommendation button; it simply restores the missing
@@ -2016,7 +2102,6 @@ export default function YieldSenseApp() {
       runCropRecommendation();
     }
   }, [activeTab, activeFieldIndex, fields.length]);
-
 
   const toggleSpeech = () => {
     if (!("speechSynthesis" in window)) return alert("TTS not supported.");
@@ -2056,8 +2141,6 @@ export default function YieldSenseApp() {
   useEffect(() => {
     setFarmAlerts(createFarmAlerts());
   }, [activeFieldIndex, forecastResult, weatherData.rainChance, forecastForm.moisture]);
-
-
 
   // ========================================================================
   // YIELDSENSE AI — INTEGRATION CONTRACTS / SAFETY GUARDS
@@ -2150,8 +2233,6 @@ export default function YieldSenseApp() {
   // ========================================================================
   // END INTEGRATION CONTRACTS
   // ========================================================================
-
-
 
   // ========================================================================
   // MODULE CHECKLIST — KEEP THIS CONTRACT WHEN EXTENDING YIELDSENSE AI
@@ -3048,7 +3129,6 @@ export default function YieldSenseApp() {
               ))}
             </div>
 
-
             {/* FARM PLANNER → INPUT STORE BRIDGE */}
             <div className="mt-10 bg-[#0A160F] p-7 rounded-[2rem] border border-[#B5F140]/20 shadow-lg">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -3059,7 +3139,6 @@ export default function YieldSenseApp() {
                 {buildDeficiencyList().map((d:any,di:number)=><div key={`deficiency-${d.nutrient}-${di}`} className="bg-black/30 p-5 rounded-2xl border border-white/5"><p className="text-xs font-bold text-white">{d.title}</p><p className="text-[10px] text-gray-500 mt-1">Nutrient: {d.nutrient}</p><div className="space-y-2 mt-4">{d.products.slice(0,3).map((p:any,pi:number)=><button key={`def-${d.nutrient}-${String(p?.id || p?.name || "input")}-${pi}`} onClick={()=>addProductToCart(p)} className="w-full text-left bg-white/5 hover:bg-[#B5F140]/10 rounded-xl p-3 border border-white/5"><span className="text-xs text-white font-semibold block">{getProductName(p,lang)}</span><span className="text-[10px] text-[#B5F140]">Add to cart · {p.unit}</span></button>)}</div></div>)}
               </div>
             </div>
-
 
             <div className="bg-[#0D1912] p-6 rounded-[2rem] border border-[#B5F140]/20 mt-6">
               <div className="flex flex-wrap justify-between gap-4 items-start"><div><p className="text-[10px] uppercase tracking-widest text-[#B5F140] font-bold">Farm Planner → Certified Seeds & Fertilizers</p><h3 className="text-2xl font-serif mt-2">{getBusinessText(lang,"recommended")}</h3><p className="text-xs text-gray-500 mt-2">{getBusinessText(lang,"deficiency")}. Matching fertilizer products are shown below so the farmer can move directly from diagnosis to purchase.</p></div><button onClick={()=>setActiveTab("planner")} className="text-xs border border-white/10 px-4 py-2 rounded-xl">Review Planner</button></div>
@@ -3117,7 +3196,6 @@ export default function YieldSenseApp() {
            </div>
         )}
 
-
         {/* ===================== FARM ALERT CENTER ===================== */}
         {activeTab === "alerts" && (
           <div className="animate-in fade-in duration-500 space-y-8">
@@ -3127,7 +3205,6 @@ export default function YieldSenseApp() {
             <button onClick={()=>setFarmAlerts(createFarmAlerts())} className="bg-[#B5F140] text-black px-5 py-3 rounded-xl font-bold">Refresh Alerts</button>
           </div>
         )}
-
 
         {/* ===================== OPERATIONS CENTER ===================== */}
         {activeTab === "operations" && (
@@ -3147,7 +3224,6 @@ export default function YieldSenseApp() {
             </div>
           </div>
         )}
-
 
         {/* ================================================================== */}
         {/* FARM BUSINESS HUB — ADDED WITHOUT REMOVING EXISTING MODULES        */}
@@ -3358,8 +3434,6 @@ export default function YieldSenseApp() {
 // End of dashboard stability checklist.
 // ============================================================================
 
-
-
 // ============================================================================
 // YieldSense AI regression and feature-integrity notes
 // ============================================================================
@@ -3380,7 +3454,6 @@ export default function YieldSenseApp() {
 // Regression checklist: overview layout, active field switching, crop switching,
 // planner dates, recommendation ranking, model registry coverage, vision upload,
 // cart persistence, expert image upload, profile persistence and architecture UI.
-
 
 // ============================================================================
 // YIELDSENSE AI — EXTENDED FEATURE CONTRACTS / REGRESSION NOTES
@@ -3442,7 +3515,6 @@ export default function YieldSenseApp() {
 // Regression target: no live market or logistics claim is generated by this client layer.
 // End of extended feature contract.
 
-
 // ============================================================================
 // LANGUAGE REGRESSION CHECKLIST — 2026.10
 // ============================================================================
@@ -3469,7 +3541,6 @@ export default function YieldSenseApp() {
 //     state, checkout state, expert requests, orders or existing navigation.
 // 15. All current YieldSense AI features remain in the same page component.
 // ============================================================================
-
 
 // ============================================================================
 // FINAL LIST-KEY REGRESSION GUARD — 2026.10
@@ -3514,7 +3585,6 @@ export default function YieldSenseApp() {
 // 8. Farmer receives visible success/error feedback.
 // ============================================================================
 
-
 // ============================================================================
 // FINAL DELIVERY CONTRACT — KEEP THIS PAGE AS THE SINGLE EXISTING APP SURFACE
 // ============================================================================
@@ -3536,7 +3606,6 @@ export default function YieldSenseApp() {
 // IMPORTANT: restart Next.js after copying route.ts so Turbopack discovers the
 // new App Router endpoint. Do not place this endpoint under pages/api.
 // ============================================================================
-
 
 // ============================================================================
 // ALL-CROP MARKET + RECOMMENDATION REGRESSION CONTRACT
@@ -3563,8 +3632,6 @@ export default function YieldSenseApp() {
 // 14. No Rice or Maize profile is used as a silent fallback for another crop.
 // 15. No live market, buyer, payment or logistics claim is invented by this page.
 // ============================================================================
-
-
 
 // ============================================================================
 // YIELDSENSE AI — 2026.10 ALL-CROP / LANGUAGE / RECOMMENDATION REGRESSION PACK
@@ -3617,3 +3684,31 @@ export default function YieldSenseApp() {
 // ============================================================================
 // End of all-crop / language / recommendation regression pack.
 // ============================================================================
+
+
+// -----------------------------------------------------------------------------
+// Deployment configuration notes (kept in source for maintainability):
+// 1. Local frontend: set NEXT_PUBLIC_API_URL=http://localhost:8000 in frontend/.env.local.
+// 2. Hosted frontend: set NEXT_PUBLIC_API_URL to the public HTTPS FastAPI service URL.
+// 3. After changing a NEXT_PUBLIC_* variable, restart `npm run dev` locally or redeploy.
+// 4. The API URL must be the service root, not a URL ending in /predict or /login.
+// 5. Prediction results are updated only after a successful /predict response.
+// 6. If the API fails, the UI reports the failure rather than changing results with mock data.
+// 7. Do not use localhost as the backend URL in a hosted Vercel deployment.
+// 8. Configure CORS on FastAPI to allow the exact frontend origin used in production.
+// 9. Keep authentication tokens and server-only secrets out of NEXT_PUBLIC_* variables.
+// 10. These notes document configuration; they do not replace environment setup.
+// -----------------------------------------------------------------------------
+
+
+// Deployment verification checklist (kept with the source for maintainers):
+// - Local development: frontend/.env.local -> NEXT_PUBLIC_API_URL=http://localhost:8000
+// - Hosted frontend: configure NEXT_PUBLIC_API_URL with the public HTTPS FastAPI root URL.
+// - Do not include /predict, /login, or /fields in the environment-variable value.
+// - Restart `npm run dev` after changing .env.local; redeploy after changing Vercel variables.
+// - Identical numeric inputs reuse the last successful result in this browser session.
+// - Changed numeric inputs make a new API request; no random forecast is generated offline.
+// - If the API is unavailable, the last successful forecast remains visible and an error is shown.
+// - Confirm the FastAPI service exposes POST /predict and returns predicted_crop_yield as a number.
+// - Confirm CORS allows the frontend origin if the browser calls FastAPI directly.
+// - Never use a localhost backend URL in a production deployment.
