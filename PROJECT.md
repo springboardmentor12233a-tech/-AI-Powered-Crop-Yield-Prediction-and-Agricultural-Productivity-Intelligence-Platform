@@ -86,6 +86,8 @@ YieldSense-AI/
 | `POST` | `/api/predict` | Returns predicted crop yield from the trained Random Forest model |
 | `POST` | `/api/report` | Returns historical weather averages and soil data for a given state |
 | `POST` | `/api/recommend` | Returns a Gemini-generated plain-language farming recommendation |
+| `POST` | `/api/report/pdf` | Generates and downloads a full PDF report (prediction, weather, soil, risk, recommendation) |
+| `POST` | `/api/chat` | AI chatbot for general farming questions and platform help |
 
 ---
 
@@ -136,6 +138,11 @@ jupyter notebook notebooks/EDA.ipynb
 - [x] Model training (Random Forest selected over Linear Regression and XGBoost)
 - [x] Model serialisation & `/api/predict` endpoint
 - [x] Enhanced frontend with real predictions & visualisations
+- [x] Risk assessment module
+- [x] Downloadable PDF report generation
+- [x] AI chatbot (Gemini-powered)
+- [x] Route-level authentication and security hardening
+- [x] Testing pass (auth, role restriction, invalid input, full UI flow)
 - [ ] Deployment (Docker / cloud hosting)
 - [ ] Report & final documentation
 

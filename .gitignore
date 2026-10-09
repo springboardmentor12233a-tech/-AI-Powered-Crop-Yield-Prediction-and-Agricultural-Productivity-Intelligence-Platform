@@ -2,9 +2,19 @@ venv/
 __pycache__/
 *.pyc
 
-dataset/
-models/*.pkl
-models/*.joblib
+# Datasets: keep only the 3 CSVs the app reads at startup
+dataset/*
+!dataset/crop_yield.csv
+!dataset/state_weather_data_1997_2020.csv
+!dataset/state_soil_data.csv
+
+# Models: keep only the small deployment model + encoders (the 268 MB original stays ignored)
+models/*
+!models/crop_yield_model_small.joblib
+!models/encoders.joblib
+!models/feature_cols.joblib
+
 .ipynb_checkpoints/
 .env
 users.db
+test_report.pdf
