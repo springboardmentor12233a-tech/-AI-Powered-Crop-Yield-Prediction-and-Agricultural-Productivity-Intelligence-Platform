@@ -16,7 +16,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from passlib.context import CryptContext
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
@@ -53,6 +52,7 @@ from database import (
 )
 from recommendations import generate_recommendations
 from risk import calculate_risk
+from passwords import hash_password, verify_password
 
 @asynccontextmanager
 async def lifespan(_app):
@@ -78,9 +78,14 @@ if production_frontend_origin not in allowed_origins:
 if "*" in allowed_origins:
     raise RuntimeError("YIELDSENSE_CORS_ORIGINS must not contain a wildcard origin.")
 
+vercel_preview_origin_regex = (
+    r"^https://yieldsense-[a-z0-9-]+-srinithi-ks-projects\.vercel\.app$"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=vercel_preview_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -118,16 +123,7 @@ if not JWT_SECRET:
 JWT_ALGORITHM = os.getenv("YIELDSENSE_JWT_ALGORITHM") or os.getenv("JWT_ALGORITHM") or "HS256"
 JWT_EXPIRE_MINUTES = int(os.getenv("YIELDSENSE_JWT_EXPIRE_MINUTES", "480"))
 
-password_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
-
-
-def hash_password(password: str) -> str:
-    return password_context.hash(password)
-
-
-def verify_password(password: str, password_hash: str) -> bool:
-    return password_context.verify(password, password_hash)
 
 
 def create_access_token(subject: str, role: str, email: str) -> str:

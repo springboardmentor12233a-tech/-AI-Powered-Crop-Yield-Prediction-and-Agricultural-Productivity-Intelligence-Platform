@@ -3,14 +3,11 @@ import sys
 from getpass import getpass
 
 from dotenv import load_dotenv
-from passlib.context import CryptContext
 
 from database import db_cursor, get_user_by_email
+from passwords import hash_password
 
 load_dotenv()
-
-password_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
-
 
 def reset_admin_password():
     email = os.getenv("YIELDSENSE_ADMIN_EMAIL") or input("Existing admin email: ")
@@ -36,7 +33,7 @@ def reset_admin_password():
     if password != confirmation:
         raise ValueError("Password confirmation does not match.")
 
-    password_hash = password_context.hash(password)
+    password_hash = hash_password(password)
     with db_cursor() as cursor:
         cursor.execute(
             """

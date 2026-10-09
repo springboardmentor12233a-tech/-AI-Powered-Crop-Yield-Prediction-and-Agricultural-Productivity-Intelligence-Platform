@@ -253,6 +253,3 @@ def fetch_prediction(prediction_id):
         cursor.execute("SELECT * FROM predictions WHERE prediction_id = %s", (prediction_id,))
         row = cursor.fetchone()
         return dict(row) if row else None
-
-
-print("PostgreSQL connected successfully!")

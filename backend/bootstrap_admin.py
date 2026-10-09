@@ -1,65 +1,115 @@
+import argparse
 import os
+import re
 import sys
-from getpass import getpass
 from uuid import uuid4
 
-from passlib.context import CryptContext
 from dotenv import load_dotenv
 
 from database import ensure_schema, get_connection
+from passwords import hash_password
 
 load_dotenv()
 
-password_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+BOOTSTRAP_LOCK_ID = 7246013302472185001
 
 
 def get_admin_values():
-    name = os.getenv("YIELDSENSE_ADMIN_NAME") or os.getenv("ADMIN_NAME")
-    email = os.getenv("YIELDSENSE_ADMIN_EMAIL") or os.getenv("ADMIN_EMAIL")
-    password = os.getenv("YIELDSENSE_ADMIN_PASSWORD") or os.getenv("ADMIN_PASSWORD")
+    name = os.getenv("YIELDSENSE_ADMIN_NAME", "").strip()
+    email = os.getenv("YIELDSENSE_ADMIN_EMAIL", "").strip().lower()
+    password = os.getenv("YIELDSENSE_ADMIN_PASSWORD", "")
 
-    if not name:
-        name = input("Admin name: ").strip()
-    if not email:
-        email = input("Admin email: ").strip().lower()
-    if not password:
-        password = getpass("Admin password: ")
+    missing = [
+        variable
+        for variable, value in (
+            ("YIELDSENSE_ADMIN_NAME", name),
+            ("YIELDSENSE_ADMIN_EMAIL", email),
+            ("YIELDSENSE_ADMIN_PASSWORD", password),
+        )
+        if not value
+    ]
+    if missing:
+        raise ValueError(f"Required environment variables are missing: {', '.join(missing)}.")
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        raise ValueError("YIELDSENSE_ADMIN_EMAIL must be a valid email address.")
+    if len(password) < 12:
+        raise ValueError("YIELDSENSE_ADMIN_PASSWORD must contain at least 12 characters.")
 
-    if not name or not email or not password:
-        raise ValueError("Name, email, and password are required.")
-
-    return name.strip(), email.strip().lower(), password
+    return name, email, password
 
 
-def ensure_admin_exists():
-    ensure_schema()
-    name, email, password = get_admin_values()
+def active_admin_count():
+    if not os.getenv("DATABASE_URL"):
+        raise RuntimeError("DATABASE_URL must be set to use the production Admin bootstrap.")
 
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
-            existing = cur.fetchone()
-            if existing:
-                print("ADMIN_ALREADY_EXISTS")
-                return {"status": "exists", "email": email}
+            cur.execute(
+                "SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = TRUE"
+            )
+            return cur.fetchone()[0]
 
-            password_hash = password_context.hash(password)
-            user_id = str(uuid4())
+
+def ensure_admin_exists():
+    if not os.getenv("DATABASE_URL"):
+        raise RuntimeError("DATABASE_URL must be set to use the production Admin bootstrap.")
+
+    ensure_schema()
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT pg_advisory_xact_lock(%s)", (BOOTSTRAP_LOCK_ID,))
+            cur.execute(
+                "SELECT 1 FROM users WHERE role = 'admin' AND is_active = TRUE LIMIT 1"
+            )
+            if cur.fetchone():
+                return "ACTIVE_ADMIN_EXISTS"
+
+            name, email, password = get_admin_values()
+            cur.execute(
+                "SELECT 1 FROM users WHERE LOWER(email) = %s LIMIT 1",
+                (email,),
+            )
+            if cur.fetchone():
+                return "EMAIL_ALREADY_IN_USE"
+
+            password_hash = hash_password(password)
             cur.execute(
                 """
                 INSERT INTO users (id, name, email, password_hash, role, is_active, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                VALUES (%s, %s, %s, %s, 'admin', TRUE, NOW())
+                ON CONFLICT (email) DO NOTHING
+                RETURNING id
                 """,
-                (user_id, name, email, password_hash, "admin", True),
+                (str(uuid4()), name, email, password_hash),
             )
-            conn.commit()
-            print("ADMIN_CREATED")
-            return {"status": "created", "email": email}
+            if cur.fetchone() is None:
+                return "EMAIL_ALREADY_IN_USE"
+
+    return "ADMIN_CREATED"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Safely bootstrap the first active Admin.")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Report whether an active Admin exists without reading credentials or changing data.",
+    )
+    args = parser.parse_args()
+
+    try:
+        if args.verify:
+            count = active_admin_count()
+            print("ACTIVE_ADMIN_EXISTS" if count else "NO_ACTIVE_ADMIN")
+        else:
+            print(ensure_admin_exists())
+    except Exception as error:
+        error_type = type(error).__name__
+        print(f"ADMIN_BOOTSTRAP_FAILED ({error_type})", file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    try:
-        ensure_admin_exists()
-    except Exception as exc:  # pragma: no cover
-        print(f"BOOTSTRAP_ERROR: {exc}")
-        sys.exit(1)
+    sys.exit(main())
