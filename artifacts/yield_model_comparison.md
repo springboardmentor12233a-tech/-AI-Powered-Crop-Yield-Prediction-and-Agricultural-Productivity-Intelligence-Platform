@@ -6,7 +6,7 @@ This report presents the empirical evaluation metrics for conventional crop yiel
 
 | Model | 5-Fold CV R² | Best Hyperparameters | Test MAE (ton/ha) | Test RMSE (ton/ha) | Test R² | Status |
 |---|---:|---|---:|---:|---:|---|
-| **Linear Regression** | 0.9824 | `{}` | 4.08 | 5.08 | 0.9821 | **Selected Production Model** |
+| **Linear Regression** | 0.9825 | `{}` | 4.08 | 5.08 | 0.9821 | **Selected Production Model** |
 | **Gradient Boosting Regressor** | 0.9814 | `{"model__learning_rate": 0.05, "model__max_depth": 4, "model__n_estimators": 100}` | 4.21 | 5.23 | 0.9811 | Evaluated Candidate |
 | **Random Forest Regressor** | 0.9803 | `{"model__max_depth": 10, "model__min_samples_split": 5, "model__n_estimators": 100}` | 4.29 | 5.34 | 0.9802 | Evaluated Candidate |
 | **Decision Tree Regressor** | 0.9750 | `{"model__max_depth": 8, "model__min_samples_split": 10}` | 4.74 | 5.86 | 0.9762 | Evaluated Candidate |

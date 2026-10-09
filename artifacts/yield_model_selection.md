@@ -6,7 +6,7 @@
 - **Test R²**: 0.9821
 - **Test RMSE**: 5.08 ton/ha
 - **Test MAE**: 4.08 ton/ha
-- **5-Fold CV R²**: 0.9824
+- **5-Fold CV R²**: 0.9825
 
 ## 2. Selection Rationale
 

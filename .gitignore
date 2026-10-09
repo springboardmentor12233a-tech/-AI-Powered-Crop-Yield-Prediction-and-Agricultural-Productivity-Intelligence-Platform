@@ -35,6 +35,7 @@ Thumbs.db
 # ML model artifacts
 *.pkl
 *.joblib
+!models/*.joblib
 *.h5
 *.keras
 

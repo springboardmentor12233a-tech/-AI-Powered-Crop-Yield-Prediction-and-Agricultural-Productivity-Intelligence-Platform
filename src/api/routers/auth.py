@@ -6,13 +6,19 @@ import json
 import hmac
 import hashlib
 import time
+import os
 
 from src.db.database import create_user, authenticate_user, get_user_by_id, complete_user_onboarding
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication & JWT"])
 
-# Secret key for HMAC-SHA256 JWT signature
-JWT_SECRET = "yieldsense-ai-secure-jwt-signing-key-milestone3"
+# Secret key for HMAC-SHA256 JWT signature. Production must provide this value.
+ENVIRONMENT = os.getenv("YIELDSENSE_ENV", "development").lower()
+JWT_SECRET = os.getenv("SECRET_KEY")
+if not JWT_SECRET:
+    if ENVIRONMENT == "production":
+        raise RuntimeError("SECRET_KEY must be configured when YIELDSENSE_ENV=production")
+    JWT_SECRET = "development-only-secret-change-me"
 
 class RegisterRequest(BaseModel):
     email: str = Field(..., description="User email address")
@@ -135,8 +141,8 @@ def get_current_admin_user(authorization: Optional[str] = Header(None)) -> Dict[
 def register(req: RegisterRequest):
     """Registers a new farmer (or admin) account with email, password, and location."""
     try:
-        # Default registration is farmer unless created by admin
-        role = "admin" if req.email.lower().strip() == "admin@yieldsense.ai" else req.role or "farmer"
+        # Public registration can never create an administrator account.
+        role = "farmer"
         user = create_user(
             email=req.email,
             password=req.password,

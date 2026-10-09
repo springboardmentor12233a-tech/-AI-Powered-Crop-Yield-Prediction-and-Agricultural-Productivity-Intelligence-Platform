@@ -144,13 +144,20 @@ def init_db():
     );
     """)
     
-    # Seed default Admin account if not existing
-    admin_pwd_hash = hash_password("admin123")
-    cursor.execute("SELECT id FROM users WHERE email = 'admin@yieldsense.ai';")
+    # Seed a development admin only. Production requires explicit credentials.
+    environment = os.getenv("YIELDSENSE_ENV", "development").lower()
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@yieldsense.ai").strip().lower()
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    if environment != "production":
+        admin_password = admin_password or "admin123"
+    if not admin_password:
+        raise RuntimeError("ADMIN_PASSWORD must be configured when YIELDSENSE_ENV=production")
+    admin_pwd_hash = hash_password(admin_password)
+    cursor.execute("SELECT id FROM users WHERE email = ?;", (admin_email,))
     if not cursor.fetchone():
         cursor.execute(
             "INSERT INTO users (email, password_hash, full_name, role, is_active, phone, state, onboarding_completed) VALUES (?, ?, ?, 'admin', 1, '1800-AGRI-ADMIN', 'National Admin Center', 1);",
-            ("admin@yieldsense.ai", admin_pwd_hash, "System Administrator")
+            (admin_email, admin_pwd_hash, "System Administrator")
         )
     
     # Seed default Gemini and OpenAI provider rows (inactive by default if no key)

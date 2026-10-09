@@ -44,6 +44,11 @@ def get_crop_recommendation_artifact():
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Crop recommendation artifact not found at {model_path}. Run training pipeline first.")
         _CROP_REC_ARTIFACT = _load_model_artifact(model_path, "Crop recommendation model")
+        # Preserve the artifact while avoiding restricted-host worker creation at inference time.
+        pipeline = _CROP_REC_ARTIFACT.get("pipeline") if isinstance(_CROP_REC_ARTIFACT, dict) else None
+        classifier = pipeline.named_steps.get("classifier") if pipeline is not None else None
+        if classifier is not None and hasattr(classifier, "n_jobs"):
+            classifier.n_jobs = 1
     return _CROP_REC_ARTIFACT
 
 def predict_crop_yield(input_dict: dict) -> float:
