@@ -26,7 +26,10 @@
 20. [How to Run the Project](#20-how-to-run-the-project)
 21. [Environment Variables](#21-environment-variables)
 22. [Current Project Status](#22-current-project-status)
-23. [Important Concepts to Understand](#24-important-concepts-to-understand)
+23. [Milestone 3 — Feature Documentation](#23-milestone-3--feature-documentation)
+24. [Milestone 4 — Testing, Deployment and Documentation](#24-milestone-4--testing-deployment-and-documentation)
+25. [5-Minute Presentation Summary](#25-5-minute-presentation-summary)
+26. [Important Concepts to Understand](#26-important-concepts-to-understand)
 
 ---
 
@@ -495,6 +498,8 @@ The crop yield prediction continues to work normally without Groq.
 Base URL: `http://127.0.0.1:8000`  
 Interactive docs: `http://127.0.0.1:8000/docs`
 
+**Milestone 1 & 2 Endpoints:**
+
 | Method | Endpoint | Auth Required | Description |
 |---|---|---|---|
 | GET | `/` | No | Returns API name and version info |
@@ -509,6 +514,15 @@ Interactive docs: `http://127.0.0.1:8000/docs`
 | POST | `/ai-insights` | Yes | Sends farm data + ML prediction to Groq → returns AI agricultural analysis |
 | GET | `/weather/analysis` | Yes | Returns weather statistics and correlations from the dataset |
 | GET | `/soil/analysis` | Yes | Returns soil/NPK statistics and correlations from the dataset |
+
+**Milestone 3 Endpoints (New):**
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| GET | `/productivity/analysis` | Yes | Returns crop productivity comparison, condition-based yield breakdown, input impact |
+| POST | `/recommendation/crop` | Yes | Accepts farm conditions, returns best crop recommendation with yield estimate and basis |
+| POST | `/resources/optimize` | Yes | Accepts farm parameters, returns fertilizer/irrigation/NPK optimization recommendations |
+| POST | `/risk/assess` | Yes | Accepts farm parameters, returns overall risk level (High/Medium/Low) and risk factor details |
 
 ---
 
@@ -540,6 +554,34 @@ The frontend is built with **React 18 + Vite** and runs at `http://localhost:517
 - A form with all 12 input fields (Crop, Region, Rainfall, Temperature, Weather Condition, Soil Type, NPK values, Soil pH, Fertilizer toggle, Irrigation toggle)
 - Click **"Predict Crop Yield"** → calls `POST /predict` → shows predicted yield (kg/acre)
 - Click **"Get AI Agricultural Insights"** → calls `POST /ai-insights` → shows Groq's analysis
+
+### Productivity Analysis Page (`/productivity`) *(Milestone 3)*
+- Summary cards: average yield, highest/lowest yielding crop, yield range
+- Fertilizer and irrigation impact summary cards
+- 5-tab chart view: Crop Productivity | By Weather | By Soil Type | By Rainfall | By Region
+- Crop productivity ranking table with Avg/Median/Max/Min/Records
+- Clearly labelled as condition-based analysis (dataset does not contain real seasonal data)
+
+### Crop Recommendation Page (`/recommendation`) *(Milestone 3)*
+- Form: Region, Rainfall, Temperature, Weather Condition, Soil Type, NPK, pH, Fertilizer, Irrigation
+- Calls `POST /recommendation/crop`
+- Result panel: recommended crop, expected avg yield, recommendation basis text
+- Top-3 recommendations with medal ranking (Gold/Silver/Bronze)
+
+### Resource Optimization Page (`/resources`) *(Milestone 3)*
+- Form: Crop, Soil Type, Rainfall, N/P/K, Soil pH, Fertilizer, Irrigation
+- Calls `POST /resources/optimize`
+- Optimization score circle (0–100) with Good/Fair/Needs Improvement label
+- Fertilizer and irrigation impact cards
+- Nutrient status cards (Optimal/Low/High) for N, P, K, and Soil pH
+- Crop typical NPK comparison from dataset
+
+### Risk Assessment Page (`/risk`) *(Milestone 3)*
+- Form: All 12 farm parameters
+- Calls `POST /risk/assess`
+- Overall risk banner with color coding (High=red, Medium=amber, Low=green)
+- Tabbed risk factor list: All / High Risk / Medium Risk / Low Risk
+- Color-coded individual risk cards per factor
 
 ---
 
@@ -575,9 +617,9 @@ The system uses **JWT (JSON Web Token)** based authentication.
 
 ## 19. Testing
 
-A test script (`backend/test_api.py`) was run against the live backend.
+Two test scripts are available in `backend/`.
 
-### Test Results — All 10 Tests Passed
+### Milestone 2 Test — `test_api.py` (10/10 passed)
 
 ```
 === 1. HEALTH CHECK ===       [PASS]  status=healthy
@@ -594,7 +636,37 @@ A test script (`backend/test_api.py`) was run against the live backend.
 RESULTS: 10 passed, 0 failed
 ```
 
-A separate Groq live test (`backend/test_groq.py`) confirmed that the Groq API returns detailed AI insights when `GROQ_API_KEY` is configured.
+### Milestone 3 Test — `test_milestone3.py` (16/16 passed)
+
+```
+--- Milestone 1 & 2 (Existing Functionality) ---
+  [PASS] Health Check — HTTP 200
+  [PASS] Root Endpoint — HTTP 200
+  [PASS] Register User — HTTP 201
+  [PASS] Login — HTTP 200
+  [PASS] Auth /me — HTTP 200
+  [PASS] /predict — HTTP 200  (Predicted yield: 3707.56 kg/acre)
+  [PASS] /model-info — HTTP 200
+  [PASS] /model-comparison — HTTP 200
+  [PASS] /weather/analysis — HTTP 200
+  [PASS] /soil/analysis — HTTP 200
+  [PASS] /ai-insights — HTTP 200
+
+--- Milestone 3 (New Functionality) ---
+  [PASS] /productivity/analysis — HTTP 200  (Highest: Sugarcane, Avg: 2669.53 kg/acre)
+  [PASS] /recommendation/crop — HTTP 200  (Recommended: Sugarcane, 5353.88 kg/acre)
+  [PASS] /resources/optimize — HTTP 200  (Score: 45/100, Fair)
+  [PASS] /risk/assess (high-risk) — HTTP 200  (Overall: High)
+  [PASS] /risk/assess (low-risk) — HTTP 200  (Overall: Low)
+
+RESULTS: 16/16 passed, 0 failed
+```
+
+**Run Milestone 3 tests:**
+```powershell
+cd "D:\2nd milestone\backend"
+python test_milestone3.py
+```
 
 ---
 
@@ -693,8 +765,18 @@ Frontend is now running at: **http://localhost:5173**
 
 ```powershell
 cd "D:\2nd milestone\backend"
+# Milestone 2 tests
 python test_api.py
+# Milestone 3 tests (all 16 endpoints)
+python test_milestone3.py
 ```
+
+### Step 6 — Use New Milestone 3 Features
+
+1. **Productivity Analysis** → Click **Productivity Analysis** in the sidebar
+2. **Crop Recommendation** → Click **Crop Recommendation** → fill farm conditions → click **Get Crop Recommendation**
+3. **Resource Optimization** → Click **Resource Optimization** → fill form → click **Analyze Resources**
+4. **Risk Assessment** → Click **Risk Assessment** → fill form → click **Assess Agricultural Risk**
 
 ---
 
@@ -728,23 +810,330 @@ MODEL_DIR=./saved_models
 |---|---|
 | **Milestone 1** — Project setup, authentication, database, frontend structure | ✅ Complete |
 | **Milestone 2** — ML pipeline, GridSearchCV, model comparison, APIs, weather/soil analysis, Groq integration, frontend-backend integration | ✅ Complete |
-| Milestone 3 | ❌ Not implemented (out of scope) |
-| Milestone 4 | ❌ Not implemented (out of scope) |
+| **Milestone 3** — Productivity analysis, crop recommendation, resource optimization, risk assessment, 4 new frontend pages | ✅ Complete |
+| **Milestone 4** — Testing, Model Validation, API Test Suite, PDF Reports, Chatbot, Docker Deployment & Documentation | ✅ Complete |
 
 ### Completed deliverables:
 - ✅ Dataset (`crop_yield.csv`, 2200 rows)
 - ✅ 5 ML models trained with GridSearchCV
 - ✅ Model saved: `best_model.pkl` (Linear Regression, R²=0.9772)
-- ✅ FastAPI backend with 11 endpoints
-- ✅ SQLite database with user authentication
-- ✅ React frontend with 4 pages
+- ✅ FastAPI backend with 15 endpoints
+- ✅ SQLite database with user authentication & volume persistence
+- ✅ React frontend with 8 pages
 - ✅ Groq LLM integration (model: `qwen/qwen3.8-27b`)
-- ✅ 10/10 API tests passing
-- ✅ Documentation
+- ✅ Productivity analysis (condition-based, clearly labelled)
+- ✅ Crop recommendation (dataset-scored, not random)
+- ✅ Resource optimization (NPK/pH flags, fertilizer/irrigation impact)
+- ✅ Risk assessment (10 risk factors, High/Medium/Low)
+- ✅ 61/61 API tests passing (M1+M2+M3+M4)
+- ✅ 24/24 Feature integration tests passing
+- ✅ Docker containerization (FastAPI + Nginx + SQLite volume)
+- ✅ Complete project documentation
 
 ---
 
-## 23. Important Concepts to Understand
+## 23. Milestone 3 — Feature Documentation
+
+### Overview
+
+Milestone 3 adds four analytical modules built entirely on top of the existing dataset and infrastructure. No new datasets were introduced. All new features use the existing `crop_yield.csv`, existing authentication, and the existing Groq integration. No existing M1/M2 functionality was modified.
+
+### 23.1 Productivity Analysis
+
+**Endpoint:** `GET /productivity/analysis` (requires login)
+
+**What it does:**
+Analyses the full 2200-row dataset and returns:
+- Overall yield statistics (mean, median, min, max, std)
+- Highest and lowest yielding crops by average yield
+- Per-crop breakdown: avg/median/max/min yield and record count
+- Average yield by weather condition (Sunny, Rainy, Cloudy, Windy, Stormy)
+- Average yield by soil type (Loamy, Sandy, Clay, Silty, Peaty, Chalky)
+- Average yield by region (North, South, East, West, Central)
+- Fertilizer impact: yield with vs without fertilizer, average gain
+- Irrigation impact: yield with vs without irrigation, average gain
+- Yield by rainfall bracket (< 400 mm to > 1400 mm)
+
+**Important note:**  
+The dataset does not contain a real `Season` column. This analysis is labelled **Condition-based Analysis** to accurately reflect the data origin. No seasonal records were invented.
+
+**Frontend page:** `/productivity` — 5 chart tabs, summary cards, crop ranking table
+
+---
+
+### 23.2 Crop Recommendation
+
+**Endpoint:** `POST /recommendation/crop` (requires login)
+
+**Input parameters:**
+```json
+{
+  "region": "North",
+  "rainfall_mm": 900,
+  "temperature_c": 27,
+  "weather_condition": "Sunny",
+  "soil_type": "Loamy",
+  "nitrogen": 80,
+  "phosphorus": 50,
+  "potassium": 60,
+  "soil_ph": 6.5,
+  "fertilizer_used": 1,
+  "irrigation_used": 1
+}
+```
+
+**How recommendations work:**  
+For each of the 8 crops, the system:
+1. Filters dataset records matching the input soil type, weather condition, region, fertilizer, and irrigation
+2. If fewer than 3 matching records exist, relaxes to soil + weather match, then falls back to all records for that crop
+3. Computes average yield for the matched subset
+4. Applies a proximity penalty for rainfall and temperature deviation from the matched records
+5. Awards bonus points for each categorical feature that matches
+6. Ranks all 8 crops by composite score and returns the top recommendation
+
+This is fully data-driven — no random generation.
+
+**Returns:**
+- `recommended_crop` — the highest-scoring crop
+- `expected_avg_yield_kg_per_acre` — average yield from matched records
+- `recommendation_basis` — human-readable explanation
+- `top_3_recommendations` — ranked list
+- `all_crop_scores` — all 8 crops with their scores
+
+**Frontend page:** `/recommendation` — input form + result panel with top-3 medal ranking
+
+---
+
+### 23.3 Resource Optimization
+
+**Endpoint:** `POST /resources/optimize` (requires login)
+
+**Input parameters:** Crop, soil type, rainfall, N/P/K values, soil pH, fertilizer used, irrigation used
+
+**What it analyses:**
+
+| Check | Optimal Range | Action |
+|---|---|---|
+| Nitrogen | 60–120 kg/ha | Low/High/Optimal status + recommendation |
+| Phosphorus | 30–80 kg/ha | Low/High/Optimal status + recommendation |
+| Potassium | 40–100 kg/ha | Low/High/Optimal status + recommendation |
+| Soil pH | 5.5–7.5 | Low/High/Optimal status + recommendation |
+| Fertilizer | Used/Not used | Computes avg yield gain from dataset |
+| Irrigation | Used/Not used | Computes avg yield gain, notes if low rainfall |
+
+**Optimization Score:** 0–100, deducted per issue. Score ≥ 70 = Good, ≥ 45 = Fair, < 45 = Needs Improvement.
+
+**Also returns:** Crop typical NPK averages from dataset (to compare your values)
+
+**Frontend page:** `/resources` — score circle, fertilizer/irrigation cards, nutrient status cards, crop comparison panel
+
+---
+
+### 23.4 Agricultural Risk Assessment
+
+**Endpoint:** `POST /risk/assess` (requires login)
+
+**Input parameters:** Same 12 farm parameters as prediction form
+
+**Risk factors evaluated (10 total):**
+
+| Factor | High Risk Threshold | Medium Risk Threshold |
+|---|---|---|
+| Rainfall | < 300 mm | 300–600 mm or > 1800 mm |
+| Temperature | > 40°C or < 12°C | 35–40°C |
+| Weather Condition | Stormy | Windy |
+| Soil pH | < 5.0 or > 8.0 | 5.0–5.5 or 7.5–8.0 |
+| Nitrogen | < 40 kg/ha | 40–60 kg/ha |
+| Phosphorus | < 20 kg/ha | 20–35 kg/ha |
+| Potassium | < 30 kg/ha | 30–45 kg/ha |
+| Fertilizer | — | Not using fertilizer |
+| Irrigation | No irrigation + rainfall < 700 mm | — |
+| Soil Type | — | Below 90% of overall avg yield |
+
+**Overall Risk Level:**
+- **High** — 3 or more High factors
+- **Medium** — 1 or more High, or 3 or more Medium factors
+- **Low** — all other cases
+
+**Returns:** Overall risk level, per-factor breakdown with descriptions, summary counts
+
+**Frontend page:** `/risk` — input form, color-coded overall risk banner, tabbed factor list
+
+---
+
+### 23.5 New Backend Files
+
+| File | Purpose |
+|---|---|
+| `backend/routes/productivity.py` | Productivity & condition-based analysis route |
+| `backend/routes/recommendation.py` | Crop recommendation route |
+| `backend/routes/resources.py` | Resource optimization route |
+| `backend/routes/risk.py` | Risk assessment route |
+| `backend/test_milestone3.py` | Full test suite (16 tests, M1+M2+M3) |
+
+### 23.6 New Frontend Files
+
+| File | Purpose |
+|---|---|
+| `frontend/src/pages/ProductivityPage.jsx` | Productivity analysis page |
+| `frontend/src/pages/RecommendationPage.jsx` | Crop recommendation page |
+| `frontend/src/pages/ResourcesPage.jsx` | Resource optimization page |
+| `frontend/src/pages/RiskPage.jsx` | Risk assessment page |
+
+### 23.7 Modified Files (Milestone 3)
+
+| File | Change |
+|---|---|
+| `backend/main.py` | Registered 4 new routers, version bumped to 2.0.0 |
+| `frontend/src/App.jsx` | Added 4 new routes |
+| `frontend/src/components/Layout.jsx` | Added 4 new sidebar navigation links (grouped) |
+| `frontend/src/services/api.js` | Added 4 new API service objects |
+| `docs/README.md` | Added Milestone 3 section, updated status |
+
+### 23.8 Data Integrity Statement
+
+> The dataset (`crop_yield.csv`) is programmatically generated for this project.  
+> It is **not** from Kaggle, FAOSTAT, USDA, or any real-world agricultural database.  
+> All Milestone 3 analyses are derived exclusively from this dataset.  
+> No new records were invented. Features not present in the dataset (e.g., real seasons) are not claimed.
+
+---
+
+## 24. Milestone 4 — Testing, Deployment and Documentation
+
+### 24.1 Model Validation
+
+Final Validation (440-row independent test set):
+
+| Metric | Value |
+|---|---|
+| Best Model | Linear Regression |
+| R² Score | 0.9772 |
+| MAE | 132.42 kg/acre |
+| RMSE | 169.50 kg/acre |
+| CV R² (5-fold) | 0.9800 ± 0.0022 |
+| Inference time | ~6.6 ms / row |
+
+Run: `cd backend && python ml/validate_model.py`
+
+### 24.2 API Testing
+
+File: `backend/test_m4_api.py` — 61 tests, 61 PASS.  
+Run: `python backend/test_m4_api.py` (with backend running on port 8000)
+
+### 24.3 Performance
+
+| Endpoint | Time |
+|---|---|
+| POST /predict (warm) | ~35 ms |
+| GET /weather/analysis | ~36 ms |
+| GET /productivity/analysis | ~58 ms |
+| POST /ai-insights | ~3.6–45 s (Groq network) |
+| POST /chatbot/ask | ~44–56 s (Groq network) |
+| POST /report/generate | ~37 ms |
+| ML inference single row | ~6.6 ms |
+
+### 24.4 Docker Deployment
+
+```bash
+cp .env.example .env
+docker compose up --build
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8000
+```
+
+### 24.5 Security
+
+- Passwords: bcrypt hashed
+- Auth: JWT (HS256, 60 min)
+- GROQ_API_KEY: server .env only
+- .env gitignored
+- User history isolated by user_id
+- Pydantic input validation on all endpoints
+
+### 24.6 Final Project Status Summary
+
+- [x] Authentication
+- [x] Prediction
+- [x] Weather Analysis
+- [x] Soil Analysis
+- [x] AI Insights
+- [x] Productivity
+- [x] Recommendation
+- [x] Resources
+- [x] Risk Assessment
+- [x] History
+- [x] PDF Reports
+- [x] Chatbot
+- [x] Model Validation
+- [x] API Testing
+- [x] Docker Containerization
+- [x] Production Build
+
+---
+
+## 25. 5-Minute Presentation Summary
+
+Use this as a speaking guide for your presentation:
+
+---
+
+**[0:00 – 0:30] Introduction**  
+"Hello, my project is called **YieldSense AI** — a crop yield prediction and agricultural forecasting system. It uses machine learning and AI to help farmers estimate how much crop they will harvest before the season begins."
+
+---
+
+**[0:30 – 1:00] Problem**  
+"Farmers face a major problem — they cannot predict crop yield accurately. They rely on experience and guesswork, which leads to wasted resources and financial losses. There was no simple, data-driven tool available to them."
+
+---
+
+**[1:00 – 1:30] Objective**  
+"My goal was to build a complete AI-powered platform that takes farm parameters as input — like soil type, rainfall, NPK values, and weather condition — and predicts the expected crop yield in kg per acre. I also added weather analysis, soil analysis, and AI-generated farming recommendations."
+
+---
+
+**[1:30 – 2:00] Dataset**  
+"I used a programmatically generated dataset of 2200 records with 12 features including crop type, rainfall, temperature, NPK values, soil type, and weather condition. The target variable is Yield in kg per acre, ranging from 514 to 5987 kg/acre."
+
+---
+
+**[2:00 – 2:45] ML Training**  
+"I trained 5 regression models: Linear Regression, Decision Tree, Random Forest, Gradient Boosting, and Extra Trees. For each model, I used GridSearchCV with 5-fold cross-validation to find the best hyperparameters automatically. All models were built using a scikit-learn Pipeline with OneHotEncoding for categorical features and StandardScaling for numerical features."
+
+---
+
+**[2:45 – 3:00] Best Model Results**  
+"After comparing all models on R², MAE, and RMSE, **Linear Regression came out best** with an R² of **0.9772**, meaning it explains 97.7% of the variation in yield. The average prediction error is just 132 kg/acre."
+
+---
+
+**[3:00 – 3:20] Weather and Soil Analysis**  
+"The platform also provides weather analysis — showing how rainfall, temperature, and weather conditions affect yield — and soil analysis — showing how NPK levels, soil pH, and soil type relate to yield. These are computed from the actual dataset using Pandas."
+
+---
+
+**[3:20 – 3:45] Groq AI Insights**  
+"When a prediction is made, the user can click 'Get AI Insights'. This sends the farm parameters and ML prediction to the Groq LLM, which generates a detailed agricultural analysis — explaining why that yield was predicted, assessing the soil, and recommending practical farming actions."
+
+---
+
+**[3:45 – 4:15] Frontend and Backend**  
+"The backend is built with FastAPI in Python — it has 15 REST API endpoints including prediction, authentication, weather analysis, soil analysis, and AI insights. The frontend is built with React and Vite — it has 8 pages. The frontend and backend are fully connected using Axios."
+
+---
+
+**[4:15 – 4:30] Testing**  
+"I wrote automated test suites (`test_m4_api.py` and `test_features.py`) that test all endpoints — registration, login, authentication, prediction, model comparison, weather analysis, soil analysis, AI insights, history, PDF generation, and chatbot. All tests passed."
+
+---
+
+**[4:30 – 5:00] Conclusion**  
+"YieldSense AI successfully combines machine learning, data analysis, and AI language models into a practical agricultural tool. It helps farmers make data-driven decisions, reduce uncertainty, and improve crop planning. The system is fully functional with a working backend, frontend, and AI integration. Thank you."
+
+---
+
+## 26. Important Concepts to Understand
 
 ### Regression
 Regression is a type of machine learning where the model **predicts a number** (not a category). In this project, we predict crop yield — a continuous number like 3657 kg/acre — which makes it a regression problem.

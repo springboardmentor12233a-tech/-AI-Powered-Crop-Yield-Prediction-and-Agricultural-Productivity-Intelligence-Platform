@@ -4,7 +4,7 @@
  */
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -56,4 +56,45 @@ export const analysisAPI = {
   getSoilAnalysis: () => api.get('/soil/analysis'),
 };
 
+// ─── Milestone 3: Productivity ────────────────────────────────────────────────
+export const productivityAPI = {
+  getAnalysis: () => api.get('/productivity/analysis'),
+};
+
+// ─── Milestone 3: Crop Recommendation ────────────────────────────────────────
+export const recommendationAPI = {
+  getCropRecommendation: (data) => api.post('/recommendation/crop', data),
+};
+
+// ─── Milestone 3: Resource Optimization ──────────────────────────────────────
+export const resourcesAPI = {
+  optimize: (data) => api.post('/resources/optimize', data),
+};
+
+// ─── Milestone 3: Risk Assessment ────────────────────────────────────────────
+export const riskAPI = {
+  assess: (data) => api.post('/risk/assess', data),
+};
+
+// ─── Prediction History ───────────────────────────────────────────────────────
+export const historyAPI = {
+  saveHistory:   (data)   => api.post('/history/save', data),
+  getHistory:    (params) => api.get('/history', { params }),
+  getPrediction: (id)     => api.get(`/history/${id}`),
+  deleteHistory: (id)     => api.delete(`/history/${id}`),
+};
+
+// ─── PDF Report ───────────────────────────────────────────────────────────────
+export const reportAPI = {
+  downloadById: (id)   => api.get(`/report/${id}`, { responseType: 'blob' }),
+  generateLive: (data) => api.post('/report/generate', data, { responseType: 'blob' }),
+};
+
+// ─── Agriculture AI Chatbot ───────────────────────────────────────────────────
+export const chatbotAPI = {
+  ask: (data) => api.post('/chatbot/ask', data),
+};
+
 export default api;
+
+

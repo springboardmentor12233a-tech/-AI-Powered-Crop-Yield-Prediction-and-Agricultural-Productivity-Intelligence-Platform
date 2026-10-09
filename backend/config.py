@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "yieldsense-super-secret-key-change-in-production-2024"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    DATABASE_URL: str = "sqlite:///./yieldsense.db"
+    DATABASE_URL: str = "sqlite:///./data/yieldsense.db"
     GROQ_API_KEY: str = ""
     DATASET_PATH: str = "../data/crop_yield.csv"
     MODEL_DIR: str = "./saved_models"

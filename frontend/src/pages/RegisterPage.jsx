@@ -4,6 +4,21 @@ import { authAPI } from '../services/api'
 
 const ROLES = ['farmer', 'researcher', 'admin']
 
+const glassInput = {
+  width: '100%', padding: '10px 14px',
+  background: 'rgba(255,255,255,0.20)',
+  border: '1.5px solid rgba(255,255,255,0.38)',
+  borderRadius: '12px', outline: 'none',
+  color: '#fff', fontSize: '0.875rem',
+  backdropFilter: 'blur(6px)',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.2s, background 0.2s',
+}
+const glassLabel = {
+  display: 'block', fontSize: '0.78rem', fontWeight: 600,
+  color: 'rgba(255,255,255,0.88)', marginBottom: '5px',
+}
+
 export default function RegisterPage() {
   const navigate  = useNavigate()
   const [form, setForm] = useState({
@@ -18,10 +33,7 @@ export default function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (form.password !== form.confirm_password) {
-      setError('Passwords do not match.')
-      return
-    }
+    if (form.password !== form.confirm_password) { setError('Passwords do not match.'); return }
     setLoading(true)
     try {
       await authAPI.register({
@@ -40,106 +52,126 @@ export default function RegisterPage() {
     }
   }
 
-  const inputStyle = { display: 'flex', flexDirection: 'column', gap: '5px' }
-  const labelStyle = { fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-secondary)' }
+  const focusIn  = e => { e.target.style.borderColor = 'rgba(255,255,255,0.85)'; e.target.style.background = 'rgba(255,255,255,0.28)' }
+  const focusOut = e => { e.target.style.borderColor = 'rgba(255,255,255,0.38)'; e.target.style.background = 'rgba(255,255,255,0.20)' }
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'var(--bg-page)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '32px 24px',
-    }}>
+    <div style={{ minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '24px' }}>
+
+      {/* Full-bleed banana-leaves background */}
+      <img src="/banana-leaves.jpeg" alt="" aria-hidden="true"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'radial-gradient(ellipse 65% 75% at 50% 45%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.42) 100%)' }} />
+
+      {/* Glassmorphism registration card */}
       <div className="animate-fade-in" style={{
-        background: 'var(--bg-white)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-md)',
-        width: '100%', maxWidth: '540px',
-        padding: '40px',
+        position: 'relative', zIndex: 2,
+        width: '100%', maxWidth: '520px',
+        background: 'rgba(255,255,255,0.17)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        border: '1.5px solid rgba(255,255,255,0.42)',
+        borderRadius: '24px',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.5)',
+        padding: '36px 36px',
       }}>
-        {/* Header */}
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <div style={{
-              width: '36px', height: '36px', background: 'var(--primary)',
-              borderRadius: '8px', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', color: '#fff', fontSize: '16px',
-            }}>🌿</div>
-            <span style={{ fontFamily: 'DM Sans', fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>YieldSense AI</span>
+        {/* Brand */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '22px' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(46,125,50,0.75)', border: '1px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🌿</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.3)' }}>YieldSense AI</div>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.72)' }}>Agricultural Intelligence Platform</div>
           </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Create your account</h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Join the platform to start predicting crop yields
-          </p>
         </div>
 
-        {error && <div className="alert alert-error" style={{ marginBottom: '20px' }}>{error}</div>}
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.3)', marginBottom: '6px' }}>Create your account</h2>
+        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)', marginBottom: '20px' }}>Join the platform to start predicting crop yields</p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div className="grid-2">
-            <div style={inputStyle}>
-              <label style={labelStyle} htmlFor="reg-username">Username *</label>
-              <input id="reg-username" type="text" className="form-input" placeholder="johndoe"
-                value={form.username} onChange={e => update('username', e.target.value)} required />
-            </div>
-            <div style={inputStyle}>
-              <label style={labelStyle} htmlFor="reg-fullname">Full Name</label>
-              <input id="reg-fullname" type="text" className="form-input" placeholder="John Doe"
-                value={form.full_name} onChange={e => update('full_name', e.target.value)} />
-            </div>
-          </div>
+        {error && (
+          <div style={{ marginBottom: '14px', padding: '11px 14px', background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', borderRadius: '12px', color: '#fff', fontSize: '0.82rem', backdropFilter: 'blur(4px)' }}>{error}</div>
+        )}
 
-          <div style={inputStyle}>
-            <label style={labelStyle} htmlFor="reg-email">Email *</label>
-            <input id="reg-email" type="email" className="form-input" placeholder="john@farm.com"
-              value={form.email} onChange={e => update('email', e.target.value)} required />
-          </div>
-
-          <div className="grid-2">
-            <div style={inputStyle}>
-              <label style={labelStyle} htmlFor="reg-password">Password *</label>
-              <input id="reg-password" type="password" className="form-input" placeholder="Min 6 characters"
-                value={form.password} onChange={e => update('password', e.target.value)} required />
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={glassLabel} htmlFor="reg-username">Username *</label>
+              <input id="reg-username" type="text" style={glassInput} placeholder="johndoe"
+                value={form.username} onChange={e => update('username', e.target.value)}
+                onFocus={focusIn} onBlur={focusOut} required />
             </div>
-            <div style={inputStyle}>
-              <label style={labelStyle} htmlFor="reg-confirm">Confirm Password *</label>
-              <input id="reg-confirm" type="password" className="form-input" placeholder="Repeat password"
-                value={form.confirm_password} onChange={e => update('confirm_password', e.target.value)} required />
+            <div>
+              <label style={glassLabel} htmlFor="reg-fullname">Full Name</label>
+              <input id="reg-fullname" type="text" style={glassInput} placeholder="John Doe"
+                value={form.full_name} onChange={e => update('full_name', e.target.value)}
+                onFocus={focusIn} onBlur={focusOut} />
             </div>
           </div>
 
-          <div style={inputStyle}>
-            <label style={labelStyle} htmlFor="reg-role">Role</label>
-            <select id="reg-role" className="form-select" value={form.role} onChange={e => update('role', e.target.value)}>
-              {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+          <div>
+            <label style={glassLabel} htmlFor="reg-email">Email *</label>
+            <input id="reg-email" type="email" style={glassInput} placeholder="john@farm.com"
+              value={form.email} onChange={e => update('email', e.target.value)}
+              onFocus={focusIn} onBlur={focusOut} required />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={glassLabel} htmlFor="reg-password">Password *</label>
+              <input id="reg-password" type="password" style={glassInput} placeholder="Min 6 characters"
+                value={form.password} onChange={e => update('password', e.target.value)}
+                onFocus={focusIn} onBlur={focusOut} required />
+            </div>
+            <div>
+              <label style={glassLabel} htmlFor="reg-confirm">Confirm Password *</label>
+              <input id="reg-confirm" type="password" style={glassInput} placeholder="Repeat password"
+                value={form.confirm_password} onChange={e => update('confirm_password', e.target.value)}
+                onFocus={focusIn} onBlur={focusOut} required />
+            </div>
+          </div>
+
+          <div>
+            <label style={glassLabel} htmlFor="reg-role">Role</label>
+            <select id="reg-role" style={{ ...glassInput, cursor: 'pointer' }}
+              value={form.role} onChange={e => update('role', e.target.value)}>
+              {ROLES.map(r => <option key={r} value={r} style={{ background: '#1a3a1e', color: '#fff' }}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
             </select>
           </div>
 
-          <div className="grid-2">
-            <div style={inputStyle}>
-              <label style={labelStyle} htmlFor="reg-farm">Farm Name</label>
-              <input id="reg-farm" type="text" className="form-input" placeholder="Green Valley Farm"
-                value={form.farm_name} onChange={e => update('farm_name', e.target.value)} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={glassLabel} htmlFor="reg-farm">Farm Name</label>
+              <input id="reg-farm" type="text" style={glassInput} placeholder="Green Valley Farm"
+                value={form.farm_name} onChange={e => update('farm_name', e.target.value)}
+                onFocus={focusIn} onBlur={focusOut} />
             </div>
-            <div style={inputStyle}>
-              <label style={labelStyle} htmlFor="reg-location">Farm Location</label>
-              <input id="reg-location" type="text" className="form-input" placeholder="Punjab, India"
-                value={form.farm_location} onChange={e => update('farm_location', e.target.value)} />
+            <div>
+              <label style={glassLabel} htmlFor="reg-location">Farm Location</label>
+              <input id="reg-location" type="text" style={glassInput} placeholder="Punjab, India"
+                value={form.farm_location} onChange={e => update('farm_location', e.target.value)}
+                onFocus={focusIn} onBlur={focusOut} />
             </div>
           </div>
 
-          <button type="submit" id="register-btn" className="btn btn-primary btn-full"
-            disabled={loading} style={{ marginTop: '6px', padding: '11px', fontSize: '0.9375rem' }}>
+          <button type="submit" id="register-btn" disabled={loading} style={{
+            marginTop: '6px', width: '100%', padding: '13px',
+            background: loading ? 'rgba(46,125,50,0.55)' : 'linear-gradient(135deg, #2E7D32 0%, #388E3C 100%)',
+            color: '#fff', fontWeight: 700, fontSize: '0.95rem',
+            border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: '14px', cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 20px rgba(46,125,50,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          }}>
             {loading ? <><span className="spinner" /> Creating account...</> : 'Create Account'}
           </button>
         </form>
 
-        <div className="divider" style={{ margin: '22px 0' }} />
-        <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+        <div style={{ margin: '18px 0', height: '1px', background: 'rgba(255,255,255,0.22)' }} />
+        <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)' }}>
           Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Sign in</Link>
+          <Link to="/login" style={{ color: '#86efac', fontWeight: 700, textDecoration: 'none' }}>Sign in</Link>
         </p>
       </div>
+
+      <style>{`input::placeholder, select::placeholder { color: rgba(255,255,255,0.50) !important; }`}</style>
     </div>
   )
 }

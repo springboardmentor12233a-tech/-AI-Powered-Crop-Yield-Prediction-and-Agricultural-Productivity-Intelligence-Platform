@@ -1,0 +1,81 @@
+##############################################################################
+# YieldSense AI — docker-compose.yml
+# Runs the complete application stack:
+#   - backend  (FastAPI + SQLite + ML model)
+#   - frontend (React/Vite built, served by nginx)
+#
+# Usage:
+#   cp .env.example .env          # then fill in real values
+#   docker compose up --build     # first run (builds images)
+#   docker compose up             # subsequent runs
+#   docker compose down           # stop
+#   docker compose down -v        # stop and wipe volumes
+##############################################################################
+
+services:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Backend — FastAPI
+  # ──────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yieldsense_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Secrets — never hardcode real values here; use .env file
+      SECRET_KEY: ${SECRET_KEY:-yieldsense-change-in-production}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///./data/yieldsense.db}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      DATASET_PATH: ${DATASET_PATH:-/data/crop_yield.csv}
+      MODEL_DIR: ${MODEL_DIR:-./saved_models}
+    volumes:
+      # Persist the SQLite database across container restarts
+      - yieldsense_db:/app/data
+      # Mount the dataset (read-only)
+      - ./data:/data:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - yieldsense_net
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Frontend — React / Vite built, served by nginx
+  # ──────────────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # The frontend calls the backend at this URL
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    container_name: yieldsense_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - yieldsense_net
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Volumes & Networks
+# ──────────────────────────────────────────────────────────────────────────────
+volumes:
+  yieldsense_db:
+    driver: local
+
+networks:
+  yieldsense_net:
+    driver: bridge

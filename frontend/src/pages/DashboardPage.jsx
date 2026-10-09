@@ -101,23 +101,79 @@ export default function DashboardPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Page header */}
-      <div className="page-header">
-        <h1 className="page-title">Agricultural Analytics</h1>
-        <p className="page-subtitle">
-          Data-driven insights from {weather?.total_records_analyzed?.toLocaleString()} crop yield records
-        </p>
+
+      {/* ─── Aerial Farm Hero Banner ─────────────────────────────────────────── */}
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        borderRadius: '16px', marginBottom: '28px',
+        minHeight: '220px', background: '#0f1f0f',
+      }}>
+        {/* Aerial farming photograph */}
+        <img
+          src="/aerial-farm.jpeg"
+          alt="Aerial view of farm fields"
+          loading="eager"
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center 40%',
+            opacity: 0.72,
+          }}
+          onError={e => { e.currentTarget.src = '/crop-field.jpg' }}
+        />
+        {/* Bottom-heavy vignette — text reads over darker bottom */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.05) 100%)',
+        }} />
+        {/* Top-left brand pill */}
+        <div style={{
+          position: 'absolute', top: '18px', left: '24px',
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: '999px', padding: '5px 13px',
+        }}>
+          <span style={{ fontSize: '13px' }}>🌾</span>
+          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Agricultural Analytics Platform</span>
+        </div>
+        {/* Bottom content row */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          padding: '20px 28px 24px',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap',
+        }}>
+          <div>
+            <h1 style={{ fontSize: '1.7rem', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: '5px', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+              Agricultural Analytics Dashboard
+            </h1>
+            <p style={{ fontSize: '0.84rem', color: 'rgba(255,255,255,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>
+              Data-driven insights from {weather?.total_records_analyzed?.toLocaleString() || '2,200'} crop yield records
+              across 8 crops, 5 regions, and multiple soil and weather conditions.
+            </p>
+          </div>
+          {/* Model stat pills */}
+          {modelInfo && (
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {[
+                ['🤖 Model',   modelInfo.best_model || 'Linear Regression'],
+                ['📈 R²',      modelInfo.r2_score?.toFixed(4)],
+                ['🗂 Records', modelInfo.total_training_rows?.toLocaleString()],
+              ].map(([label, val]) => (
+                <div key={label} style={{
+                  background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)',
+                  borderRadius: '12px', padding: '9px 14px', textAlign: 'center', minWidth: '100px',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                }}>
+                  <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.65)', marginBottom: '2px' }}>{label}</div>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff' }}>{val}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Summary stat cards */}
-      {modelInfo && (
-        <div className="grid-4" style={{ marginBottom: '28px' }}>
-          <StatCard label="Best ML Model"    value={modelInfo.best_model || '—'} unit="Selected model" />
-          <StatCard label="R² Score"         value={modelInfo.r2_score?.toFixed(4)} unit="Higher is better" />
-          <StatCard label="Training Records" value={modelInfo.total_training_rows?.toLocaleString()} unit="dataset rows" />
-          <StatCard label="Target Variable"  value="Yield" unit="kg/acre predicted" />
-        </div>
-      )}
+
 
       {/* Tabs */}
       <div className="tabs">

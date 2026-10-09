@@ -1,0 +1,22 @@
+# ── Backend ──────────────────────────────────────────────────────────────────
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.env
+backend/.env.*
+backend/yieldsense.db
+backend/venv/
+backend/.venv/
+
+# ── Frontend ─────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+
+# ── General ──────────────────────────────────────────────────────────────────
+*.pyc
+*.pyo
+__pycache__/
+.DS_Store
+Thumbs.db

@@ -1,6 +1,56 @@
-frontend/node_modules/ 
-__pycache__/ 
-*.pyc 
-.env 
-backend/.env* 
-frontend/dist/ 
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ── Environment & secrets — NEVER commit these ────────────────────────────────
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm/
+
+# ── Database ──────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── ML model artefacts (large binary files) ───────────────────────────────────
+# Comment out these lines if you WANT to commit trained models to the repo
+# backend/saved_models/*.pkl
+
+# ── OS / Editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# (docker-compose.yml and Dockerfiles ARE tracked — only secrets are excluded)
+
+# ── Test artefacts ───────────────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage

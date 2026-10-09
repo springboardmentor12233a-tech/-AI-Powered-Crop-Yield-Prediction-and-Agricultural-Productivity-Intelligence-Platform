@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { predictionAPI, insightsAPI } from '../services/api'
+import { predictionAPI, insightsAPI, historyAPI, reportAPI } from '../services/api'
 
 const CROPS             = ['Rice', 'Wheat', 'Maize', 'Sugarcane', 'Cotton', 'Soybean', 'Barley', 'Sorghum']
 const SOIL_TYPES        = ['Loamy', 'Sandy', 'Clay', 'Silty', 'Peaty', 'Chalky']
@@ -30,19 +30,32 @@ const sectionLabel = {
 export default function PredictPage() {
   const [form, setForm]             = useState(DEFAULT_FORM)
   const [prediction, setPrediction] = useState(null)
+  const [savedId, setSavedId]       = useState(null)   // ID in prediction_history table
   const [insights, setInsights]     = useState(null)
   const [loading, setLoading]       = useState(false)
   const [insightsLoading, setInsightsLoading] = useState(false)
+  const [reportLoading, setReportLoading]     = useState(false)
   const [error, setError]           = useState('')
 
   function update(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
   async function handlePredict(e) {
     e.preventDefault()
-    setError(''); setPrediction(null); setInsights(null); setLoading(true)
+    setError(''); setPrediction(null); setInsights(null)
+    setSavedId(null); setLoading(true)
     try {
       const res = await predictionAPI.predict(form)
       setPrediction(res.data)
+      // Auto-save to history
+      try {
+        const saveRes = await historyAPI.saveHistory({
+          ...form,
+          predicted_yield_kg_per_acre: res.data.predicted_yield_kg_per_acre,
+          model_used:                  res.data.model_used,
+          prediction_confidence:       res.data.prediction_confidence,
+        })
+        setSavedId(saveRes.data.id)
+      } catch (_) { /* history save is non-critical */ }
     } catch (err) {
       setError(err.response?.data?.detail || 'Prediction failed. Ensure backend is running and model is trained.')
     } finally {
@@ -80,10 +93,22 @@ export default function PredictPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Page header */}
-      <div className="page-header">
-        <h1 className="page-title">Crop Yield Prediction</h1>
-        <p className="page-subtitle">Enter your farm parameters to get an ML-powered yield prediction</p>
+      {/* Compact agricultural page banner */}
+      <div style={{
+        position: 'relative', overflow: 'hidden', borderRadius: '12px',
+        marginBottom: '22px', background: '#1a4028', minHeight: '90px',
+      }}>
+        <img src="/aerial-farm.jpeg" alt="" aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 55%', opacity: 0.3 }}
+          onError={e => { e.target.style.display = 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(15,40,20,0.9) 0%, rgba(25,65,38,0.65) 100%)' }} />
+        <div style={{ position: 'relative', padding: '20px 28px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <span style={{ fontSize: '24px' }}>🌾</span>
+          <div>
+            <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#fff', marginBottom: '3px' }}>Crop Yield Prediction</h1>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>Enter your farm parameters to get an ML-powered yield forecast</p>
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px', alignItems: 'start' }}>
@@ -257,6 +282,54 @@ export default function PredictPage() {
               onClick={handleInsights} disabled={insightsLoading}
               style={{ padding: '10px', fontSize: '0.875rem' }}>
               {insightsLoading ? <><span className="spinner" /> Generating insights...</> : 'Get AI Agricultural Insights'}
+            </button>
+          )}
+
+          {/* Download Report button */}
+          {prediction && (
+            <button
+              id="download-report-btn"
+              className="btn btn-full"
+              disabled={reportLoading}
+              onClick={async () => {
+                setReportLoading(true)
+                try {
+                  // If we have a saved history ID, use the server-side report
+                  let blob
+                  if (savedId) {
+                    const r = await reportAPI.downloadById(savedId)
+                    blob = r.data
+                  } else {
+                    const payload = {
+                      ...form,
+                      predicted_yield_kg_per_acre: prediction.predicted_yield_kg_per_acre,
+                      model_used: prediction.model_used,
+                      prediction_confidence: prediction.prediction_confidence,
+                      ...(insights ? { ai_insights: insights.insights } : {}),
+                    }
+                    const r = await reportAPI.generateLive(payload)
+                    blob = r.data
+                  }
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `YieldSense_${form.crop}_Report.pdf`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch (e) {
+                  alert('Report generation failed. Please try again.')
+                } finally {
+                  setReportLoading(false)
+                }
+              }}
+              style={{
+                padding: '10px', fontSize: '0.875rem',
+                background: '#f0fdf4', color: 'var(--primary)',
+                border: '1px solid #bbf7d0', borderRadius: 'var(--radius-md)',
+                cursor: 'pointer', fontWeight: 600,
+              }}
+            >
+              {reportLoading ? <><span className="spinner" /> Generating PDF...</> : 'Download Prediction Report (PDF)'}
             </button>
           )}
 

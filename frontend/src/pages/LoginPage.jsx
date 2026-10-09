@@ -27,115 +27,173 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
+      position: 'relative',
       display: 'flex',
-      background: 'var(--bg-page)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
     }}>
-      {/* Left panel */}
+      {/* ── Full-bleed background: banana leaves / blue sky ─────────────── */}
+      <img
+        src="/banana-leaves.jpeg"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          objectFit: 'cover', objectPosition: 'center',
+          zIndex: 0,
+        }}
+      />
+      {/* Very light vignette to push card to the front */}
       <div style={{
-        flex: '0 0 420px',
-        background: 'var(--primary)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '60px 48px',
-        color: '#fff',
+        position: 'absolute', inset: 0, zIndex: 1,
+        background: 'radial-gradient(ellipse 60% 70% at 50% 45%, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.38) 100%)',
+      }} />
+
+      {/* ── Central Glassmorphism Login Card ────────────────────────────── */}
+      <div className="animate-fade-in" style={{
+        position: 'relative', zIndex: 2,
+        width: '100%', maxWidth: '420px',
+        margin: '24px',
+        background: 'rgba(255,255,255,0.18)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1.5px solid rgba(255,255,255,0.45)',
+        borderRadius: '24px',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.5)',
+        padding: '44px 40px',
       }}>
-        <div style={{ marginBottom: '40px' }}>
+        {/* Brand */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{
-            width: '48px', height: '48px',
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '12px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '22px',
-            marginBottom: '24px',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(255,255,255,0.25)',
+            border: '1.5px solid rgba(255,255,255,0.5)',
+            fontSize: '26px', marginBottom: '14px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
           }}>🌿</div>
-          <h1 style={{ color: '#fff', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.2, marginBottom: '10px' }}>
-            YieldSense AI
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem', lineHeight: 1.7 }}>
-            Crop Yield Prediction & Agricultural Productivity Forecasting System
+          <h1 style={{
+            fontSize: '1.6rem', fontWeight: 800, lineHeight: 1.2,
+            color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.4)',
+            marginBottom: '5px',
+          }}>YieldSense AI</h1>
+          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.82)', fontWeight: 500, letterSpacing: '0.02em' }}>
+            Agricultural Intelligence Platform
           </p>
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '32px' }}>
-          {[
-            ['Machine Learning Prediction', 'R² = 0.9772 accuracy'],
-            ['Weather & Soil Analysis', 'Data-driven insights'],
-            ['AI Agricultural Insights', 'Powered by Groq LLM'],
-          ].map(([title, sub]) => (
-            <div key={title} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '18px' }}>
-              <div style={{ width: '6px', height: '6px', background: 'rgba(255,255,255,0.6)', borderRadius: '50%', marginTop: '7px', flexShrink: 0 }} />
-              <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{title}</div>
-                <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>{sub}</div>
-              </div>
-            </div>
+        <h2 style={{
+          fontSize: '1.05rem', fontWeight: 700, color: '#fff',
+          textShadow: '0 1px 6px rgba(0,0,0,0.3)',
+          marginBottom: '20px',
+        }}>Sign in to your account</h2>
+
+        {error && (
+          <div style={{
+            marginBottom: '16px', padding: '12px 16px',
+            background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)',
+            borderRadius: '12px', color: '#fff', fontSize: '0.85rem',
+            backdropFilter: 'blur(4px)',
+          }}>{error}</div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: '6px' }}
+              htmlFor="username">Username</label>
+            <input
+              id="username" type="text"
+              placeholder="Enter your username"
+              value={form.username}
+              onChange={e => setForm({ ...form, username: e.target.value })}
+              required
+              style={{
+                width: '100%', padding: '11px 15px',
+                background: 'rgba(255,255,255,0.22)',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                borderRadius: '12px', outline: 'none',
+                color: '#fff', fontSize: '0.9rem',
+                backdropFilter: 'blur(6px)',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(255,255,255,0.85)'; e.target.style.background = 'rgba(255,255,255,0.28)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.4)'; e.target.style.background = 'rgba(255,255,255,0.22)' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: '6px' }}
+              htmlFor="password">Password</label>
+            <input
+              id="password" type="password"
+              placeholder="Enter your password"
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              required
+              style={{
+                width: '100%', padding: '11px 15px',
+                background: 'rgba(255,255,255,0.22)',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                borderRadius: '12px', outline: 'none',
+                color: '#fff', fontSize: '0.9rem',
+                backdropFilter: 'blur(6px)',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(255,255,255,0.85)'; e.target.style.background = 'rgba(255,255,255,0.28)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.4)'; e.target.style.background = 'rgba(255,255,255,0.22)' }}
+            />
+          </div>
+
+          <button
+            id="login-btn"
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: '6px',
+              width: '100%', padding: '13px',
+              background: loading ? 'rgba(46,125,50,0.6)' : 'linear-gradient(135deg, #2E7D32 0%, #388E3C 100%)',
+              color: '#fff', fontWeight: 700, fontSize: '0.95rem',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: '14px', cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 20px rgba(46,125,50,0.5)',
+              transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            }}
+          >
+            {loading ? (<><span className="spinner" /> Signing in...</>) : 'Sign In'}
+          </button>
+        </form>
+
+        <div style={{ margin: '22px 0', height: '1px', background: 'rgba(255,255,255,0.25)' }} />
+
+        <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)' }}>
+          Don&apos;t have an account?{' '}
+          <Link to="/register" style={{
+            color: '#86efac', fontWeight: 700, textDecoration: 'none',
+          }}>Create account</Link>
+        </p>
+
+        {/* Feature badges */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+          {['🌾 ML Prediction', '🌦 Weather AI', '🤖 Groq LLM'].map(badge => (
+            <span key={badge} style={{
+              padding: '4px 10px', borderRadius: '999px',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              fontSize: '0.68rem', color: 'rgba(255,255,255,0.88)', fontWeight: 500,
+            }}>{badge}</span>
           ))}
         </div>
       </div>
 
-      {/* Right panel — form */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 32px',
-      }}>
-        <div style={{ width: '100%', maxWidth: '380px' }} className="animate-fade-in">
-          <div style={{ marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '1.375rem', fontWeight: 700, marginBottom: '6px' }}>Sign in to your account</h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Enter your credentials to continue</p>
-          </div>
-
-          {error && (
-            <div className="alert alert-error" style={{ marginBottom: '20px' }}>{error}</div>
-          )}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="username">Username</label>
-              <input
-                id="username" type="text" className="form-input"
-                placeholder="Enter your username"
-                value={form.username}
-                onChange={e => setForm({ ...form, username: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <input
-                id="password" type="password" className="form-input"
-                placeholder="Enter your password"
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              id="login-btn"
-              className="btn btn-primary btn-full"
-              disabled={loading}
-              style={{ marginTop: '6px', padding: '11px 20px', fontSize: '0.9375rem' }}
-            >
-              {loading ? <><span className="spinner" /> Signing in...</> : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="divider" style={{ margin: '24px 0' }} />
-
-          <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Don&apos;t have an account?{' '}
-            <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
-              Create account
-            </Link>
-          </p>
-        </div>
-      </div>
+      {/* Placeholder text for input colours */}
+      <style>{`
+        input::placeholder { color: rgba(255,255,255,0.55) !important; }
+      `}</style>
     </div>
   )
 }
