@@ -528,7 +528,7 @@ Interactive docs: `http://127.0.0.1:8000/docs`
 
 ## 17. Frontend Pages
 
-The frontend is built with **React 18 + Vite** and runs at `http://localhost:5173`.
+The frontend is built with **React 18 + Vite** and runs at `http://localhost:5173` (Vite dev server) or `http://localhost:3000` (Docker container served via Nginx).
 
 ### Login Page (`/login`)
 - A form with username and password fields
@@ -752,7 +752,7 @@ Frontend is now running at: **http://localhost:5173**
 
 ### Step 4 — Use the Application
 
-1. Open **http://localhost:5173** in your browser
+1. Open **http://localhost:5173** (Vite dev server) or **http://localhost:3000** (Docker Compose) in your browser
 2. Click **Create account** and register
 3. Log in with your username and password
 4. **Dashboard** → view weather analysis, soil analysis, and model comparison charts
@@ -761,17 +761,32 @@ Frontend is now running at: **http://localhost:5173**
 
 ---
 
-### Step 5 — Run Tests (Optional)
+### Step 5 — Option B: Run with Docker Compose
+
+If you prefer running via Docker instead of running Python and Vite manually:
+
+```powershell
+cp .env.example .env
+docker compose up --build
+```
+
+- **Frontend (Nginx):** `http://localhost:3000`
+- **Backend API:** `http://localhost:8000`
+- **Health Check:** `http://localhost:8000/health`
+
+---
+
+### Step 6 — Run Tests (Optional)
 
 ```powershell
 cd "D:\2nd milestone\backend"
-# Milestone 2 tests
-python test_api.py
-# Milestone 3 tests (all 16 endpoints)
-python test_milestone3.py
+# Milestone 4 test suite (61 tests)
+python test_m4_api.py
+# Feature test suite (24 tests)
+python test_features.py
 ```
 
-### Step 6 — Use New Milestone 3 Features
+### Step 7 — Use Milestone 3 Features
 
 1. **Productivity Analysis** → Click **Productivity Analysis** in the sidebar
 2. **Crop Recommendation** → Click **Crop Recommendation** → fill farm conditions → click **Get Crop Recommendation**
@@ -1038,8 +1053,9 @@ Run: `python backend/test_m4_api.py` (with backend running on port 8000)
 ```bash
 cp .env.example .env
 docker compose up --build
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:8000
+# Frontend:     http://localhost:3000
+# Backend API:  http://localhost:8000
+# Health check: http://localhost:8000/health
 ```
 
 ### 24.5 Security
