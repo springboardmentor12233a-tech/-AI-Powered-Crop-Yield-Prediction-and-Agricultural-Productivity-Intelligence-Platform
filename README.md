@@ -113,7 +113,7 @@ YieldSense-AI/
 
 ## 🚀 Live Links & Local Setup
 
-* **Live Application:** [YieldSense AI Dashboard](https://www.google.com/search?q=https://yieldsense-ai-frontend-plum.vercel.app)
+* **Live Application:** [YieldSense AI Dashboard](https://www.google.com/search?q=https://yieldsense-ai-frontend-git-sanghavi-s-avadhani-sanghavi21.vercel.app)
 * **Live API Swagger UI:** [YieldSense Backend Docs](https://www.google.com/url?sa=E&source=gmail&q=https://ai-powered-crop-yield-prediction-and-2gyv.onrender.com/docs)
 
 *(For local execution instructions, please refer to the deployment steps detailed in the repository documentation.)*
