@@ -1,105 +1,354 @@
-import { Sprout, Sparkles, Scale, FlaskConical, Bot, ShieldCheck, ArrowRight, Lock } from "lucide-react";
+import { 
+  Sprout, Sparkles, Scale, FlaskConical, Bot, ShieldCheck, 
+  ArrowRight, Lock, CheckCircle2, TrendingUp, Cpu, Award, Zap, ChevronRight
+} from "lucide-react";
 import { t } from "../utils/i18n";
 
-export default function LandingPage({ onOpenAuth, onQuickDemoLogin, currentLang = "en" }) {
+export default function LandingPage({ onOpenAuth, currentLang = "en" }) {
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1.5rem" }}>
-      {/* Hero Header */}
+    <div className="page-container" style={{ maxWidth: "1280px" }}>
+      {/* Hero Section — Minimal, Editorial, High-Clarity */}
       <div style={{
         textAlign: "center",
-        padding: "4rem 2rem",
-        borderRadius: "28px",
-        background: "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, var(--bg-card) 100%)",
-        border: "1px solid rgba(16, 185, 129, 0.25)",
-        backdropFilter: "blur(20px)",
-        boxShadow: "var(--shadow-main)",
-        marginBottom: "3.5rem"
+        padding: "3.5rem 1.5rem 2.5rem",
+        marginBottom: "2rem"
       }}>
+        {/* Subtle Badge */}
         <div style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "8px",
-          padding: "6px 18px",
-          borderRadius: "9999px",
-          background: "rgba(16, 185, 129, 0.2)",
-          color: "#10b981",
-          fontSize: "0.88rem",
-          fontWeight: 700,
-          marginBottom: "1.5rem",
-          border: "1px solid rgba(16, 185, 129, 0.3)"
+          gap: "6px",
+          padding: "4px 12px",
+          borderRadius: "var(--radius-full)",
+          background: "var(--surface-inset)",
+          border: "1px solid var(--border-subtle)",
+          color: "var(--fg-secondary)",
+          fontSize: "0.78rem",
+          fontWeight: 500,
+          marginBottom: "1.5rem"
         }}>
-          <Sparkles size={16} /> {t("heroBadge", currentLang)}
+          <span className="live-dot"></span>
+          <span>Enterprise Agricultural Intelligence</span>
         </div>
 
+        {/* Hero Title */}
         <h1 style={{
-          fontSize: "3.2rem",
+          fontSize: "clamp(2.2rem, 4.5vw, 3.4rem)",
           fontWeight: 800,
           lineHeight: 1.15,
-          color: "var(--text-main)",
-          marginBottom: "1.2rem",
-          letterSpacing: "-0.02em"
+          color: "var(--fg-primary)",
+          letterSpacing: "-0.03em",
+          maxWidth: "850px",
+          margin: "0 auto 1.25rem"
         }}>
-          {t("heroTitlePrefix", currentLang)} <span className="gradient-text">{t("heroTitleSuffix", currentLang)}</span>
+          Precision Crop Forecasting & Agronomic Intelligence
         </h1>
 
+        {/* Hero Supporting Text */}
         <p style={{
-          fontSize: "1.25rem",
-          color: "var(--text-muted)",
+          fontSize: "1.05rem",
+          color: "var(--fg-secondary)",
           maxWidth: "680px",
-          margin: "0 auto 2.2rem",
+          margin: "0 auto 2rem",
           lineHeight: 1.6
         }}>
-          {t("heroDesc", currentLang)}
+          Calibrated XGBoost yield regression paired with real-time agro-meteorology and dual generative AI advisory for modern farm operations.
         </p>
 
-        {/* CTA Buttons */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+        {/* Action Controls */}
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "center", 
+          alignItems: "center",
+          gap: "0.75rem", 
+          flexWrap: "wrap"
+        }}>
           <button
             onClick={onOpenAuth}
-            className="btn btn-primary pulse-primary"
-            style={{ padding: "0.95rem 2rem", fontSize: "1.05rem", borderRadius: "14px" }}
+            className="btn btn-primary"
+            style={{ height: "42px", padding: "0 1.5rem", fontSize: "0.9rem" }}
           >
-            <Lock size={18} /> {t("signInAccess", currentLang)}
-          </button>
-
-          <button
-            onClick={() => onQuickDemoLogin("farmer")}
-            className="btn btn-secondary"
-            style={{ padding: "0.95rem 1.8rem", fontSize: "1.05rem", borderRadius: "14px", border: "1px solid #10b981", color: "#10b981" }}
-          >
-            🌾 {t("exploreFarmer", currentLang)}
-          </button>
-
-          <button
-            onClick={() => onQuickDemoLogin("admin")}
-            className="btn btn-secondary"
-            style={{ padding: "0.95rem 1.8rem", fontSize: "1.05rem", borderRadius: "14px", border: "1px solid #8b5cf6", color: "#8b5cf6" }}
-          >
-            👑 {t("exploreAdmin", currentLang)}
+            <Lock size={15} /> {t("signInAccess", currentLang)}
           </button>
         </div>
       </div>
 
-      {/* Access Protection Notice */}
+      {/* Bento Grid Layout — Primary Features & Live Preview */}
+      <div className="bento-grid" style={{ marginBottom: "3rem" }}>
+        {/* Bento Cell 1: Live Model Telemetry (Span 7) */}
+        <div className="bento-cell col-span-7" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <div style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--accent-subtle)",
+                  color: "var(--accent)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <Zap size={15} />
+                </div>
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--fg-primary)" }}>
+                  Live Model Telemetry Preview
+                </span>
+              </div>
+              <span className="badge badge-emerald">
+                Calibrated Model v2.0
+              </span>
+            </div>
+
+            <p style={{ fontSize: "0.82rem", color: "var(--fg-muted)", marginBottom: "1.25rem" }}>
+              Simulated harvest prediction based on historical ICRISAT district baseline datasets.
+            </p>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+              gap: "0.75rem",
+              marginBottom: "1rem"
+            }}>
+              <div style={{ background: "var(--surface-inset)", padding: "0.75rem", borderRadius: "var(--radius-md)" }}>
+                <div className="text-caption" style={{ color: "var(--fg-muted)" }}>Target Plot</div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 700, marginTop: "2px" }}>Punjab, Ludhiana</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)" }}>10.0 ha • Alluvial</div>
+              </div>
+
+              <div style={{ background: "var(--surface-inset)", padding: "0.75rem", borderRadius: "var(--radius-md)" }}>
+                <div className="text-caption" style={{ color: "var(--fg-muted)" }}>Crop Variety</div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 700, marginTop: "2px" }}>Wheat (PBW 550)</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)" }}>Rabi Season</div>
+              </div>
+
+              <div style={{ background: "var(--surface-inset)", padding: "0.75rem", borderRadius: "var(--radius-md)" }}>
+                <div className="text-caption" style={{ color: "var(--accent)" }}>Predicted Yield</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
+                  4,320 kg/ha
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--accent)", fontWeight: 500 }}>
+                  ↑ +14.2% vs Regional
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            background: "var(--surface-inset)",
+            padding: "0.75rem 1rem",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--border-subtle)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontSize: "0.82rem"
+          }}>
+            <span style={{ color: "var(--fg-secondary)" }}>
+              Recommended N-P-K Dosing: <strong style={{ color: "var(--fg-primary)" }}>Urea 120kg • DAP 55kg • MOP 30kg</strong>
+            </span>
+            <button
+              onClick={onOpenAuth}
+              className="btn btn-ghost"
+              style={{ height: "26px", fontSize: "0.75rem", color: "var(--accent)" }}
+            >
+              Test Custom Plot <ChevronRight size={13} />
+            </button>
+          </div>
+        </div>
+
+        {/* Bento Cell 2: System Accuracy & Metrics (Span 5) */}
+        <div className="bento-cell col-span-5" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--secondary-subtle)",
+                color: "var(--secondary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <Cpu size={15} />
+              </div>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--fg-primary)" }}>
+                Quantitative Regression Performance
+              </span>
+            </div>
+            <p style={{ fontSize: "0.82rem", color: "var(--fg-muted)", marginBottom: "1.25rem" }}>
+              Validation metrics across 50 years of agricultural harvest records.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+            <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
+                98.4%
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)", marginTop: "2px" }}>
+                R² Test Coefficient
+              </div>
+            </div>
+
+            <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--secondary)", fontFamily: "var(--font-mono)" }}>
+                28+
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)", marginTop: "2px" }}>
+                States & UTs Covered
+              </div>
+            </div>
+
+            <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--fg-primary)", fontFamily: "var(--font-mono)" }}>
+                10+
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)", marginTop: "2px" }}>
+                Commercial Crops
+              </div>
+            </div>
+
+            <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--warning)", fontFamily: "var(--font-mono)" }}>
+                Dual-AI
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)", marginTop: "2px" }}>
+                Gemini + Groq LLaMA
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bento Cell 3: Multi-Crop ROI Optimizer (Span 4) */}
+        <div className="bento-cell col-span-4" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--secondary-subtle)",
+              color: "var(--secondary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "0.85rem"
+            }}>
+              <Scale size={18} />
+            </div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--fg-primary)", marginBottom: "0.4rem" }}>
+              {t("featureCompareTitle", currentLang)}
+            </h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--fg-secondary)", lineHeight: 1.55 }}>
+              {t("featureCompareDesc", currentLang)}
+            </p>
+          </div>
+          <button
+            onClick={onOpenAuth}
+            className="btn btn-secondary"
+            style={{ width: "100%", marginTop: "1.25rem", height: "34px", fontSize: "0.8rem" }}
+          >
+            {t("loginToCompare", currentLang)} <ArrowRight size={13} />
+          </button>
+        </div>
+
+        {/* Bento Cell 4: Soil N-P-K Dosage Calculator (Span 4) */}
+        <div className="bento-cell col-span-4" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--accent-subtle)",
+              color: "var(--accent)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "0.85rem"
+            }}>
+              <FlaskConical size={18} />
+            </div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--fg-primary)", marginBottom: "0.4rem" }}>
+              {t("featureFertilizerTitle", currentLang)}
+            </h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--fg-secondary)", lineHeight: 1.55 }}>
+              {t("featureFertilizerDesc", currentLang)}
+            </p>
+          </div>
+          <button
+            onClick={onOpenAuth}
+            className="btn btn-secondary"
+            style={{ width: "100%", marginTop: "1.25rem", height: "34px", fontSize: "0.8rem" }}
+          >
+            {t("loginToCalculate", currentLang)} <ArrowRight size={13} />
+          </button>
+        </div>
+
+        {/* Bento Cell 5: Dual-AI Farm Assistant (Span 4) */}
+        <div className="bento-cell col-span-4" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--warning-subtle)",
+              color: "var(--warning)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "0.85rem"
+            }}>
+              <Bot size={18} />
+            </div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--fg-primary)", marginBottom: "0.4rem" }}>
+              {t("featureAssistantTitle", currentLang)}
+            </h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--fg-secondary)", lineHeight: 1.55 }}>
+              {t("featureAssistantDesc", currentLang)}
+            </p>
+          </div>
+          <button
+            onClick={onOpenAuth}
+            className="btn btn-secondary"
+            style={{ width: "100%", marginTop: "1.25rem", height: "34px", fontSize: "0.8rem" }}
+          >
+            {t("loginToChat", currentLang)} <ArrowRight size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* Trust & Governance Strip */}
       <div style={{
-        background: "rgba(245, 158, 11, 0.1)",
-        border: "1px solid rgba(245, 158, 11, 0.3)",
-        borderRadius: "16px",
-        padding: "1.2rem 1.5rem",
-        marginBottom: "3rem",
+        background: "var(--surface-base)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: "var(--radius-lg)",
+        padding: "1rem 1.5rem",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         flexWrap: "wrap",
         gap: "1rem"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <ShieldCheck size={24} color="#f59e0b" />
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{
+            width: "30px",
+            height: "30px",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--surface-inset)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--accent)"
+          }}>
+            <ShieldCheck size={16} />
+          </div>
           <div>
-            <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)" }}>
+            <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--fg-primary)" }}>
               {t("secureAccess", currentLang)}
             </div>
-            <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+            <div style={{ fontSize: "0.76rem", color: "var(--fg-muted)" }}>
               {t("secureDesc", currentLang)}
             </div>
           </div>
@@ -108,85 +357,10 @@ export default function LandingPage({ onOpenAuth, onQuickDemoLogin, currentLang 
         <button
           onClick={onOpenAuth}
           className="btn btn-primary"
-          style={{ padding: "0.6rem 1.2rem", fontSize: "0.9rem" }}
+          style={{ height: "32px", fontSize: "0.8rem" }}
         >
-          {t("signInNow", currentLang)} <ArrowRight size={16} />
+          {t("signInNow", currentLang)} <ArrowRight size={13} />
         </button>
-      </div>
-
-      {/* Platform Capabilities Grid */}
-      <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1.5rem", textAlign: "center" }}>
-        {t("platformCapabilities", currentLang)}
-      </h2>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
-        gap: "1.5rem"
-      }}>
-        {/* Capability 1 */}
-        <div className="glass-panel hover-card" style={{ padding: "1.8rem" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981", marginBottom: "1rem" }}>
-            <Sprout size={24} />
-          </div>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-            {t("featurePredictorTitle", currentLang)}
-          </h3>
-          <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "1.2rem" }}>
-            {t("featurePredictorDesc", currentLang)}
-          </p>
-          <button onClick={onOpenAuth} className="btn btn-secondary" style={{ width: "100%", fontSize: "0.85rem" }}>
-            {t("loginToPredict", currentLang)}
-          </button>
-        </div>
-
-        {/* Capability 2 */}
-        <div className="glass-panel hover-card" style={{ padding: "1.8rem" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6", marginBottom: "1rem" }}>
-            <Scale size={24} />
-          </div>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-            {t("featureCompareTitle", currentLang)}
-          </h3>
-          <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "1.2rem" }}>
-            {t("featureCompareDesc", currentLang)}
-          </p>
-          <button onClick={onOpenAuth} className="btn btn-secondary" style={{ width: "100%", fontSize: "0.85rem" }}>
-            {t("loginToCompare", currentLang)}
-          </button>
-        </div>
-
-        {/* Capability 3 */}
-        <div className="glass-panel hover-card" style={{ padding: "1.8rem" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(139,92,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6", marginBottom: "1rem" }}>
-            <FlaskConical size={24} />
-          </div>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-            {t("featureFertilizerTitle", currentLang)}
-          </h3>
-          <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "1.2rem" }}>
-            {t("featureFertilizerDesc", currentLang)}
-          </p>
-          <button onClick={onOpenAuth} className="btn btn-secondary" style={{ width: "100%", fontSize: "0.85rem" }}>
-            {t("loginToCalculate", currentLang)}
-          </button>
-        </div>
-
-        {/* Capability 4 */}
-        <div className="glass-panel hover-card" style={{ padding: "1.8rem" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b", marginBottom: "1rem" }}>
-            <Bot size={24} />
-          </div>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-            {t("featureAssistantTitle", currentLang)}
-          </h3>
-          <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "1.2rem" }}>
-            {t("featureAssistantDesc", currentLang)}
-          </p>
-          <button onClick={onOpenAuth} className="btn btn-secondary" style={{ width: "100%", fontSize: "0.85rem" }}>
-            {t("loginToChat", currentLang)}
-          </button>
-        </div>
       </div>
     </div>
   );

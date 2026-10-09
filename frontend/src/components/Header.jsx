@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { Sprout, User, LogOut, ShieldCheck, UserCheck, Bot, LayoutDashboard, History, BookOpen, Scale, FlaskConical, Globe, Sun, Moon, Clock } from "lucide-react";
+import { 
+  Sprout, User, LogOut, ShieldCheck, UserCheck, Bot, 
+  LayoutDashboard, History, BookOpen, Scale, FlaskConical, 
+  Globe, Sun, Moon, Clock, Wrench
+} from "lucide-react";
 import { LANGUAGES, t } from "../utils/i18n";
 
 export default function Header({
@@ -8,7 +12,6 @@ export default function Header({
   user,
   onOpenAuth,
   onLogout,
-  onQuickDemoLogin,
   onOpenDocs,
   systemHealth,
   currentLang = "en",
@@ -24,17 +27,18 @@ export default function Header({
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
   return (
-    <header style={{
+    <header className="acrylic-surface" style={{
       position: "sticky",
       top: 0,
       zIndex: 50,
-      background: "var(--header-bg)",
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-      borderBottom: "1px solid var(--border-glass)",
-      padding: "0.85rem 1.5rem",
-      transition: "background 0.3s ease"
+      borderTop: "none",
+      borderLeft: "none",
+      borderRight: "none",
+      borderBottom: "1px solid var(--border-subtle)",
+      padding: "0.55rem 1.5rem",
+      transition: "background 0.2s ease, border-color 0.2s ease"
     }}>
       <div style={{
         maxWidth: "1400px",
@@ -45,258 +49,241 @@ export default function Header({
         gap: "1rem",
         flexWrap: "wrap"
       }}>
-        {/* Brand / Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {/* Brand Section */}
+        <div 
+          onClick={() => setActiveTab(user ? "dashboard" : "landing")}
+          style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "0.65rem", 
+            cursor: "pointer",
+            userSelect: "none"
+          }}
+        >
           <div style={{
-            width: "42px",
-            height: "42px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            width: "34px",
+            height: "34px",
+            borderRadius: "var(--radius-md)",
+            background: "var(--accent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 0 15px rgba(16, 185, 129, 0.4)"
+            color: "#ffffff",
+            boxShadow: "0 2px 8px rgba(16, 185, 129, 0.25)"
           }}>
-            <Sprout size={24} color="#ffffff" />
+            <Sprout size={20} strokeWidth={2.2} />
           </div>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <h1 style={{ fontSize: "1.35rem", fontWeight: 800, margin: 0 }} className="gradient-text">
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span style={{ 
+                fontFamily: "var(--font-display)", 
+                fontSize: "1.15rem", 
+                fontWeight: 700, 
+                letterSpacing: "-0.02em",
+                color: "var(--fg-primary)" 
+              }}>
                 {t("brand", currentLang)}
-              </h1>
-              <span className="badge badge-emerald" style={{ fontSize: "0.65rem", padding: "0.15rem 0.45rem" }}>
-                v2.0 Dual-AI
+              </span>
+              <span className="badge badge-emerald" style={{ fontSize: "0.6rem", padding: "0.1rem 0.4rem" }}>
+                v2.0
               </span>
             </div>
-            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>
+            <p style={{ fontSize: "0.7rem", color: "var(--fg-muted)", margin: 0, lineHeight: 1 }}>
               {t("subBrand", currentLang)}
             </p>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.4rem",
-          background: "var(--bg-glass)",
-          padding: "0.3rem",
-          borderRadius: "9999px",
-          border: "1px solid var(--border-glass)",
-          flexWrap: "wrap"
-        }}>
+        {/* Fluent Navigation Items */}
+        <nav className="nav-pill-group" style={{ maxWidth: "100%" }}>
           {user && (
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`btn ${activeTab === "dashboard" ? "btn-primary" : "btn-secondary"}`}
-              style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+              className={`nav-tab-btn ${activeTab === "dashboard" ? "active" : ""}`}
             >
-              <LayoutDashboard size={15} /> {t("dashboard", currentLang)}
+              <LayoutDashboard size={14} /> {t("dashboard", currentLang)}
             </button>
           )}
 
           <button
             onClick={() => user ? setActiveTab("predictor") : onOpenAuth()}
-            className={`btn ${activeTab === "predictor" ? "btn-primary" : "btn-secondary"}`}
-            style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+            className={`nav-tab-btn ${activeTab === "predictor" ? "active" : ""}`}
           >
-            <Sprout size={15} /> {t("predictor", currentLang)}
+            <Sprout size={14} /> {t("predictor", currentLang)}
           </button>
 
           <button
             onClick={() => user ? setActiveTab("compare") : onOpenAuth()}
-            className={`btn ${activeTab === "compare" ? "btn-primary" : "btn-secondary"}`}
-            style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+            className={`nav-tab-btn ${activeTab === "compare" ? "active" : ""}`}
           >
-            <Scale size={15} /> {t("compare", currentLang)}
+            <Scale size={14} /> {t("compare", currentLang)}
           </button>
 
           <button
             onClick={() => user ? setActiveTab("fertilizer") : onOpenAuth()}
-            className={`btn ${activeTab === "fertilizer" ? "btn-primary" : "btn-secondary"}`}
-            style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+            className={`nav-tab-btn ${activeTab === "fertilizer" ? "active" : ""}`}
           >
-            <FlaskConical size={15} /> {t("fertilizer", currentLang)}
+            <FlaskConical size={14} /> {t("fertilizer", currentLang)}
           </button>
 
           <button
             onClick={() => user ? setActiveTab("assistant") : onOpenAuth()}
-            className={`btn ${activeTab === "assistant" ? "btn-primary" : "btn-secondary"}`}
-            style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+            className={`nav-tab-btn ${activeTab === "assistant" ? "active" : ""}`}
           >
-            <Bot size={15} /> {t("assistant", currentLang)}
+            <Bot size={14} /> {t("assistant", currentLang)}
           </button>
 
           <button
             onClick={() => user ? setActiveTab("history") : onOpenAuth()}
-            className={`btn ${activeTab === "history" ? "btn-primary" : "btn-secondary"}`}
-            style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+            className={`nav-tab-btn ${activeTab === "history" ? "active" : ""}`}
           >
-            <History size={15} /> {t("logs", currentLang)}
+            <History size={14} /> {t("logs", currentLang)}
           </button>
 
           {user && (
             <button
               onClick={() => setActiveTab("tools")}
-              className={`btn ${activeTab === "tools" ? "btn-primary" : "btn-secondary"}`}
-              style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+              className={`nav-tab-btn ${activeTab === "tools" ? "active" : ""}`}
             >
-              <Sprout size={15} /> Tools
+              <Wrench size={14} /> Tools
             </button>
           )}
 
           {user && user.role === "admin" && (
             <button
               onClick={() => setActiveTab("admin")}
-              className={`btn ${activeTab === "admin" ? "btn-primary" : "btn-secondary"}`}
-              style={{ borderRadius: "9999px", padding: "0.5rem 0.95rem", fontSize: "0.82rem" }}
+              className={`nav-tab-btn ${activeTab === "admin" ? "active" : ""}`}
             >
-              <LayoutDashboard size={15} /> {t("admin", currentLang)}
+              <ShieldCheck size={14} /> {t("admin", currentLang)}
             </button>
           )}
         </nav>
 
-        {/* Right Controls & Auth Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-          {/* Live Digital Time Counter Clock */}
+        {/* Right Controls & Utilities */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {/* Telemetry Clock */}
           <div style={{
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            gap: "6px",
-            background: "var(--bg-glass)",
-            padding: "5px 12px",
-            borderRadius: "10px",
-            border: "1px solid rgba(16, 185, 129, 0.35)",
-            fontSize: "0.82rem",
-            fontWeight: 700,
-            color: "#10b981",
-            boxShadow: "0 2px 10px rgba(16, 185, 129, 0.1)"
+            gap: "5px",
+            background: "var(--surface-inset)",
+            padding: "3px 9px",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border-subtle)",
+            fontSize: "0.75rem",
+            color: "var(--fg-secondary)",
+            fontFamily: "var(--font-mono)"
           }}>
-            <Clock size={14} color="#10b981" />
-            <span style={{ fontFamily: "monospace", letterSpacing: "0.05em" }}>
-              {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-            </span>
-            {systemHealth && (
-              <span className="badge badge-emerald" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", marginLeft: "4px" }}>
-                ● {systemHealth.status || "Online"}
-              </span>
-            )}
+            <span className="live-dot" title="Telemetry Active"></span>
+            <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
-
-          {/* Light / Dark Mode Toggle Button */}
-          <button
-            onClick={onToggleTheme}
-            className="btn btn-secondary"
-            style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem", borderRadius: "10px" }}
-            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {theme === "dark" ? (
-              <><Sun size={15} color="#fbbf24" /> {t("themeLight", currentLang)}</>
-            ) : (
-              <><Moon size={15} color="#8b5cf6" /> {t("themeDark", currentLang)}</>
-            )}
-          </button>
 
           {/* Multilingual Selector */}
           <div style={{
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            gap: "6px",
-            background: "var(--bg-glass)",
-            padding: "4px 10px",
-            borderRadius: "10px",
-            border: "1px solid var(--border-glass)"
+            gap: "4px",
+            background: "var(--surface-inset)",
+            padding: "2px 6px",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border-subtle)"
           }}>
-            <Globe size={15} color="#10b981" />
+            <Globe size={13} color="var(--fg-muted)" />
             <select
               value={currentLang}
               onChange={(e) => onLanguageChange && onLanguageChange(e.target.value)}
               style={{
-                background: "none",
+                background: "transparent",
                 border: "none",
-                color: "var(--text-main)",
-                fontSize: "0.82rem",
-                fontWeight: 600,
+                color: "var(--fg-primary)",
+                fontSize: "0.78rem",
+                fontWeight: 500,
                 cursor: "pointer",
                 outline: "none"
               }}
             >
               {LANGUAGES.map(lang => (
-                <option key={lang.code} value={lang.code} style={{ background: "var(--bg-secondary)", color: "var(--text-main)" }}>
+                <option key={lang.code} value={lang.code} style={{ background: "var(--surface-elevated)", color: "var(--fg-primary)" }}>
                   {lang.flag} {lang.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* System Specs Modal Trigger */}
+          {/* Theme Toggle Button */}
           <button
-            onClick={onOpenDocs}
-            className="btn btn-secondary"
-            style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
-            title="View Technical Specifications"
+            onClick={onToggleTheme}
+            className="btn btn-ghost"
+            style={{ width: "32px", height: "32px", padding: 0, borderRadius: "var(--radius-sm)" }}
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle Theme"
           >
-            <BookOpen size={14} /> {t("systemSpecs", currentLang)}
+            {theme === "dark" ? <Sun size={15} color="#fbbf24" /> : <Moon size={15} color="#6366f1" />}
           </button>
 
-          {/* User Profile / Auth Control */}
+          {/* Docs Button */}
+          <button
+            onClick={onOpenDocs}
+            className="btn btn-ghost"
+            style={{ width: "32px", height: "32px", padding: 0, borderRadius: "var(--radius-sm)" }}
+            title="System Specifications & Architecture"
+            aria-label="View Specs"
+          >
+            <BookOpen size={15} />
+          </button>
+
+          {/* User Account / Auth Actions */}
           {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <div style={{
-                background: "var(--bg-glass)",
-                border: "1px solid var(--border-glass)",
-                borderRadius: "12px",
-                padding: "0.4rem 0.8rem",
+                background: "var(--surface-inset)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-sm)",
+                padding: "2px 8px 2px 5px",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem"
+                gap: "0.45rem"
               }}>
-                {user.role === "admin" ? (
-                  <ShieldCheck size={18} color="#8b5cf6" />
-                ) : (
-                  <UserCheck size={18} color="#10b981" />
-                )}
+                <div style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "var(--radius-xs)",
+                  background: user.role === "admin" ? "var(--secondary-subtle)" : "var(--accent-subtle)",
+                  color: user.role === "admin" ? "var(--secondary)" : "var(--accent)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  {user.role === "admin" ? <ShieldCheck size={13} /> : <UserCheck size={13} />}
+                </div>
                 <div>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.2 }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--fg-primary)", lineHeight: 1.1 }}>
                     {user.full_name}
                   </div>
-                  <div style={{ fontSize: "0.7rem", color: user.role === "admin" ? "#8b5cf6" : "#10b981", fontWeight: 600 }}>
-                    {user.role.toUpperCase()}
+                  <div style={{ fontSize: "0.62rem", color: "var(--fg-muted)", fontWeight: 500, textTransform: "uppercase" }}>
+                    {user.role}
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={onLogout}
-                className="btn btn-secondary"
-                style={{ padding: "0.5rem", borderRadius: "10px" }}
+                className="btn btn-ghost"
+                style={{ width: "32px", height: "32px", padding: 0, borderRadius: "var(--radius-sm)" }}
                 title={t("logOut", currentLang)}
+                aria-label="Log Out"
               >
-                <LogOut size={16} color="#f43f5e" />
+                <LogOut size={14} color="var(--danger)" />
               </button>
             </div>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <button
-                onClick={() => onQuickDemoLogin("farmer")}
-                className="btn btn-secondary"
-                style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
-              >
-                🌾 {t("demoFarmer", currentLang)}
-              </button>
-              <button
-                onClick={() => onQuickDemoLogin("admin")}
-                className="btn btn-secondary"
-                style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
-              >
-                👑 {t("demoAdmin", currentLang)}
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", position: "relative" }}>
               <button
                 onClick={onOpenAuth}
                 className="btn btn-primary"
-                style={{ padding: "0.45rem 0.85rem", fontSize: "0.82rem" }}
+                style={{ height: "32px", padding: "0 0.85rem", fontSize: "0.8rem" }}
               >
-                <User size={14} /> {t("signIn", currentLang)}
+                <User size={13} /> {t("signIn", currentLang)}
               </button>
             </div>
           )}

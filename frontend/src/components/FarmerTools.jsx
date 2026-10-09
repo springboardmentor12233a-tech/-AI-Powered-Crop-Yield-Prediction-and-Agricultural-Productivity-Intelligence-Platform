@@ -247,39 +247,41 @@ export default function FarmerTools({ onSwitchToAssistant }) {
   ];
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+    <div className="page-container">
       {/* Notification Toast */}
       {showNotification && (
         <div style={{
           position: "fixed", top: "20px", right: "20px", zIndex: 1000,
-          background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "white",
-          padding: "1rem 1.5rem", borderRadius: "12px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+          background: "var(--accent-primary)", color: "white",
+          padding: "0.85rem 1.25rem", borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-elevation)",
           display: "flex", alignItems: "center", gap: "0.75rem", maxWidth: "400px"
         }}>
-          <Bell size={20} />
-          <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{notificationMessage}</span>
+          <Bell size={18} />
+          <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{notificationMessage}</span>
           <button onClick={() => setShowNotification(false)} style={{ background: "none", border: "none", color: "white", cursor: "pointer" }}>
-            <X size={16} />
+            <X size={15} />
           </button>
         </div>
       )}
 
-      {/* Tool Navigation */}
-      <div style={{
-        display: "flex", gap: "0.5rem", marginBottom: "1.5rem", overflowX: "auto", paddingBottom: "0.5rem"
-      }}>
+      {/* Page Header */}
+      <div className="page-header">
+        <h1 className="page-title">
+          Farmer Tools & Utilities 🌾
+        </h1>
+        <p className="page-subtitle">
+          Essential agronomy calculators, multi-farm plot records, and pest diagnostic utilities.
+        </p>
+      </div>
+
+      {/* Tool Navigation Pills */}
+      <div className="nav-pill-group" style={{ marginBottom: "1.5rem" }}>
         {tools.map(tool => (
           <button
             key={tool.id}
             onClick={() => setActiveTool(tool.id)}
-            style={{
-              display: "flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.6rem 1rem", borderRadius: "10px", border: "none",
-              background: activeTool === tool.id ? "linear-gradient(135deg, #10b981, #059669)" : "var(--bg-glass)",
-              color: activeTool === tool.id ? "white" : "var(--text-muted)",
-              cursor: "pointer", fontSize: "0.85rem", fontWeight: 600,
-              whiteSpace: "nowrap", transition: "all 0.2s"
-            }}
+            className={`nav-pill ${activeTool === tool.id ? "active" : ""}`}
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", whiteSpace: "nowrap" }}
           >
             {tool.icon}
             <span>{tool.label}</span>
@@ -290,34 +292,21 @@ export default function FarmerTools({ onSwitchToAssistant }) {
       {/* Dashboard Overview */}
       {activeTool === "dashboard" && (
         <div>
-          <div style={{
-            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, var(--bg-card) 100%)",
-            border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "20px",
-            padding: "1.5rem 2rem", marginBottom: "1.5rem"
-          }}>
-            <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-main)", margin: 0 }}>
-              Farmer Tools & Utilities 🌾
-            </h1>
-            <p style={{ color: "var(--text-muted)", marginTop: "4px", fontSize: "0.9rem" }}>
-              All farming tools in one place. Simple, easy, and free.
-            </p>
-          </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem" }}>
             {tools.filter(t => t.id !== "dashboard").map(tool => (
               <div
                 key={tool.id}
                 onClick={() => setActiveTool(tool.id)}
-                className="glass-panel hover-card"
-                style={{ padding: "1.25rem", cursor: "pointer", border: "1px solid var(--border-glass)" }}
+                className="fluent-panel"
+                style={{ padding: "1.25rem", cursor: "pointer", transition: "var(--transition-smooth)" }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(16, 185, 129, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-sm)", background: "var(--accent-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-primary)" }}>
                     {tool.icon}
                   </div>
-                  <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{tool.label}</h3>
+                  <h3 style={{ fontSize: "0.98rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{tool.label}</h3>
                 </div>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0 }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
                   {tool.id === "farms" && "Manage multiple farm plots"}
                   {tool.id === "harvest" && "Predict harvest dates"}
                   {tool.id === "water" && "Calculate water needs"}

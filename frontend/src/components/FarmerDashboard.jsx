@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
-import { Sprout, Scale, FlaskConical, Bot, TrendingUp, Calendar, Sparkles, ArrowRight, Activity, CloudSun, CloudRain, Droplets, Thermometer, Wind, Bug, IndianRupee, Phone, BookOpen, AlertTriangle, Lightbulb, Users, TrendingDown, Gift, HelpCircle, MessageCircle, Plus, X } from "lucide-react";
+import { 
+  Sprout, Scale, FlaskConical, Bot, TrendingUp, Calendar, Sparkles, 
+  ArrowRight, Activity, CloudSun, CloudRain, Droplets, Thermometer, 
+  Wind, Bug, IndianRupee, Phone, BookOpen, AlertTriangle, Lightbulb, 
+  Users, TrendingDown, Gift, HelpCircle, MessageCircle, Plus, X, 
+  CheckCircle2, Compass, ShieldCheck, ChevronRight
+} from "lucide-react";
 import { t } from "../utils/i18n";
 
-// Weather data mock - in production, this would come from a weather API
+// Weather data mock
 const WEATHER_DATA = {
   current: { temp: 28, condition: "Partly Cloudy", humidity: 65, wind: 12, rainfall: 0 },
   forecast: [
@@ -41,7 +47,7 @@ const PEST_GUIDE = [
   { name: "Root Rot", crop: "Pulses, Cotton", symptom: "Wilting, yellowing, root decay", treatment: "Trichoderma viride @ 5kg/ha or Carbendazim 50WP @ 1g/L", severity: "High" }
 ];
 
-// Market prices (MSP - Minimum Support Price)
+// Market prices
 const MARKET_PRICES = [
   { crop: "Wheat", msp: 2275, market: 2400, trend: "up" },
   { crop: "Rice (Paddy)", msp: 2183, market: 2350, trend: "up" },
@@ -83,18 +89,12 @@ const FARMING_CALENDAR = [
 
 export default function FarmerDashboard({ user, token, setActiveTab, currentLang = "en" }) {
   const [historyItems, setHistoryItems] = useState([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [soilTestResults] = useState({ N: 40, P: 20, K: 25, pH: 6.5, organicCarbon: 0.5 });
-  const [showSoilAnalysis, setShowSoilAnalysis] = useState(false);
-  const [showPestGuide, setShowPestGuide] = useState(false);
-  const [showMarketPrices, setShowMarketPrices] = useState(false);
-  const [showSchemes, setShowSchemes] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedAdvisoryTab, setSelectedAdvisoryTab] = useState("weather");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [expenses, setExpenses] = useState([]);
   const [newExpense, setNewExpense] = useState({ category: "", amount: 0, date: "", description: "" });
-  const [showExpenseTracker, setShowExpenseTracker] = useState(false);
-  const [showWeather, setShowWeather] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -121,7 +121,6 @@ export default function FarmerDashboard({ user, token, setActiveTab, currentLang
 
   const uniqueCrops = Array.from(new Set(historyItems.map(i => i.Crop))).length;
 
-  // Calculate soil health score
   const getSoilHealthScore = () => {
     let score = 0;
     if (soilTestResults.N >= 40) score += 25;
@@ -151,605 +150,584 @@ export default function FarmerDashboard({ user, token, setActiveTab, currentLang
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "1.5rem 1rem" }}>
-      {/* Welcome Banner - Simplified */}
-      <div style={{
-        background: "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, var(--bg-card) 100%)",
-        border: "1px solid rgba(16, 185, 129, 0.3)",
-        borderRadius: "20px",
-        padding: "1.5rem 2rem",
-        marginBottom: "1.5rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "1rem"
-      }}>
+    <div className="page-container">
+      {/* Page Header Block */}
+      <div className="page-header">
         <div>
-          <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-main)", margin: 0 }}>
-            {t("welcome", currentLang)}, <span className="gradient-text">{user?.full_name || t("roleFarmer", currentLang)}</span>! 🌾
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
+            <span className="badge badge-emerald">
+              <ShieldCheck size={12} /> {t("verifiedFarmerPortal", currentLang)}
+            </span>
+            <span className="badge badge-gray">
+              📍 {user?.farm_location || "Ludhiana, Punjab"}
+            </span>
+          </div>
+          <h1 className="page-header-title">
+            {t("welcome", currentLang)}, <span style={{ color: "var(--accent)" }}>{user?.full_name || t("roleFarmer", currentLang)}</span>
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: "4px", fontSize: "0.9rem" }}>
-            {user?.farm_location || "Ludhiana, Punjab"}
+          <p className="page-header-desc">
+            {t("farmerWelcomeDesc", currentLang)}
           </p>
         </div>
+
         <button
           onClick={() => setActiveTab("predictor")}
           className="btn btn-primary"
-          style={{ padding: "0.75rem 1.5rem", borderRadius: "10px", fontSize: "0.95rem" }}
+          style={{ height: "38px" }}
         >
-          <Sprout size={16} /> {t("runNewPrediction", currentLang)}
+          <Sprout size={15} /> {t("runNewPrediction", currentLang)}
         </button>
       </div>
 
-      {/* Quick Action Cards - Big and Simple */}
+      {/* Row 1: Bento KPI Metric Tiles */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "1rem",
-        marginBottom: "1.5rem"
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: "1.25rem",
+        marginBottom: "2rem"
       }}>
-        <div onClick={() => setActiveTab("predictor")} className="glass-panel hover-card" style={{ padding: "1.25rem", cursor: "pointer", textAlign: "center", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981", margin: "0 auto 0.75rem" }}>
-            <Sprout size={24} />
+        {/* Tile 1 */}
+        <div className="metric-tile">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <span className="metric-tile-label">{t("totalPredictionsRun", currentLang)}</span>
+            <Activity size={16} color="var(--accent)" />
           </div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("predictor", currentLang)}</h3>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.25rem 0 0" }}>{t("featurePredictorDesc", currentLang)}</p>
+          <div className="metric-tile-value">{totalPredictions}</div>
+          <div className="metric-tile-sub">{t("savedInHistory", currentLang)}</div>
         </div>
 
-        <div onClick={() => setShowSoilAnalysis(!showSoilAnalysis)} className="glass-panel hover-card" style={{ padding: "1.25rem", cursor: "pointer", textAlign: "center", border: "1px solid rgba(59, 130, 246, 0.25)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6", margin: "0 auto 0.75rem" }}>
-            <FlaskConical size={24} />
+        {/* Tile 2 */}
+        <div className="metric-tile">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <span className="metric-tile-label">{t("avgYieldEstimate", currentLang)}</span>
+            <TrendingUp size={16} color="var(--secondary)" />
           </div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("soilAnalysis", currentLang)}</h3>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.25rem 0 0" }}>{t("soilAnalysisDesc", currentLang)}</p>
+          <div className="metric-tile-value">
+            {avgYield.toLocaleString()} <span style={{ fontSize: "0.9rem", color: "var(--fg-muted)", fontWeight: 500 }}>kg/ha</span>
+          </div>
+          <div className="metric-tile-sub">{t("mlBenchmark", currentLang)}</div>
         </div>
 
-        <div onClick={() => setShowWeather(!showWeather)} className="glass-panel hover-card" style={{ padding: "1.25rem", cursor: "pointer", textAlign: "center", border: "1px solid rgba(245, 158, 11, 0.25)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(245, 158, 11, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b", margin: "0 auto 0.75rem" }}>
-            <CloudSun size={24} />
+        {/* Tile 3 */}
+        <div className="metric-tile">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <span className="metric-tile-label">{t("uniqueCropsEvaluated", currentLang)}</span>
+            <Sprout size={16} color="var(--warning)" />
           </div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("weather", currentLang)}</h3>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.25rem 0 0" }}>{t("weatherDesc", currentLang)}</p>
+          <div className="metric-tile-value">
+            {uniqueCrops || (totalPredictions > 0 ? 1 : 0)}
+          </div>
+          <div className="metric-tile-sub">{t("acrossFarmPlots", currentLang)}</div>
         </div>
 
-        <div onClick={() => setShowPestGuide(!showPestGuide)} className="glass-panel hover-card" style={{ padding: "1.25rem", cursor: "pointer", textAlign: "center", border: "1px solid rgba(244, 63, 94, 0.25)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(244, 63, 94, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f43f5e", margin: "0 auto 0.75rem" }}>
-            <Bug size={24} />
+        {/* Tile 4 */}
+        <div className="metric-tile">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <span className="metric-tile-label">{t("aiAgronomyReports", currentLang)}</span>
+            <Sparkles size={16} color="#8b5cf6" />
           </div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("pestGuide", currentLang)}</h3>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.25rem 0 0" }}>{t("pestGuideDesc", currentLang)}</p>
-        </div>
-
-        <div onClick={() => setShowMarketPrices(!showMarketPrices)} className="glass-panel hover-card" style={{ padding: "1.25rem", cursor: "pointer", textAlign: "center", border: "1px solid rgba(139, 92, 246, 0.25)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(139, 92, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6", margin: "0 auto 0.75rem" }}>
-            <IndianRupee size={24} />
-          </div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("marketPrices", currentLang)}</h3>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.25rem 0 0" }}>{t("marketPricesDesc", currentLang)}</p>
-        </div>
-
-        <div onClick={() => setShowSchemes(!showSchemes)} className="glass-panel hover-card" style={{ padding: "1.25rem", cursor: "pointer", textAlign: "center", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981", margin: "0 auto 0.75rem" }}>
-            <Gift size={24} />
-          </div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("govtSchemes", currentLang)}</h3>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.25rem 0 0" }}>{t("govtSchemesDesc", currentLang)}</p>
+          <div className="metric-tile-value">{totalPredictions}</div>
+          <div className="metric-tile-sub">{t("dualAiEngine", currentLang)}</div>
         </div>
       </div>
 
-      {/* Weather Section */}
-      {showWeather && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(245, 158, 11, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <CloudSun size={20} color="#f59e0b" /> {t("weatherForecast", currentLang)}
-            </h2>
-            <button onClick={() => setShowWeather(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-          
-          {/* Current Weather */}
-          <div style={{ display: "flex", gap: "1.5rem", alignItems: "center", marginBottom: "1rem", padding: "1rem", background: "var(--bg-glass)", borderRadius: "12px" }}>
-            <div style={{ textAlign: "center" }}>
-              <Thermometer size={32} color="#f59e0b" />
-              <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-main)" }}>{WEATHER_DATA.current.temp}°C</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{WEATHER_DATA.current.condition}</div>
+      {/* Row 2: Bento Grid (Primary Operations Span 8 + Quick Launchers Span 4) */}
+      <div className="bento-grid" style={{ marginBottom: "2.5rem" }}>
+        {/* Left Bento Area (Span 8): Field Operations Telemetry Center */}
+        <div className="bento-cell col-span-8">
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+            marginBottom: "1.25rem",
+            paddingBottom: "0.85rem",
+            borderBottom: "1px solid var(--border-subtle)"
+          }}>
+            <div>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>
+                Field Operations & Telemetry Center
+              </h2>
+              <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", margin: "2px 0 0" }}>
+                Live agro-climate metrics, soil diagnostics, and regional mandi prices
+              </p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", flex: 1 }}>
-              <div style={{ textAlign: "center" }}>
-                <Droplets size={20} color="#3b82f6" />
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Humidity</div>
-                <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>{WEATHER_DATA.current.humidity}%</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <Wind size={20} color="#10b981" />
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Wind</div>
-                <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>{WEATHER_DATA.current.wind} km/h</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <CloudRain size={20} color="#8b5cf6" />
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Rainfall</div>
-                <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>{WEATHER_DATA.current.rainfall} mm</div>
-              </div>
-            </div>
-          </div>
 
-          {/* 5-Day Forecast */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.75rem", marginBottom: "1rem" }}>
-            {WEATHER_DATA.forecast.map((day, idx) => (
-              <div key={idx} style={{ background: "var(--bg-glass)", padding: "0.75rem", borderRadius: "10px", textAlign: "center" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>{day.day}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)" }}>{day.temp}°C</div>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{day.condition}</div>
-                {day.rainfall > 0 && (
-                  <div style={{ fontSize: "0.7rem", color: "#3b82f6", marginTop: "0.25rem" }}>💧 {day.rainfall}mm</div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Weather Advice */}
-          <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", borderRadius: "10px", padding: "0.85rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-              <Lightbulb size={16} color="#10b981" />
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#10b981" }}>{t("weatherAdvice", currentLang)}</span>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0 }}>{WEATHER_DATA.advice}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Soil Analysis Section */}
-      {showSoilAnalysis && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(59, 130, 246, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <FlaskConical size={20} color="#3b82f6" /> {t("soilAnalysis", currentLang)}
-            </h2>
-            <button onClick={() => setShowSoilAnalysis(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Soil Health Score */}
-          <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem" }}>
-            <div style={{ flex: 1, background: "var(--bg-glass)", padding: "1rem", borderRadius: "12px", textAlign: "center" }}>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>{t("soilHealthScore", currentLang)}</div>
-              <div style={{ fontSize: "2.5rem", fontWeight: 800, color: getSoilHealthScore() >= 75 ? "#10b981" : getSoilHealthScore() >= 50 ? "#f59e0b" : "#f43f5e" }}>
-                {getSoilHealthScore()}%
-              </div>
-            </div>
-            <div style={{ flex: 2, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}>
-              <div style={{ background: "var(--bg-glass)", padding: "0.75rem", borderRadius: "10px" }}>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Nitrogen (N)</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: soilTestResults.N >= 40 ? "#10b981" : "#f43f5e" }}>{soilTestResults.N} kg/ha</div>
-              </div>
-              <div style={{ background: "var(--bg-glass)", padding: "0.75rem", borderRadius: "10px" }}>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Phosphorus (P)</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: soilTestResults.P >= 20 ? "#10b981" : "#f43f5e" }}>{soilTestResults.P} kg/ha</div>
-              </div>
-              <div style={{ background: "var(--bg-glass)", padding: "0.75rem", borderRadius: "10px" }}>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Potassium (K)</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: soilTestResults.K >= 25 ? "#10b981" : "#f43f5e" }}>{soilTestResults.K} kg/ha</div>
-              </div>
-              <div style={{ background: "var(--bg-glass)", padding: "0.75rem", borderRadius: "10px" }}>
-                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>pH Level</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: soilTestResults.pH >= 6.0 && soilTestResults.pH <= 7.5 ? "#10b981" : "#f43f5e" }}>{soilTestResults.pH}</div>
-              </div>
+            {/* Segmented Selector Buttons */}
+            <div style={{
+              display: "flex",
+              gap: "2px",
+              background: "var(--surface-inset)",
+              padding: "2px",
+              borderRadius: "var(--radius-sm)",
+              border: "1px solid var(--border-subtle)",
+              overflowX: "auto",
+              maxWidth: "100%",
+              scrollbarWidth: "none"
+            }}>
+              {[
+                { id: "weather", label: t("weather", currentLang), icon: CloudSun },
+                { id: "soil", label: t("soilAnalysis", currentLang), icon: FlaskConical },
+                { id: "pests", label: t("pestGuide", currentLang), icon: Bug },
+                { id: "market", label: t("marketPrices", currentLang), icon: IndianRupee },
+                { id: "schemes", label: t("govtSchemes", currentLang), icon: Gift },
+                { id: "calendar", label: t("farmingCalendar", currentLang), icon: Calendar },
+                { id: "expenses", label: t("expenseTracker", currentLang), icon: IndianRupee },
+                { id: "support", label: t("helpSupport", currentLang), icon: Phone }
+              ].map(tab => {
+                const Icon = tab.icon;
+                const isActive = selectedAdvisoryTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSelectedAdvisoryTab(tab.id)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "0.35rem 0.65rem",
+                      borderRadius: "calc(var(--radius-sm) - 2px)",
+                      border: "none",
+                      fontSize: "0.76rem",
+                      fontWeight: isActive ? 600 : 500,
+                      cursor: "pointer",
+                      background: isActive ? "var(--surface-base)" : "transparent",
+                      color: isActive ? "var(--accent)" : "var(--fg-secondary)",
+                      boxShadow: isActive ? "var(--shadow-sm)" : "none",
+                      transition: "all 0.15s ease",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    <Icon size={12} /> {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Soil Recommendations */}
-          {getSoilRecommendations().length > 0 && (
-            <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", borderRadius: "10px", padding: "0.85rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                <AlertTriangle size={16} color="#f59e0b" />
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f59e0b" }}>{t("soilRecommendations", currentLang)}</span>
-              </div>
-              {getSoilRecommendations().map((rec, idx) => (
-                <div key={idx} style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>• {rec}</div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+          {/* Module Content */}
+          <div style={{ flex: 1 }}>
+            {/* Weather Module */}
+            {selectedAdvisoryTab === "weather" && (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+                  <div style={{
+                    background: "var(--surface-inset)",
+                    padding: "1rem",
+                    borderRadius: "var(--radius-md)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1.25rem"
+                  }}>
+                    <div style={{ textAlign: "center" }}>
+                      <Thermometer size={28} color="var(--warning)" />
+                      <div style={{ fontSize: "1.75rem", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                        {WEATHER_DATA.current.temp}°C
+                      </div>
+                      <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)" }}>
+                        {WEATHER_DATA.current.condition}
+                      </div>
+                    </div>
 
-      {/* Pest Guide Section */}
-      {showPestGuide && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(244, 63, 94, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Bug size={20} color="#f43f5e" /> {t("pestGuide", currentLang)}
-            </h2>
-            <button onClick={() => setShowPestGuide(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.75rem" }}>
-            {PEST_GUIDE.map((pest, idx) => (
-              <div key={idx} style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                  <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-main)" }}>{pest.name}</span>
-                  <span className="badge" style={{ fontSize: "0.65rem", background: pest.severity === "High" ? "rgba(244, 63, 94, 0.15)" : "rgba(245, 158, 11, 0.15)", color: pest.severity === "High" ? "#f43f5e" : "#f59e0b" }}>
-                    {pest.severity}
-                  </span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", flex: 1 }}>
+                      <div style={{ textAlign: "center", background: "var(--surface-base)", padding: "0.5rem", borderRadius: "var(--radius-sm)" }}>
+                        <div style={{ fontSize: "0.68rem", color: "var(--fg-muted)" }}>Humidity</div>
+                        <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{WEATHER_DATA.current.humidity}%</div>
+                      </div>
+                      <div style={{ textAlign: "center", background: "var(--surface-base)", padding: "0.5rem", borderRadius: "var(--radius-sm)" }}>
+                        <div style={{ fontSize: "0.68rem", color: "var(--fg-muted)" }}>Wind</div>
+                        <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{WEATHER_DATA.current.wind} km/h</div>
+                      </div>
+                      <div style={{ textAlign: "center", background: "var(--surface-base)", padding: "0.5rem", borderRadius: "var(--radius-sm)" }}>
+                        <div style={{ fontSize: "0.68rem", color: "var(--fg-muted)" }}>Rainfall</div>
+                        <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{WEATHER_DATA.current.rainfall} mm</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: "var(--surface-inset)",
+                    padding: "1rem",
+                    borderRadius: "var(--radius-md)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.35rem" }}>
+                      <Lightbulb size={16} color="var(--accent)" />
+                      <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--accent)" }}>
+                        Agro Advisory Note
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "0.82rem", color: "var(--fg-secondary)", margin: 0, lineHeight: 1.5 }}>
+                      {WEATHER_DATA.advice}
+                    </p>
+                  </div>
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}><strong>Crops:</strong> {pest.crop}</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}><strong>Symptoms:</strong> {pest.symptom}</div>
-                <div style={{ fontSize: "0.75rem", color: "#10b981" }}><strong>Treatment:</strong> {pest.treatment}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Market Prices Section */}
-      {showMarketPrices && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(139, 92, 246, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <IndianRupee size={20} color="#8b5cf6" /> {t("marketPrices", currentLang)}
-            </h2>
-            <button onClick={() => setShowMarketPrices(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-            {MARKET_PRICES.map((item, idx) => (
-              <div key={idx} style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                  <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-main)" }}>{item.crop}</span>
-                  {item.trend === "up" ? <TrendingUp size={16} color="#10b981" /> : item.trend === "down" ? <TrendingDown size={16} color="#f43f5e" /> : <span style={{ color: "var(--text-muted)" }}>—</span>}
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
-                  <span style={{ color: "var(--text-muted)" }}>MSP: ₹{item.msp}</span>
-                  <span style={{ color: "#10b981", fontWeight: 600 }}>Market: ₹{item.market}</span>
+                {/* 5-Day Forecast Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem" }}>
+                  {WEATHER_DATA.forecast.map((d, i) => (
+                    <div key={i} style={{
+                      background: "var(--surface-inset)",
+                      padding: "0.65rem 0.5rem",
+                      borderRadius: "var(--radius-sm)",
+                      textAlign: "center"
+                    }}>
+                      <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)", fontWeight: 500 }}>{d.day}</div>
+                      <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "var(--font-mono)", margin: "2px 0" }}>{d.temp}°C</div>
+                      <div style={{ fontSize: "0.68rem", color: "var(--fg-secondary)" }}>{d.condition}</div>
+                      {d.rainfall > 0 && <div style={{ fontSize: "0.68rem", color: "var(--secondary)" }}>💧 {d.rainfall}mm</div>}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
 
-      {/* Government Schemes Section */}
-      {showSchemes && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Gift size={20} color="#10b981" /> {t("govtSchemes", currentLang)}
-            </h2>
-            <button onClick={() => setShowSchemes(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.75rem" }}>
-            {GOVERNMENT_SCHEMES.map((scheme, idx) => (
-              <div key={idx} style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#10b981", marginBottom: "0.25rem" }}>{scheme.name}</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>{scheme.desc}</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}><strong>Benefit:</strong> {scheme.benefit}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+            {/* Soil Health Module */}
+            {selectedAdvisoryTab === "soil" && (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.85rem", marginBottom: "1rem" }}>
+                  <div style={{ background: "var(--surface-inset)", padding: "1rem", borderRadius: "var(--radius-md)", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--fg-muted)", fontWeight: 500 }}>Soil Health Index</div>
+                    <div style={{ fontSize: "2.2rem", fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
+                      {getSoilHealthScore()}%
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)" }}>Optimal Condition</div>
+                  </div>
 
-      {/* Farming Calendar Section */}
-      {showCalendar && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Calendar size={20} color="#10b981" /> {t("farmingCalendar", currentLang)}
-            </h2>
-            <button onClick={() => setShowCalendar(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-            {FARMING_CALENDAR.map((month, idx) => (
-              <div key={idx} onClick={() => setSelectedMonth(idx)} style={{ background: idx === selectedMonth ? "rgba(16, 185, 129, 0.15)" : "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: idx === selectedMonth ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid var(--border-glass)", cursor: "pointer" }}>
-                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: idx === selectedMonth ? "#10b981" : "var(--text-main)", marginBottom: "0.5rem" }}>{month.month}</div>
-                {idx === selectedMonth && (
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                    {month.activities.map((act, i) => (
-                      <div key={i} style={{ marginBottom: "0.25rem" }}>• {act}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+                    <div style={{ background: "var(--surface-inset)", padding: "0.65rem", borderRadius: "var(--radius-sm)" }}>
+                      <div className="text-caption" style={{ color: "var(--fg-muted)" }}>Nitrogen (N)</div>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}>{soilTestResults.N} kg/ha</div>
+                    </div>
+                    <div style={{ background: "var(--surface-inset)", padding: "0.65rem", borderRadius: "var(--radius-sm)" }}>
+                      <div className="text-caption" style={{ color: "var(--fg-muted)" }}>Phosphorus (P)</div>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}>{soilTestResults.P} kg/ha</div>
+                    </div>
+                    <div style={{ background: "var(--surface-inset)", padding: "0.65rem", borderRadius: "var(--radius-sm)" }}>
+                      <div className="text-caption" style={{ color: "var(--fg-muted)" }}>Potassium (K)</div>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}>{soilTestResults.K} kg/ha</div>
+                    </div>
+                    <div style={{ background: "var(--surface-inset)", padding: "0.65rem", borderRadius: "var(--radius-sm)" }}>
+                      <div className="text-caption" style={{ color: "var(--fg-muted)" }}>pH Balance</div>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}>{soilTestResults.pH}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {getSoilRecommendations().length > 0 && (
+                  <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "0.75rem 1rem" }}>
+                    <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--warning)", marginBottom: "0.3rem" }}>
+                      Nutrient Corrections:
+                    </div>
+                    {getSoilRecommendations().map((r, i) => (
+                      <div key={i} style={{ fontSize: "0.78rem", color: "var(--fg-secondary)", marginBottom: "0.2rem" }}>• {r}</div>
                     ))}
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
 
-      {/* Expense Tracker Section */}
-      {showExpenseTracker && (
-        <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(245, 158, 11, 0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <IndianRupee size={20} color="#f59e0b" /> {t("expenseTracker", currentLang)}
-            </h2>
-            <button onClick={() => setShowExpenseTracker(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
-              <X size={18} />
-            </button>
-          </div>
-          
-          {/* Add Expense Form */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.75rem", marginBottom: "1rem" }}>
-            <select value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category: e.target.value})} className="input-field" style={{ padding: "0.5rem", fontSize: "0.85rem" }}>
-              <option value="">Select Category</option>
-              <option value="Seeds">Seeds</option>
-              <option value="Fertilizer">Fertilizer</option>
-              <option value="Pesticide">Pesticide</option>
-              <option value="Labor">Labor</option>
-              <option value="Irrigation">Irrigation</option>
-              <option value="Equipment">Equipment</option>
-              <option value="Other">Other</option>
-            </select>
-            <input type="number" placeholder="Amount (₹)" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount: Number(e.target.value)})} className="input-field" style={{ padding: "0.5rem", fontSize: "0.85rem" }} />
-            <input type="date" value={newExpense.date} onChange={(e) => setNewExpense({...newExpense, date: e.target.value})} className="input-field" style={{ padding: "0.5rem", fontSize: "0.85rem" }} />
-            <button onClick={addExpense} className="btn btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}>
-              <Plus size={14} /> Add
-            </button>
-          </div>
-
-          {/* Expense List */}
-          {expenses.length > 0 ? (
-            <div style={{ marginBottom: "1rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", borderBottom: "1px solid var(--border-glass)", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                <span>Category</span>
-                <span>Amount</span>
-                <span>Date</span>
+            {/* Pest Guide Module */}
+            {selectedAdvisoryTab === "pests" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem" }}>
+                {PEST_GUIDE.slice(0, 4).map((p, i) => (
+                  <div key={i} style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
+                      <span style={{ fontSize: "0.88rem", fontWeight: 600 }}>{p.name}</span>
+                      <span className="badge badge-amber" style={{ fontSize: "0.62rem" }}>{p.severity}</span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--fg-secondary)", marginBottom: "0.2rem" }}>
+                      <strong>Target:</strong> {p.crop}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--accent)", fontWeight: 500 }}>
+                      <strong>Remedy:</strong> {p.treatment}
+                    </div>
+                  </div>
+                ))}
               </div>
-              {expenses.map(exp => (
-                <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", borderBottom: "1px solid var(--border-glass)", fontSize: "0.85rem" }}>
-                  <span style={{ color: "var(--text-main)" }}>{exp.category}</span>
-                  <span style={{ color: "#f43f5e", fontWeight: 600 }}>₹{exp.amount}</span>
-                  <span style={{ color: "var(--text-muted)" }}>{exp.date}</span>
+            )}
+
+            {/* Mandi Market Prices Module */}
+            {selectedAdvisoryTab === "market" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.65rem" }}>
+                {MARKET_PRICES.slice(0, 6).map((m, i) => (
+                  <div key={i} style={{ background: "var(--surface-inset)", padding: "0.75rem", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{m.crop}</span>
+                      <span style={{ fontSize: "0.72rem", color: m.trend === "up" ? "var(--accent)" : "var(--fg-muted)" }}>
+                        {m.trend === "up" ? "↑ Up" : "● Stable"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.76rem" }}>
+                      <span style={{ color: "var(--fg-muted)" }}>MSP: ₹{m.msp}</span>
+                      <span style={{ color: "var(--accent)", fontWeight: 600 }}>Market: ₹{m.market}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Govt Schemes Module */}
+            {selectedAdvisoryTab === "schemes" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem" }}>
+                {GOVERNMENT_SCHEMES.slice(0, 3).map((s, i) => (
+                  <div key={i} style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "var(--accent)", marginBottom: "0.2rem" }}>{s.name}</div>
+                    <div style={{ fontSize: "0.76rem", color: "var(--fg-secondary)", marginBottom: "0.35rem" }}>{s.desc}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--fg-primary)", fontWeight: 500 }}>{s.benefit}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Farm Calendar Module */}
+            {selectedAdvisoryTab === "calendar" && (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.4rem", marginBottom: "0.85rem" }}>
+                  {FARMING_CALENDAR.slice(0, 6).map((cal, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedMonth(i)}
+                      style={{
+                        padding: "0.5rem 0.3rem",
+                        borderRadius: "var(--radius-sm)",
+                        border: selectedMonth === i ? "1px solid var(--accent)" : "1px solid var(--border-subtle)",
+                        background: selectedMonth === i ? "var(--surface-base)" : "var(--surface-inset)",
+                        color: selectedMonth === i ? "var(--accent)" : "var(--fg-secondary)",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        cursor: "pointer"
+                      }}
+                    >
+                      {cal.month.slice(0, 3)}
+                    </button>
+                  ))}
                 </div>
-              ))}
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "0.75rem 0 0", fontSize: "0.9rem", fontWeight: 700 }}>
-                <span>Total Expenses</span>
-                <span style={{ color: "#f43f5e" }}>₹{totalExpenses.toLocaleString()}</span>
+                <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)" }}>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--accent)", marginBottom: "0.3rem" }}>
+                    {FARMING_CALENDAR[selectedMonth].month} Actions:
+                  </div>
+                  {FARMING_CALENDAR[selectedMonth].activities.map((a, idx) => (
+                    <div key={idx} style={{ fontSize: "0.78rem", color: "var(--fg-secondary)", marginBottom: "0.2rem" }}>• {a}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Expenses Module */}
+            {selectedAdvisoryTab === "expenses" && (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.5rem", marginBottom: "0.85rem" }}>
+                  <select
+                    value={newExpense.category}
+                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                    className="input-field select-field"
+                    style={{ height: "34px", fontSize: "0.78rem" }}
+                  >
+                    <option value="">Category</option>
+                    <option value="Seeds">Seeds</option>
+                    <option value="Fertilizer">Fertilizer</option>
+                    <option value="Irrigation">Irrigation</option>
+                    <option value="Labor">Labor</option>
+                  </select>
+
+                  <input
+                    type="number"
+                    placeholder="Amount (₹)"
+                    value={newExpense.amount || ""}
+                    onChange={(e) => setNewExpense({ ...newExpense, amount: Number(e.target.value) })}
+                    className="input-field"
+                    style={{ height: "34px", fontSize: "0.78rem" }}
+                  />
+
+                  <button onClick={addExpense} className="btn btn-primary" style={{ height: "34px", fontSize: "0.78rem" }}>
+                    <Plus size={13} /> Add
+                  </button>
+                </div>
+
+                <div style={{ fontSize: "0.8rem", color: "var(--fg-secondary)" }}>
+                  Total Recorded Outflow: <strong style={{ color: "var(--fg-primary)" }}>₹{totalExpenses.toLocaleString()}</strong>
+                </div>
+              </div>
+            )}
+
+            {/* Kisan Helpline Module */}
+            {selectedAdvisoryTab === "support" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
+                <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)", textAlign: "center" }}>
+                  <Phone size={20} color="var(--accent)" style={{ margin: "0 auto 4px" }} />
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>Kisan Call Center</div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--accent)", fontWeight: 600 }}>1800-180-1551 (Toll Free)</div>
+                </div>
+
+                <div style={{ background: "var(--surface-inset)", padding: "0.85rem", borderRadius: "var(--radius-md)", textAlign: "center" }}>
+                  <MessageCircle size={20} color="var(--secondary)" style={{ margin: "0 auto 4px" }} />
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>WhatsApp Agronomy</div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--secondary)", fontWeight: 600 }}>+91 98765 43210</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Bento Area (Span 4): Core Intelligence Launchers */}
+        <div className="bento-cell col-span-4" style={{ justifyContent: "space-between" }}>
+          <div>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "0.2rem" }}>
+              Intelligence Suite
+            </h2>
+            <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", marginBottom: "1rem" }}>
+              Quick access to core quantitative models
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {/* Launcher 1 */}
+              <div
+                onClick={() => setActiveTab("predictor")}
+                className="fluent-card fluent-card-interactive"
+                style={{ padding: "0.75rem 0.95rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "var(--radius-xs)", background: "var(--accent-subtle)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Sprout size={15} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("predictor", currentLang)}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)" }}>Yield forecasting in kg/ha</div>
+                  </div>
+                </div>
+                <ChevronRight size={14} color="var(--fg-muted)" />
+              </div>
+
+              {/* Launcher 2 */}
+              <div
+                onClick={() => setActiveTab("fertilizer")}
+                className="fluent-card fluent-card-interactive"
+                style={{ padding: "0.75rem 0.95rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "var(--radius-xs)", background: "rgba(139, 92, 246, 0.12)", color: "#8b5cf6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <FlaskConical size={15} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("fertilizer", currentLang)}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)" }}>Precision N-P-K dosing</div>
+                  </div>
+                </div>
+                <ChevronRight size={14} color="var(--fg-muted)" />
+              </div>
+
+              {/* Launcher 3 */}
+              <div
+                onClick={() => setActiveTab("compare")}
+                className="fluent-card fluent-card-interactive"
+                style={{ padding: "0.75rem 0.95rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "var(--radius-xs)", background: "var(--secondary-subtle)", color: "var(--secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Scale size={15} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("compare", currentLang)}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)" }}>Multi-crop ROI matrix</div>
+                  </div>
+                </div>
+                <ChevronRight size={14} color="var(--fg-muted)" />
+              </div>
+
+              {/* Launcher 4 */}
+              <div
+                onClick={() => setActiveTab("assistant")}
+                className="fluent-card fluent-card-interactive"
+                style={{ padding: "0.75rem 0.95rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "var(--radius-xs)", background: "var(--warning-subtle)", color: "var(--warning)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Bot size={15} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("assistant", currentLang)}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--fg-muted)" }}>Dual-AI Voice & Chat</div>
+                  </div>
+                </div>
+                <ChevronRight size={14} color="var(--fg-muted)" />
               </div>
             </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "1.5rem", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-              {t("noExpensesRecorded", currentLang)}
-            </div>
-          )}
-        </div>
-      )}
+          </div>
 
-      {/* Help & Support Section */}
-      <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(59, 130, 246, 0.25)" }}>
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: 0, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <HelpCircle size={20} color="#3b82f6" /> {t("helpSupport", currentLang)}
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-          <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", textAlign: "center" }}>
-            <Phone size={24} color="#10b981" />
-            <div style={{ fontSize: "0.85rem", fontWeight: 600, marginTop: "0.5rem" }}>Kisan Call Center</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>1800-180-1551 (Toll Free)</div>
-          </div>
-          <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", textAlign: "center" }}>
-            <MessageCircle size={24} color="#3b82f6" />
-            <div style={{ fontSize: "0.85rem", fontWeight: 600, marginTop: "0.5rem" }}>WhatsApp Support</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>+91 98765 43210</div>
-          </div>
-          <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", textAlign: "center" }}>
-            <BookOpen size={24} color="#8b5cf6" />
-            <div style={{ fontSize: "0.85rem", fontWeight: 600, marginTop: "0.5rem" }}>User Guide</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Step-by-step instructions</div>
-          </div>
-          <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", textAlign: "center" }}>
-            <Users size={24} color="#f59e0b" />
-            <div style={{ fontSize: "0.85rem", fontWeight: 600, marginTop: "0.5rem" }}>Local Expert</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Connect with agri officer</div>
+          <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>Active Engine:</span>
+            <span className="badge badge-emerald">Dual AI (Gemini + Groq)</span>
           </div>
         </div>
       </div>
 
-      {/* KPI Stats Counters Grid */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-        gap: "1.25rem",
-        marginBottom: "2.5rem"
-      }}>
-        {/* Stat 1 */}
-        <div className="glass-panel" style={{ padding: "1.5rem", border: "1px solid rgba(16,185,129,0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("totalPredictionsRun", currentLang)}</span>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
-              <Activity size={18} />
-            </div>
+      {/* Row 3: Recent Activity / Historical Logs Table */}
+      <div className="fluent-panel">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>
+              {t("recentPredictionHistory", currentLang)}
+            </h2>
+            <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", margin: "2px 0 0" }}>
+              Persistent farm logs verified by XGBoost regression pipeline
+            </p>
           </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--text-main)", marginTop: "8px" }}>
-            {totalPredictions}
-          </div>
-          <div style={{ fontSize: "0.78rem", color: "#10b981", marginTop: "4px" }}>
-            {t("savedInHistory", currentLang)}
-          </div>
+
+          <button
+            onClick={() => setActiveTab("history")}
+            className="btn btn-ghost"
+            style={{ height: "30px", fontSize: "0.78rem", color: "var(--accent)" }}
+          >
+            {t("viewAllLogs", currentLang)} <ArrowRight size={13} />
+          </button>
         </div>
 
-        {/* Stat 2 */}
-        <div className="glass-panel" style={{ padding: "1.5rem", border: "1px solid rgba(59,130,246,0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("avgYieldEstimate", currentLang)}</span>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6" }}>
-              <TrendingUp size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--text-main)", marginTop: "8px" }}>
-            {avgYield.toLocaleString()} <span style={{ fontSize: "1rem", color: "#3b82f6" }}>kg/ha</span>
-          </div>
-          <div style={{ fontSize: "0.78rem", color: "#3b82f6", marginTop: "4px" }}>
-            {t("mlBenchmark", currentLang)}
-          </div>
-        </div>
-
-        {/* Stat 3 */}
-        <div className="glass-panel" style={{ padding: "1.5rem", border: "1px solid rgba(139,92,246,0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("uniqueCropsEvaluated", currentLang)}</span>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(139,92,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6" }}>
-              <Sprout size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--text-main)", marginTop: "8px" }}>
-            {uniqueCrops}
-          </div>
-          <div style={{ fontSize: "0.78rem", color: "#8b5cf6", marginTop: "4px" }}>
-            {t("acrossFarmPlots", currentLang)}
-          </div>
-        </div>
-
-        {/* Stat 4 */}
-        <div className="glass-panel" style={{ padding: "1.5rem", border: "1px solid rgba(245,158,11,0.25)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("aiAgronomyReports", currentLang)}</span>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b" }}>
-              <Sparkles size={18} />
-            </div>
-          </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--text-main)", marginTop: "8px" }}>
-            {totalPredictions}
-          </div>
-          <div style={{ fontSize: "0.78rem", color: "#f59e0b", marginTop: "4px" }}>
-            {t("dualAiEngine", currentLang)}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Action Launcher Grid */}
-      <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1.2rem" }}>
-        {t("quickActionLauncher", currentLang)}
-      </h2>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-        gap: "1.25rem",
-        marginBottom: "2.5rem"
-      }}>
-        {/* Action 1 */}
-        <div
-          onClick={() => setActiveTab("predictor")}
-          className="glass-panel hover-card"
-          style={{ padding: "1.5rem", cursor: "pointer", border: "1px solid rgba(16, 185, 129, 0.25)" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "0.8rem" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(16, 185, 129, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
-              <Sprout size={20} />
-            </div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("predictor", currentLang)}</h3>
-          </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
-            {t("featurePredictorDesc", currentLang)}
-          </p>
-        </div>
-
-        {/* Action 2 */}
-        <div
-          onClick={() => setActiveTab("fertilizer")}
-          className="glass-panel hover-card"
-          style={{ padding: "1.5rem", cursor: "pointer", border: "1px solid rgba(139, 92, 246, 0.25)" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "0.8rem" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(139, 92, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6" }}>
-              <FlaskConical size={20} />
-            </div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("fertilizer", currentLang)}</h3>
-          </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
-            {t("featureFertilizerDesc", currentLang)}
-          </p>
-        </div>
-
-        {/* Action 3 */}
-        <div
-          onClick={() => setActiveTab("compare")}
-          className="glass-panel hover-card"
-          style={{ padding: "1.5rem", cursor: "pointer", border: "1px solid rgba(59, 130, 246, 0.25)" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "0.8rem" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b82f6" }}>
-              <Scale size={20} />
-            </div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("compare", currentLang)}</h3>
-          </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
-            {t("featureCompareDesc", currentLang)}
-          </p>
-        </div>
-
-        {/* Action 4 */}
-        <div
-          onClick={() => setActiveTab("assistant")}
-          className="glass-panel hover-card"
-          style={{ padding: "1.5rem", cursor: "pointer", border: "1px solid rgba(245, 158, 11, 0.25)" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "0.8rem" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(245, 158, 11, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b" }}>
-              <Bot size={20} />
-            </div>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>{t("assistant", currentLang)}</h3>
-          </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
-            {t("featureAssistantDesc", currentLang)}
-          </p>
-        </div>
-      </div>
-
-      {/* Recent Predictions Table */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)", margin: 0 }}>
-          {t("recentPredictionHistory", currentLang)}
-        </h2>
-        <button
-          onClick={() => setActiveTab("history")}
-          style={{ background: "none", border: "none", color: "#10b981", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-        >
-          {t("viewAllLogs", currentLang)} <ArrowRight size={14} />
-        </button>
-      </div>
-
-      <div className="glass-panel" style={{ padding: "1.5rem" }}>
         {historyItems.length > 0 ? (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", color: "var(--text-main)", fontSize: "0.9rem" }}>
+          <div className="fluent-table-wrapper">
+            <table className="fluent-table">
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border-glass)", textAlign: "left", color: "var(--text-muted)" }}>
-                  <th style={{ padding: "10px" }}>{t("cropLabel", currentLang)}</th>
-                  <th style={{ padding: "10px" }}>{t("locationLabel", currentLang)}</th>
-                  <th style={{ padding: "10px" }}>{t("yearLabel", currentLang)}</th>
-                  <th style={{ padding: "10px" }}>{t("predictedYieldLabel", currentLang)}</th>
-                  <th style={{ padding: "10px" }}>{t("aiEngineLabel", currentLang)}</th>
-                  <th style={{ padding: "10px" }}>{t("timestampLabel", currentLang)}</th>
+                <tr>
+                  <th>{t("cropLabel", currentLang)}</th>
+                  <th>{t("locationLabel", currentLang)}</th>
+                  <th>{t("yearLabel", currentLang)}</th>
+                  <th>{t("predictedYieldLabel", currentLang)}</th>
+                  <th>{t("aiEngineLabel", currentLang)}</th>
+                  <th>{t("timestampLabel", currentLang)}</th>
                 </tr>
               </thead>
               <tbody>
                 {historyItems.slice(0, 5).map(item => (
-                  <tr key={item.id} style={{ borderBottom: "1px solid var(--border-glass)" }}>
-                    <td style={{ padding: "12px 10px", fontWeight: 700, color: "#10b981" }}>{item.Crop}</td>
-                    <td style={{ padding: "12px 10px" }}>{item.Dist_Name}, {item.State_Name}</td>
-                    <td style={{ padding: "12px 10px" }}>{item.Year}</td>
-                    <td style={{ padding: "12px 10px", fontWeight: 700, color: "var(--text-main)" }}>{item.predicted_yield} kg/ha</td>
-                    <td style={{ padding: "12px 10px" }}>
-                      <span className="badge badge-purple" style={{ fontSize: "0.7rem" }}>{item.ai_provider_used}</span>
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: 600, color: "var(--accent)" }}>{item.Crop}</td>
+                    <td>{item.Dist_Name}, {item.State_Name}</td>
+                    <td style={{ fontFamily: "var(--font-mono)" }}>{item.Year}</td>
+                    <td style={{ fontWeight: 600, fontFamily: "var(--font-mono)" }}>
+                      {item.predicted_yield} kg/ha
                     </td>
-                    <td style={{ padding: "12px 10px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{item.created_at_formatted}</td>
+                    <td>
+                      <span className="badge badge-purple">
+                        {item.ai_provider_used}
+                      </span>
+                    </td>
+                    <td style={{ color: "var(--fg-muted)", fontSize: "0.78rem" }}>
+                      {item.created_at_formatted}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
-            {t("noPredictionsRecorded", currentLang)}
+          <div style={{ textAlign: "center", padding: "2.5rem 1rem", color: "var(--fg-muted)" }}>
+            <Sprout size={32} color="var(--accent)" style={{ margin: "0 auto 0.5rem", opacity: 0.6 }} />
+            <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{t("noPredictionsRecorded", currentLang)}</div>
+            <p style={{ fontSize: "0.78rem", color: "var(--fg-muted)", marginTop: "2px" }}>
+              Run your first yield prediction to generate verifiable soil records.
+            </p>
           </div>
         )}
       </div>

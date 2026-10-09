@@ -116,16 +116,6 @@ function App() {
     setActiveTab("dashboard");
   };
 
-  const handleQuickDemoLogin = async (roleType) => {
-    const email = roleType === "admin" ? "admin@agriyield.ai" : "farmer@agriyield.ai";
-    const password = roleType === "admin" ? "admin123" : "farmer123";
-    try {
-      await handleLogin(email, password);
-    } catch (err) {
-      alert("Quick demo login failed: " + err.message);
-    }
-  };
-
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header
@@ -134,7 +124,6 @@ function App() {
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogout={handleLogout}
-        onQuickDemoLogin={handleQuickDemoLogin}
         onOpenDocs={() => setIsDocsOpen(true)}
         systemHealth={systemHealth}
         currentLang={currentLang}
@@ -147,7 +136,6 @@ function App() {
         {!user ? (
           <LandingPage
             onOpenAuth={() => setIsAuthOpen(true)}
-            onQuickDemoLogin={handleQuickDemoLogin}
             currentLang={currentLang}
           />
         ) : (

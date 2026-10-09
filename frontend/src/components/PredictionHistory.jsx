@@ -72,10 +72,8 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
     document.body.removeChild(link);
   };
 
-  // Unique crops for filtering
   const uniqueCrops = ["ALL", ...Array.from(new Set(history.map(item => item.Crop)))];
 
-  // Filtered records
   const filteredHistory = history.filter(item => {
     const matchesSearch =
       item.Crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -88,24 +86,24 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
   });
 
   return (
-    <div style={{ maxWidth: "1350px", margin: "0 auto", padding: "1.5rem 1rem" }}>
-      {/* Title */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span className="badge badge-emerald">
-              <History size={12} /> {t("logs", currentLang)}
+              <History size={11} /> Historical Records
             </span>
             {user && (
               <span className="badge badge-purple">
-                {user.role === "admin" ? "System Audit (All Farmers)" : `My Farm Records (${user.full_name})`}
+                {user.role === "admin" ? "All Farmer Logs" : `Personal Farm Records (${user.full_name})`}
               </span>
             )}
           </div>
-          <h1 style={{ fontSize: "2rem", fontWeight: 800, marginTop: "0.4rem", color: "var(--text-main)" }}>
+          <h1 className="page-title">
             {t("historyTitle", currentLang)}
           </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
+          <p className="page-subtitle">
             {t("historySub", currentLang)}
           </p>
         </div>
@@ -113,33 +111,33 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
         <button
           onClick={handleExportCSV}
           className="btn btn-secondary"
-          style={{ fontSize: "0.85rem" }}
+          style={{ fontSize: "0.82rem" }}
           disabled={history.length === 0}
         >
-          <Download size={14} /> {t("exportCSV", currentLang)}
+          <Download size={13} /> {t("exportCSV", currentLang)}
         </button>
       </div>
 
-      {/* Filter Controls Bar */}
-      <div className="glass-panel" style={{ padding: "1rem 1.25rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: "220px", background: "var(--bg-glass)", padding: "0.5rem 0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-          <Search size={16} color="var(--text-muted)" />
+      {/* Filter & Search Bar */}
+      <div className="fluent-panel" style={{ padding: "0.85rem 1.15rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.85rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: "220px", background: "var(--bg-inset)", padding: "0.45rem 0.8rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+          <Search size={15} color="var(--text-muted)" />
           <input
             type="text"
             placeholder={t("searchPlaceholder", currentLang)}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ background: "none", border: "none", outline: "none", color: "var(--text-main)", fontSize: "0.88rem", width: "100%" }}
+            style={{ background: "none", border: "none", outline: "none", color: "var(--text-main)", fontSize: "0.85rem", width: "100%" }}
           />
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("filterByCrop", currentLang)}:</span>
+          <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("filterByCrop", currentLang)}:</span>
           <select
             value={selectedCropFilter}
             onChange={(e) => setSelectedCropFilter(e.target.value)}
-            className="input-field select-field"
-            style={{ width: "auto", fontSize: "0.85rem", padding: "0.45rem 2.2rem 0.45rem 0.75rem" }}
+            className="select-field"
+            style={{ width: "auto", fontSize: "0.82rem", padding: "0.35rem 1.8rem 0.35rem 0.65rem" }}
           >
             {uniqueCrops.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -149,30 +147,30 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
       </div>
 
       {errorMsg && (
-        <div style={{ background: "rgba(244, 63, 94, 0.15)", border: "1px solid rgba(244, 63, 94, 0.3)", color: "#f43f5e", padding: "1rem", borderRadius: "12px", marginBottom: "1.5rem" }}>
-          ⚠️ {errorMsg}
+        <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--color-danger)", padding: "0.75rem 1rem", borderRadius: "var(--radius-sm)", marginBottom: "1.25rem", fontSize: "0.82rem" }}>
+          {errorMsg}
         </div>
       )}
 
       {/* Table Container */}
-      <div className="glass-panel" style={{ padding: "1.5rem" }}>
+      <div className="fluent-panel" style={{ padding: 0, overflow: "hidden" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "3rem" }}>
-            <span className="spinner" style={{ width: "28px", height: "28px", margin: "0 auto 1rem" }}></span>
-            <p style={{ color: "var(--text-muted)" }}>Loading prediction logs...</p>
+            <span className="spinner" style={{ width: "24px", height: "24px", margin: "0 auto 0.75rem" }}></span>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading prediction history...</p>
           </div>
         ) : filteredHistory.length > 0 ? (
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.9rem", color: "var(--text-main)" }}>
+            <table className="fluent-table">
               <thead>
-                <tr style={{ background: "var(--table-head-bg)", borderBottom: "1px solid var(--border-glass)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                  <th style={{ padding: "0.85rem 1rem" }}>{t("cropLabel", currentLang)}</th>
-                  <th style={{ padding: "0.85rem 1rem" }}>{t("locationLabel", currentLang)}</th>
-                  <th style={{ padding: "0.85rem 1rem" }}>{t("yearLabel", currentLang)}</th>
-                  <th style={{ padding: "0.85rem 1rem" }}>{t("predictedYieldLabel", currentLang)}</th>
-                  <th style={{ padding: "0.85rem 1rem" }}>{t("aiEngineLabel", currentLang)}</th>
-                  <th style={{ padding: "0.85rem 1rem" }}>{t("timestampLabel", currentLang)}</th>
-                  <th style={{ padding: "0.85rem 1rem", textAlign: "right" }}>{t("actionsLabel", currentLang)}</th>
+                <tr>
+                  <th>{t("cropLabel", currentLang)}</th>
+                  <th>{t("locationLabel", currentLang)}</th>
+                  <th>{t("yearLabel", currentLang)}</th>
+                  <th>{t("predictedYieldLabel", currentLang)}</th>
+                  <th>{t("aiEngineLabel", currentLang)}</th>
+                  <th>{t("timestampLabel", currentLang)}</th>
+                  <th style={{ textAlign: "right" }}>{t("actionsLabel", currentLang)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -180,48 +178,47 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
                   <tr
                     key={item.id}
                     onClick={() => setSelectedItem(item)}
-                    style={{ borderBottom: "1px solid var(--border-glass)", cursor: "pointer" }}
-                    className="hover-card"
+                    style={{ cursor: "pointer" }}
                   >
-                    <td style={{ padding: "0.85rem 1rem", fontWeight: 700, color: "#10b981" }}>
+                    <td style={{ fontWeight: 700, color: "var(--accent-primary)" }}>
                       {item.Crop}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
+                    <td>
                       {item.Dist_Name}, {item.State_Name}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
+                    <td>
                       {item.Year}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem", fontWeight: 700, color: "var(--text-main)" }}>
+                    <td style={{ fontWeight: 700, fontFamily: "var(--font-mono)" }}>
                       {item.predicted_yield} kg/ha
                     </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <span className="badge badge-purple" style={{ fontSize: "0.68rem" }}>
+                    <td>
+                      <span className="badge badge-purple" style={{ fontSize: "0.65rem" }}>
                         {item.ai_provider_used || "Google Gemini"}
                       </span>
                     </td>
-                    <td style={{ padding: "0.85rem 1rem", color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                    <td style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
                       {item.created_at_formatted || new Date(item.created_at * 1000).toLocaleString()}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem", textAlign: "right" }}>
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.4rem" }}>
+                    <td style={{ textAlign: "right" }}>
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.35rem" }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }}
                           className="btn btn-secondary"
-                          style={{ padding: "0.35rem 0.65rem", fontSize: "0.78rem" }}
+                          style={{ padding: "0.25rem 0.55rem", fontSize: "0.74rem" }}
                           title={t("viewReport", currentLang)}
                         >
-                          <Eye size={13} /> {t("viewReport", currentLang)}
+                          <Eye size={12} /> {t("viewReport", currentLang)}
                         </button>
 
                         {(user?.role === "admin" || (token && item.user_id === user?.id)) && (
                           <button
                             onClick={(e) => handleDelete(item.id, e)}
-                            className="btn btn-danger"
-                            style={{ padding: "0.35rem 0.55rem", fontSize: "0.78rem" }}
+                            className="btn btn-ghost"
+                            style={{ padding: "0.25rem 0.45rem", color: "var(--color-danger)" }}
                             title={t("delete", currentLang)}
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={12} />
                           </button>
                         )}
                       </div>
@@ -232,7 +229,7 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
             </table>
           </div>
         ) : (
-          <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
+          <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)", fontSize: "0.85rem" }}>
             {t("noHistoryFound", currentLang)}
           </div>
         )}
@@ -245,42 +242,42 @@ export default function PredictionHistory({ user, token, currentLang = "en" }) {
           inset: 0,
           zIndex: 110,
           background: "var(--modal-overlay)",
-          backdropFilter: "blur(8px)",
+          backdropFilter: "blur(12px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: "1rem"
         }}>
-          <div className="glass-panel" style={{
+          <div className="fluent-panel" style={{
             width: "100%",
-            maxWidth: "750px",
+            maxWidth: "720px",
             maxHeight: "85vh",
             overflowY: "auto",
-            padding: "2rem",
-            position: "relative",
-            border: "1px solid var(--border-glass)"
+            padding: "1.75rem",
+            position: "relative"
           }}>
             <button
               onClick={() => setSelectedItem(null)}
-              style={{ position: "absolute", top: "1.25rem", right: "1.25rem", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
+              className="btn btn-ghost"
+              style={{ position: "absolute", top: "1rem", right: "1rem", padding: "0.35rem" }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <div style={{ marginBottom: "1.5rem" }}>
+            <div style={{ marginBottom: "1.25rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span className="badge badge-emerald">{selectedItem.Crop}</span>
                 <span className="badge badge-purple">{selectedItem.ai_provider_used}</span>
               </div>
-              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, marginTop: "0.4rem", color: "var(--text-main)" }}>
+              <h2 style={{ fontSize: "1.35rem", fontWeight: 800, marginTop: "0.35rem", color: "var(--text-main)" }}>
                 Yield Report: {selectedItem.Dist_Name}, {selectedItem.State_Name} ({selectedItem.Year})
               </h2>
-              <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#10b981", marginTop: "0.3rem" }}>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent-primary)", marginTop: "0.25rem", fontFamily: "var(--font-mono)" }}>
                 {selectedItem.predicted_yield} Kg/ha
               </div>
             </div>
 
-            <div style={{ background: "var(--bg-glass)", padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-glass)" }}>
+            <div style={{ background: "var(--bg-inset)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
               <MarkdownReport content={selectedItem.ai_analysis} />
             </div>
           </div>

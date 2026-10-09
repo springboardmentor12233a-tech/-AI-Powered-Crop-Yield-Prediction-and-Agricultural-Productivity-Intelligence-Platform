@@ -145,7 +145,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     if (!weatherData) return;
     setRainfallOffset(Math.round(weatherData.rainfall_mm - 50));
     setSoilHealthScore(Math.round(weatherData.soil_moisture_pct));
-    alert(`⚡ Auto-filled exact weather & soil parameters for ${selectedDistrict}, ${selectedState}!\nObserved Time: ${weatherData.observation_time}\nTemp: ${weatherData.current_temp_c}°C | Humidity: ${weatherData.current_humidity_pct}% | Soil Moisture: ${weatherData.soil_moisture_pct}%`);
+    alert(`Auto-filled live weather parameters for ${selectedDistrict}, ${selectedState}!\nTemp: ${weatherData.current_temp_c}°C | Humidity: ${weatherData.current_humidity_pct}% | Soil Moisture: ${weatherData.soil_moisture_pct}%`);
   };
 
   const handleSpeakReport = () => {
@@ -156,7 +156,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
       return;
     }
     window.speechSynthesis.cancel();
-    const textToSpeak = `Yield prediction summary for ${result.Crop} in ${result.Dist_Name}, ${result.State_Name}. Authoritative AI predicted yield is ${result.predicted_yield} kg per hectare. AI Advice: ${result.ai_analysis.replace(/[*#_`]/g, '')}`;
+    const textToSpeak = `Yield prediction summary for ${result.Crop} in ${result.Dist_Name}, ${result.State_Name}. Predicted yield is ${result.predicted_yield} kg per hectare. AI Advice: ${result.ai_analysis.replace(/[*#_`]/g, '')}`;
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = currentLang === "te" ? "te-IN" : currentLang === "hi" ? "hi-IN" : currentLang === "ta" ? "ta-IN" : currentLang === "kn" ? "kn-IN" : currentLang === "ml" ? "ml-IN" : currentLang === "mr" ? "mr-IN" : "en-US";
     utterance.onend = () => setIsSpeakingReport(false);
@@ -215,7 +215,6 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
         title: `AgriYield AI Report - ${result.Crop}`,
         text: shareText,
       }).catch(() => {
-        // Fallback to clipboard
         navigator.clipboard.writeText(shareText);
         alert(t("reportSaved", currentLang));
       });
@@ -242,15 +241,8 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     alert(t("reportSaved", currentLang));
   };
 
-  // Toggle simple mode for farmer-friendly view
-  const toggleSimpleMode = () => {
-    setSimpleMode(prev => !prev);
-  };
-
-  // Toggle help section
-  const toggleHelp = () => {
-    setShowHelp(prev => !prev);
-  };
+  const toggleSimpleMode = () => setSimpleMode(prev => !prev);
+  const toggleHelp = () => setShowHelp(prev => !prev);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -275,11 +267,16 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 25000);
       const response = await fetch("/api/predict", {
         method: "POST",
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+
+      window.clearTimeout(timeoutId);
 
       const data = await response.json();
       if (!response.ok) {
@@ -290,13 +287,15 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
       setResult(data);
       if (onSaveSuccess) onSaveSuccess();
     } catch (err) {
-      setError(err.message || "An unexpected error occurred during prediction.");
+      setError(err.name === "AbortError"
+        ? "The advisory service is taking too long. Try Instant ML result or submit again shortly."
+        : (err.message || "An unexpected error occurred during prediction."));
     } finally {
       setLoading(false);
     }
   };
 
-  // Dynamic Language Sync: Auto translate AI Agronomy Advisory when global language changes
+  // Dynamic Language Sync
   useEffect(() => {
     if (!result || !result.ai_analysis) return;
     const targetLangName = LANG_NAME_MAP[currentLang] || "English";
@@ -309,7 +308,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
 
   const handleCopyReport = () => {
     if (!result) return;
-    const reportText = `AgriYield AI Executive Agronomy Advisory Report\n==============================================\nCrop: ${result.Crop}\nLocation: ${result.Dist_Name}, ${result.State_Name}\nYear: ${result.Year}\nAI Predicted Yield: ${result.predicted_yield} Kg/ha\nAI Engine Used: ${result.ai_provider_used}\n\nAI Agronomic Advisory:\n${result.ai_analysis}`;
+    const reportText = `AgriYield AI Executive Agronomy Advisory Report\n==============================================\nCrop: ${result.Crop}\nLocation: ${result.Dist_Name}, ${result.State_Name}\nYear: ${result.Year}\nAI Predicted Yield: ${result.predicted_yield} Kg/ha\nAI Engine: ${result.ai_provider_used}\n\nAI Agronomic Advisory:\n${result.ai_analysis}`;
     navigator.clipboard.writeText(reportText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -326,6 +325,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
       ["Cultivated Area (ha)", area],
       ["Previous Year Yield (kg/ha)", prevYield],
       ["AI Predicted Yield (kg/ha)", result.predicted_yield],
+      ["Adjusted Forecast Yield (kg/ha)", adjustedYield],
       ["Total Production (Kg)", adjustedYield * area],
       ["AI Engine Used", result.ai_provider_used]
     ];
@@ -339,10 +339,8 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     document.body.removeChild(link);
   };
 
-  // Download Report as HTML
   const handleDownloadReport = () => {
     if (!result) return;
-    
     const reportContent = showTranslation && translatedContent ? translatedContent : result.ai_analysis;
     const langName = LANG_NAME_MAP[currentLang] || "English";
     
@@ -350,88 +348,49 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
 <html lang="${currentLang}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgriYield AI Report - ${result.Crop} ${result.Year}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 30px; text-align: center; }
-    .header h1 { font-size: 1.8rem; margin-bottom: 8px; }
-    .header p { opacity: 0.9; font-size: 0.95rem; }
-    .content { padding: 30px; }
-    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
-    .info-card { background: #f1f5f9; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; }
-    .info-card .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .info-card .value { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
-    .yield-highlight { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 2px solid #10b981; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 25px; }
-    .yield-highlight .yield-value { font-size: 2.5rem; font-weight: 800; color: #059669; }
-    .yield-highlight .yield-label { font-size: 0.9rem; color: #047857; margin-top: 5px; }
-    .report-body { background: #f8fafc; border-radius: 8px; padding: 20px; border: 1px solid #e2e8f0; }
-    .report-body h2 { font-size: 1.3rem; color: #0f172a; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #10b981; }
-    .report-body h3 { font-size: 1.1rem; color: #1e293b; margin: 15px 0 10px; }
-    .report-body p { margin-bottom: 10px; color: #334155; }
-    .report-body ul, .report-body ol { margin-left: 20px; margin-bottom: 10px; }
-    .report-body li { margin-bottom: 5px; color: #334155; }
-    .report-body strong { color: #0f172a; }
-    .report-body table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-    .report-body th, .report-body td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .report-body th { background: #f1f5f9; font-weight: 600; color: #475569; }
-    .footer { text-align: center; padding: 20px; background: #f1f5f9; color: #64748b; font-size: 0.85rem; }
-    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-info { background: #dbeafe; color: #1e40af; }
-    @media print { body { background: white; padding: 0; } .container { box-shadow: none; } }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 24px; }
+    .container { max-width: 820px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden; }
+    .header { background: #0f172a; color: white; padding: 28px; }
+    .header h1 { font-size: 1.6rem; margin-bottom: 6px; font-weight: 700; }
+    .header p { opacity: 0.8; font-size: 0.9rem; }
+    .content { padding: 28px; }
+    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .info-card { background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .info-card .label { font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
+    .info-card .value { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-top: 4px; }
+    .yield-highlight { background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 24px; }
+    .yield-highlight .yield-value { font-size: 2.5rem; font-weight: 800; color: #15803d; }
+    .yield-highlight .yield-label { font-size: 0.85rem; color: #166534; font-weight: 600; }
+    .report-body { background: #ffffff; border-radius: 8px; padding: 20px; border: 1px solid #e2e8f0; line-height: 1.7; }
+    .footer { text-align: center; padding: 18px; background: #f8fafc; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 0.8rem; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>AgriYield AI - Executive Agronomy Report</h1>
-      <p>${result.Crop} | ${result.Dist_Name}, ${result.State_Name} | ${result.Year}</p>
+      <h1>AgriYield AI Executive Agronomy Report</h1>
+      <p>${result.Crop} • ${result.Dist_Name}, ${result.State_Name} • Harvest Season ${result.Year}</p>
     </div>
     <div class="content">
       <div class="info-grid">
-        <div class="info-card">
-          <div class="label">Crop</div>
-          <div class="value">${result.Crop}</div>
-        </div>
-        <div class="info-card">
-          <div class="label">Location</div>
-          <div class="value">${result.Dist_Name}, ${result.State_Name}</div>
-        </div>
-        <div class="info-card">
-          <div class="label">Prediction Year</div>
-          <div class="value">${result.Year}</div>
-        </div>
-        <div class="info-card">
-          <div class="label">Cultivated Area</div>
-          <div class="value">${area} ha</div>
-        </div>
-        <div class="info-card">
-          <div class="label">Previous Year Yield</div>
-          <div class="value">${prevYield} Kg/ha</div>
-        </div>
-        <div class="info-card">
-          <div class="label">AI Engine</div>
-          <div class="value">${result.ai_provider_used}</div>
-        </div>
+        <div class="info-card"><div class="label">Crop</div><div class="value">${result.Crop}</div></div>
+        <div class="info-card"><div class="label">Location</div><div class="value">${result.Dist_Name}, ${result.State_Name}</div></div>
+        <div class="info-card"><div class="label">Area</div><div class="value">${area} ha</div></div>
       </div>
-      
       <div class="yield-highlight">
         <div class="yield-value">${result.predicted_yield} Kg/ha</div>
-        <div class="yield-label">AI Predicted Yield</div>
+        <div class="yield-label">ML Regression Authoritative Yield Forecast</div>
       </div>
-      
       <div class="report-body">
-        <h2>AI Agronomic Advisory Report</h2>
-        <p><span class="badge badge-success">Language: ${langName}</span> <span class="badge badge-info">Generated by ${result.ai_provider_used}</span></p>
-        ${reportContent.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/### (.*?)(<br>|$)/g, '<h3>$1</h3>').replace(/## (.*?)(<br>|$)/g, '<h2>$1</h2>').replace(/- (.*?)(<br>|$)/g, '<li>$1</li>').replace(/<li>/g, '<ul><li>').replace(/<\/li>/g, '</li></ul>')}
+        <p style="margin-bottom: 12px; font-size: 0.85rem; color: #64748b;"><strong>Language:</strong> ${langName} | <strong>Engine:</strong> ${result.ai_provider_used}</p>
+        ${reportContent.replace(/\n/g, '<br/>')}
       </div>
     </div>
     <div class="footer">
-      <p>Generated by AgriYield AI | ${new Date().toLocaleString()}</p>
-      <p>This report is for informational purposes. Please consult with local agricultural experts for specific advice.</p>
+      Generated by AgriYield AI • ${new Date().toLocaleString()}
     </div>
   </div>
 </body>
@@ -448,9 +407,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     URL.revokeObjectURL(url);
   };
 
-  const handlePrintReport = () => {
-    window.print();
-  };
+  const handlePrintReport = () => window.print();
 
   const getAdjustedYield = () => {
     if (!result) return 0;
@@ -461,200 +418,178 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
   };
 
   const adjustedYield = getAdjustedYield();
-
-  // Financial Revenue & Profit Calculations derived STRICTLY from AI ML yield
   const totalProductionKg = result ? (adjustedYield * area) : 0;
   const totalProductionQuintals = totalProductionKg / 100;
-  
   const grossRevenueINR = Math.round(totalProductionQuintals * marketPricePerQuintal);
   const totalExpensesINR = Math.round(area * costPerHectare);
   const netProfitINR = grossRevenueINR - totalExpensesINR;
   const roiPct = totalExpensesINR > 0 ? ((netProfitINR / totalExpensesINR) * 100).toFixed(1) : 0;
-
   const plantingAdvice = weatherData?.planting_advice;
 
   return (
-    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1.5rem 1rem" }}>
-      {/* Top Banner */}
-      <div style={{
-        display: "flex",
-        justify: "space-between",
-        alignItems: "flex-start",
-        marginBottom: "2rem",
-        flexWrap: "wrap",
-        gap: "1rem"
-      }}>
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span className="badge badge-emerald">
-              <Sparkles size={12} /> AI-Powered
+              <Sparkles size={11} /> ML Regression Model
             </span>
             {user && (
               <span className="badge badge-blue">
-                👤 {user.full_name} ({user.role})
+                {user.full_name} ({user.role})
               </span>
             )}
           </div>
-          <h1 style={{ fontSize: "2.2rem", fontWeight: 800, marginTop: "0.4rem", color: "var(--text-main)" }}>
+          <h1 className="page-title">
             {t("yieldPredictorTitle", currentLang)}
           </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.98rem", marginTop: "0.25rem" }}>
+          <p className="page-subtitle">
             {t("yieldPredictorSub", currentLang)}
           </p>
         </div>
 
-        {/* Small Compact Weather Box */}
-        <div style={{
-          background: "var(--bg-glass)",
-          border: "1px solid rgba(245, 158, 11, 0.35)",
-          padding: "0.75rem 1.15rem",
-          borderRadius: "14px",
+        {/* Live Weather Micro-Tile */}
+        <div className="fluent-panel" style={{
+          padding: "0.65rem 1rem",
           display: "flex",
           alignItems: "center",
           gap: "0.85rem",
-          boxShadow: "0 4px 15px rgba(245, 158, 11, 0.12)"
+          minWidth: "260px"
         }}>
-            <div style={{
-              width: "38px",
-              height: "38px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)",
-              border: "1px solid rgba(245, 158, 11, 0.4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
-              <CloudSun size={20} color="#f59e0b" />
+          <div style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "var(--radius-sm)",
+            background: "rgba(245, 158, 11, 0.12)",
+            border: "1px solid rgba(245, 158, 11, 0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <CloudSun size={18} color="#d97706" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {selectedDistrict || "District"}, {selectedState || "State"} {weatherLoading && <span className="spinner" style={{ width: "10px", height: "10px" }}></span>}
             </div>
-            <div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 700, display: "flex", alignItems: "center", gap: "5px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                📍 {selectedDistrict || "District"}, {selectedState || "State"} {weatherLoading && <span className="spinner"></span>}
-              </div>
-              <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-main)", marginTop: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ color: "#f59e0b" }}>{weatherData ? `${weatherData.current_temp_c}°C` : "28°C"}</span>
-                <span style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600 }}>
-                  {weatherData ? `${weatherData.condition} • 💧${weatherData.current_humidity_pct}%` : "Agro Weather"}
-                </span>
-                {weatherData && (
-                  <button
-                    type="button"
-                    onClick={handleAutoFillWeather}
-                    className="btn btn-secondary"
-                    style={{ fontSize: "0.7rem", padding: "0.2rem 0.5rem", marginLeft: "4px" }}
-                    title="Auto-fill climate parameters"
-                  >
-                    ⚡ Auto-fill
-                  </button>
-                )}
-              </div>
+            <div style={{ fontSize: "0.98rem", fontWeight: 700, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span>{weatherData ? `${weatherData.current_temp_c}°C` : "28°C"}</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                {weatherData ? `${weatherData.condition} • 💧${weatherData.current_humidity_pct}%` : "Live Weather"}
+              </span>
             </div>
           </div>
+          {weatherData && (
+            <button
+              type="button"
+              onClick={handleAutoFillWeather}
+              className="btn btn-ghost"
+              style={{ padding: "0.3rem 0.6rem", fontSize: "0.72rem" }}
+              title="Auto-fill climate parameters"
+            >
+              Sync
+            </button>
+          )}
         </div>
+      </div>
 
-      {/* Main Grid */}
+      {/* Main 2-Column Bento Layout */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(430px, 1fr))",
-        gap: "2rem",
+        gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
+        gap: "1.5rem",
         alignItems: "start"
       }}>
-        {/* Left Column: Best Planting Season & Sowing Advice, Farm Parameters Form & Climate Simulator */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        {/* Left Column: Form & Simulator */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
 
-          {/* BEST PLANTING SEASON & CROP SOWING ADVICE CARD */}
+          {/* Sowing Advice Card */}
           {plantingAdvice && (
-            <div className="glass-panel" style={{
-              padding: "1.65rem",
-              border: "1px solid rgba(16, 185, 129, 0.35)",
-              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 100%)"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+            <div className="fluent-panel" style={{ borderLeft: "3px solid var(--accent-primary)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
                 <div>
                   <span className="badge badge-emerald" style={{ fontSize: "0.7rem" }}>
                     🌱 {t("bestPlantingTimeTitle", currentLang)}
                   </span>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-main)", marginTop: "0.3rem" }}>
-                    {selectedCrop} Planting & Sowing Calendar
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-main)", marginTop: "0.3rem" }}>
+                    {selectedCrop} Sowing Calendar
                   </h3>
                 </div>
-                <span className="badge badge-purple" style={{ fontSize: "0.75rem", padding: "0.35rem 0.75rem" }}>
+                <span className="badge badge-purple" style={{ fontSize: "0.72rem" }}>
                   {plantingAdvice.status_badge}
                 </span>
               </div>
 
-              {/* Grid Details */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "1rem" }}>
-                <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("bestSowingWindow", currentLang)}</div>
-                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#10b981", marginTop: "3px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.65rem", marginBottom: "0.85rem" }}>
+                <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("bestSowingWindow", currentLang)}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-primary)", marginTop: "2px" }}>
                     📅 {plantingAdvice.best_months}
                   </div>
                 </div>
 
-                <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("recommendedSeason", currentLang)}</div>
-                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#3b82f6", marginTop: "3px" }}>
+                <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("recommendedSeason", currentLang)}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#3b82f6", marginTop: "2px" }}>
                     🌾 {plantingAdvice.season}
                   </div>
                 </div>
 
-                <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("idealGerminationTemp", currentLang)}</div>
-                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#f59e0b", marginTop: "3px" }}>
+                <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("idealGerminationTemp", currentLang)}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#f59e0b", marginTop: "2px" }}>
                     🌡️ {plantingAdvice.ideal_temp}
                   </div>
                 </div>
 
-                <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("seedRate", currentLang)}</div>
-                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#8b5cf6", marginTop: "3px" }}>
+                <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>{t("seedRate", currentLang)}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#8b5cf6", marginTop: "2px" }}>
                     🧪 {plantingAdvice.seed_rate}
                   </div>
                 </div>
               </div>
 
-              {/* Sowing Advice Box */}
-              <div style={{ background: "var(--bg-glass)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-glass)", fontSize: "0.9rem", color: "var(--text-main)", lineHeight: 1.5 }}>
-                <strong style={{ color: "#10b981" }}>💡 {t("agronomyTip", currentLang)}:</strong> {plantingAdvice.advice}
+              <div style={{ background: "var(--bg-inset)", padding: "0.85rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)", fontSize: "0.82rem", color: "var(--text-main)", lineHeight: 1.5 }}>
+                <strong style={{ color: "var(--accent-primary)" }}>💡 {t("agronomyTip", currentLang)}:</strong> {plantingAdvice.advice}
               </div>
             </div>
           )}
 
           {/* Form Card */}
-          <div className="glass-panel" style={{ padding: "1.85rem", border: "1px solid var(--border-glass)" }}>
+          <div className="fluent-panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-              <h2 style={{ fontSize: "1.3rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-main)" }}>
-                <Layers color="#10b981" size={22} /> {t("inputParams", currentLang)}
+              <h2 style={{ fontSize: "1.15rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-main)" }}>
+                <Layers color="var(--accent-primary)" size={18} /> {t("inputParams", currentLang)}
               </h2>
               <span className="badge badge-emerald">Parameters</span>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {/* Location Selectors */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontWeight: 600 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
+                <div className="form-group">
+                  <label className="input-label">
                     {t("stateName", currentLang)}
                   </label>
                   <select
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
-                    className="input-field select-field"
-                    style={{ textOverflow: "ellipsis", whiteSpace: "nowrap", overflow: "hidden" }}
+                    className="select-field"
                   >
                     {states.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
 
-                <div>
-                  <label style={{ display: "block", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontWeight: 600 }}>
+                <div className="form-group">
+                  <label className="input-label">
                     {t("districtName", currentLang)}
                   </label>
                   <select
                     value={selectedDistrict}
                     onChange={(e) => setSelectedDistrict(e.target.value)}
-                    className="input-field select-field"
-                    style={{ textOverflow: "ellipsis", whiteSpace: "nowrap", overflow: "hidden" }}
+                    className="select-field"
                   >
                     {districts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -662,29 +597,28 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
               </div>
 
               {/* Crop & Year Selectors */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontWeight: 600 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
+                <div className="form-group">
+                  <label className="input-label">
                     {t("cropType", currentLang)}
                   </label>
                   <select
                     value={selectedCrop}
                     onChange={(e) => setSelectedCrop(e.target.value)}
-                    className="input-field select-field"
-                    style={{ textOverflow: "ellipsis", whiteSpace: "nowrap", overflow: "hidden" }}
+                    className="select-field"
                   >
                     {crops.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
 
-                <div>
-                  <label style={{ display: "block", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontWeight: 600 }}>
+                <div className="form-group">
+                  <label className="input-label">
                     {t("targetYear", currentLang)}
                   </label>
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
-                    className="input-field select-field"
+                    className="select-field"
                   >
                     {years.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
@@ -692,8 +626,8 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
               </div>
 
               {/* Land Area */}
-              <div>
-                <label style={{ display: "block", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontWeight: 600 }}>
+              <div className="form-group">
+                <label className="input-label">
                   {t("landArea", currentLang)}
                 </label>
                 <input
@@ -707,23 +641,23 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                 />
               </div>
 
-              {/* Previous Year Baseline Data */}
+              {/* Historical Baseline Group */}
               <div style={{
-                background: "var(--bg-glass)",
-                border: "1px solid var(--border-glass)",
-                borderRadius: "12px",
-                padding: "1rem",
+                background: "var(--bg-inset)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                padding: "0.85rem",
                 display: "flex",
                 flexDirection: "column",
-                gap: "0.85rem"
+                gap: "0.75rem"
               }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--accent-primary)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Historical Baseline (Year {selectedYear - 1})
                 </span>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
+                    <label className="input-label" style={{ fontSize: "0.72rem" }}>
                       {t("prevYearYield", currentLang)}
                     </label>
                     <input
@@ -733,13 +667,13 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                       value={prevYield}
                       onChange={(e) => setPrevYield(e.target.value)}
                       className="input-field"
-                      style={{ padding: "0.55rem 0.85rem", fontSize: "0.88rem" }}
+                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.85rem" }}
                       required
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: "block", fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
+                    <label className="input-label" style={{ fontSize: "0.72rem" }}>
                       {t("prevYearArea", currentLang)}
                     </label>
                     <input
@@ -749,14 +683,14 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                       value={prevArea}
                       onChange={(e) => setPrevArea(e.target.value)}
                       className="input-field"
-                      style={{ padding: "0.55rem 0.85rem", fontSize: "0.88rem" }}
+                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.85rem" }}
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
+                  <label className="input-label" style={{ fontSize: "0.72rem" }}>
                     {t("prevYearProd", currentLang)}
                   </label>
                   <input
@@ -766,61 +700,61 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                     value={prevProduction}
                     onChange={(e) => setPrevProduction(e.target.value)}
                     className="input-field"
-                    style={{ padding: "0.55rem 0.85rem", fontSize: "0.88rem" }}
+                    style={{ padding: "0.45rem 0.75rem", fontSize: "0.85rem" }}
                     required
                   />
                 </div>
               </div>
 
               {/* AI Advisory Provider Selector */}
-              <div>
-                <label style={{ display: "block", fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "0.4rem", fontWeight: 600 }}>
+              <div className="form-group">
+                <label className="input-label">
                   {t("aiProviderSelect", currentLang)}
                 </label>
                 <select
                   value={aiProvider}
                   onChange={(e) => setAiProvider(e.target.value)}
-                  className="input-field select-field"
+                  className="select-field"
                 >
-                  <option value="auto">⚡ Auto AI</option>
-                  <option value="gemini">✨ AI Engine</option>
-                  <option value="groq">🔥 AI Engine</option>
+                  <option value="auto">Auto Orchestrator (Gemini 3.8 + Groq)</option>
+                  <option value="gemini">Google Gemini 3.8 Flash</option>
+                  <option value="groq">Groq LLaMA 3.3 70B</option>
+                  <option value="local">Instant ML result (built-in advisory)</option>
                 </select>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="btn btn-primary pulse-primary"
-                style={{ width: "100%", padding: "0.95rem", fontSize: "1.05rem", marginTop: "0.5rem" }}
+                className="btn btn-primary"
+                style={{ width: "100%", padding: "0.75rem", fontSize: "0.95rem", marginTop: "0.25rem" }}
               >
                 {loading ? (
                   <>
-                    <span className="spinner"></span> Running AI Prediction...
+                    <span className="spinner"></span> Running Regression Predictor...
                   </>
                 ) : (
                   <>
-                    <Sprout size={20} /> {t("predictNow", currentLang)}
+                    <Sprout size={16} /> {t("predictNow", currentLang)}
                   </>
                 )}
               </button>
             </form>
           </div>
 
-          {/* Climate & Soil Health Sensitivity Simulator */}
-          <div className="glass-panel" style={{ padding: "1.5rem", border: "1px solid var(--border-glass)" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Sliders size={18} color="#8b5cf6" /> {t("climateSimulator", currentLang)}
+          {/* Climate Sensitivity Simulator */}
+          <div className="fluent-panel">
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Sliders size={16} color="var(--accent-primary)" /> {t("climateSimulator", currentLang)}
             </h3>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              {/* Rainfall Slider */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "0.4rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", marginBottom: "0.35rem" }}>
                   <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <Droplets size={14} color="#3b82f6" /> {t("rainfallOffsetLabel", currentLang)}
+                    <Droplets size={13} color="#3b82f6" /> {t("rainfallOffsetLabel", currentLang)}
                   </span>
-                  <span style={{ fontWeight: 700, color: rainfallOffset >= 0 ? "#10b981" : "#f43f5e" }}>
+                  <span style={{ fontWeight: 600, color: rainfallOffset >= 0 ? "var(--color-success)" : "var(--color-danger)" }}>
                     {rainfallOffset > 0 ? `+${rainfallOffset}%` : `${rainfallOffset}%`}
                   </span>
                 </div>
@@ -830,17 +764,16 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                   max="30"
                   value={rainfallOffset}
                   onChange={(e) => setRainfallOffset(parseInt(e.target.value))}
-                  style={{ width: "100%", accentColor: "#3b82f6", cursor: "pointer" }}
+                  style={{ width: "100%", accentColor: "var(--accent-primary)", cursor: "pointer" }}
                 />
               </div>
 
-              {/* Soil Carbon Slider */}
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "0.4rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", marginBottom: "0.35rem" }}>
                   <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <Thermometer size={14} color="#10b981" /> {t("soilHealthLabel", currentLang)}
+                    <Thermometer size={13} color="var(--accent-primary)" /> {t("soilHealthLabel", currentLang)}
                   </span>
-                  <span style={{ fontWeight: 700, color: "#10b981" }}>
+                  <span style={{ fontWeight: 600, color: "var(--accent-primary)" }}>
                     {soilHealthScore} / 100 Index
                   </span>
                 </div>
@@ -850,116 +783,119 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                   max="120"
                   value={soilHealthScore}
                   onChange={(e) => setSoilHealthScore(parseInt(e.target.value))}
-                  style={{ width: "100%", accentColor: "#10b981", cursor: "pointer" }}
+                  style={{ width: "100%", accentColor: "var(--accent-primary)", cursor: "pointer" }}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Prediction Results & Financial ROI Calculator */}
+        {/* Right Column: Prediction Results & Financial Estimation */}
         <div>
           {error && (
             <div style={{
-              background: "rgba(244, 63, 94, 0.15)",
-              border: "1px solid rgba(244, 63, 94, 0.3)",
-              borderRadius: "16px",
-              padding: "1.25rem",
-              color: "#f43f5e",
-              marginBottom: "1.5rem",
+              background: "rgba(239, 68, 68, 0.08)",
+              border: "1px solid rgba(239, 68, 68, 0.25)",
+              borderRadius: "var(--radius-md)",
+              padding: "1rem",
+              color: "var(--color-danger)",
+              marginBottom: "1.25rem",
               display: "flex",
               alignItems: "center",
               gap: "0.75rem"
             }}>
-              <AlertTriangle size={24} />
+              <AlertTriangle size={20} />
               <div>
-                <h4 style={{ fontWeight: 700, margin: 0 }}>Prediction Error</h4>
-                <p style={{ fontSize: "0.88rem", margin: 0, marginTop: "2px" }}>{error}</p>
+                <h4 style={{ fontWeight: 700, margin: 0, fontSize: "0.92rem" }}>Prediction Notice</h4>
+                <p style={{ fontSize: "0.82rem", margin: "2px 0 0" }}>{error}</p>
               </div>
             </div>
           )}
 
           {result ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              {/* Quick Stats Summary - Farmer Friendly */}
+              {/* Quick KPI Strip */}
               <div style={{
-                background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)",
-                border: "1px solid rgba(16, 185, 129, 0.2)",
-                borderRadius: "16px",
-                padding: "1.25rem"
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                gap: "0.65rem"
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-                  <Lightbulb size={18} color="#10b981" />
-                  <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)" }}>{t("quickSummary", currentLang)}</span>
+                <div className="metric-tile" style={{ padding: "0.85rem" }}>
+                  <div className="metric-label">{t("predictedYield", currentLang)}</div>
+                  <div className="metric-value" style={{ color: "var(--accent-primary)", fontSize: "1.25rem" }}>
+                    {adjustedYield.toLocaleString()}
+                  </div>
+                  <div className="metric-subtext">Kg / Hectare</div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.75rem" }}>
-                  <div style={{ background: "var(--bg-card)", padding: "0.75rem", borderRadius: "10px", textAlign: "center" }}>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginBottom: "4px" }}>{t("predictedYield", currentLang)}</div>
-                    <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#10b981" }}>{adjustedYield.toLocaleString()}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Kg/ha</div>
+
+                <div className="metric-tile" style={{ padding: "0.85rem" }}>
+                  <div className="metric-label">{t("totalProduction", currentLang)}</div>
+                  <div className="metric-value" style={{ color: "#3b82f6", fontSize: "1.25rem" }}>
+                    {Math.round(totalProductionKg).toLocaleString()}
                   </div>
-                  <div style={{ background: "var(--bg-card)", padding: "0.75rem", borderRadius: "10px", textAlign: "center" }}>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginBottom: "4px" }}>{t("totalProduction", currentLang)}</div>
-                    <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#3b82f6" }}>{Math.round(totalProductionKg).toLocaleString()}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Kg</div>
+                  <div className="metric-subtext">Total Kilograms</div>
+                </div>
+
+                <div className="metric-tile" style={{ padding: "0.85rem" }}>
+                  <div className="metric-label">{t("estimatedRevenue", currentLang)}</div>
+                  <div className="metric-value" style={{ color: "#8b5cf6", fontSize: "1.25rem" }}>
+                    ₹{grossRevenueINR.toLocaleString()}
                   </div>
-                  <div style={{ background: "var(--bg-card)", padding: "0.75rem", borderRadius: "10px", textAlign: "center" }}>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginBottom: "4px" }}>{t("estimatedRevenue", currentLang)}</div>
-                    <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#8b5cf6" }}>₹{grossRevenueINR.toLocaleString()}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>INR</div>
+                  <div className="metric-subtext">Gross Mandi Value</div>
+                </div>
+
+                <div className="metric-tile" style={{ padding: "0.85rem" }}>
+                  <div className="metric-label">{t("netProfit", currentLang)}</div>
+                  <div className="metric-value" style={{ color: netProfitINR >= 0 ? "var(--color-success)" : "var(--color-danger)", fontSize: "1.25rem" }}>
+                    ₹{netProfitINR.toLocaleString()}
                   </div>
-                  <div style={{ background: "var(--bg-card)", padding: "0.75rem", borderRadius: "10px", textAlign: "center" }}>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginBottom: "4px" }}>{t("netProfit", currentLang)}</div>
-                    <div style={{ fontSize: "1.25rem", fontWeight: 800, color: netProfitINR >= 0 ? "#10b981" : "#f43f5e" }}>₹{netProfitINR.toLocaleString()}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>({roiPct}%)</div>
-                  </div>
+                  <div className="metric-subtext">{roiPct}% ROI</div>
                 </div>
               </div>
 
-              {/* Primary AI Output Card */}
-              <div className="glass-panel" style={{
-                padding: "1.75rem",
-                border: "2px solid #10b981",
-                boxShadow: "0 0 30px rgba(16, 185, 129, 0.15)"
+              {/* Primary AI Harvest Spotlight Card */}
+              <div className="fluent-panel" style={{
+                border: "1px solid var(--accent-subtle)",
+                boxShadow: "0 8px 24px rgba(16, 185, 129, 0.08)"
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                   <span className="badge badge-emerald">
-                    <Award size={12} /> {t("mlAuthoritative", currentLang)}
+                    <Award size={11} /> {t("mlAuthoritative", currentLang)}
                   </span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>
                     {t("xgboostModel", currentLang)}
                   </span>
                 </div>
 
-                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {t("predictedHarvestYield", currentLang)} ({result.Crop})
                 </div>
 
-                <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", margin: "0.5rem 0" }}>
-                  <span style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1 }} className="gradient-text">
+                <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", margin: "0.4rem 0" }}>
+                  <span style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1, fontFamily: "var(--font-mono)" }}>
                     {adjustedYield.toLocaleString()}
                   </span>
-                  <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#10b981" }}>
+                  <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--accent-primary)" }}>
                     Kg per Hectare
                   </span>
                 </div>
 
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border-glass)", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border-subtle)", fontSize: "0.78rem", color: "var(--text-muted)" }}>
                   <div>📍 <strong style={{ color: "var(--text-main)" }}>{result.Dist_Name}, {result.State_Name}</strong></div>
-                  <div>📅 <strong style={{ color: "var(--text-main)" }}>{result.Year}</strong></div>
-                  <div>🌾 <strong style={{ color: "var(--text-main)" }}>{area} ha</strong></div>
+                  <div>📅 <strong style={{ color: "var(--text-main)" }}>Year {result.Year}</strong></div>
+                  <div>🌾 <strong style={{ color: "var(--text-main)" }}>{area} Hectares</strong></div>
                 </div>
               </div>
 
               {/* Financial & ROI Calculator Panel */}
-              <div className="glass-panel" style={{ padding: "1.75rem", border: "1px solid var(--border-glass)" }}>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <DollarSign size={20} color="#f59e0b" /> {t("financialCalculator", currentLang)}
+              <div className="fluent-panel">
+                <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <DollarSign size={18} color="#f59e0b" /> {t("financialCalculator", currentLang)}
                 </h3>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.78rem", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem", marginBottom: "1rem" }}>
+                  <div className="form-group">
+                    <label className="input-label">
                       Market Rate (₹ / Quintal)
                     </label>
                     <input
@@ -967,12 +903,12 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                       value={marketPricePerQuintal}
                       onChange={(e) => setMarketPricePerQuintal(Number(e.target.value))}
                       className="input-field"
-                      style={{ padding: "0.5rem 0.8rem", fontSize: "0.9rem" }}
+                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.85rem" }}
                     />
                   </div>
 
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.78rem", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
+                  <div className="form-group">
+                    <label className="input-label">
                       Cultivation Cost (₹ / Hectare)
                     </label>
                     <input
@@ -980,219 +916,215 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                       value={costPerHectare}
                       onChange={(e) => setCostPerHectare(Number(e.target.value))}
                       className="input-field"
-                      style={{ padding: "0.5rem 0.8rem", fontSize: "0.9rem" }}
+                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.85rem" }}
                     />
                   </div>
                 </div>
 
-                {/* Financial Summary Cards */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.85rem" }}>
-                  <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t("grossRevenue", currentLang)}</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#3b82f6", marginTop: "2px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.65rem" }}>
+                  <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{t("grossRevenue", currentLang)}</div>
+                    <div style={{ fontSize: "1rem", fontWeight: 700, color: "#3b82f6", marginTop: "2px" }}>
                       ₹{grossRevenueINR.toLocaleString()}
                     </div>
                   </div>
 
-                  <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t("cultivationCost", currentLang)}</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#f43f5e", marginTop: "2px" }}>
+                  <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{t("cultivationCost", currentLang)}</div>
+                    <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-danger)", marginTop: "2px" }}>
                       ₹{totalExpensesINR.toLocaleString()}
                     </div>
                   </div>
 
-                  <div style={{ background: "var(--bg-glass)", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t("netProfit", currentLang)}</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: netProfitINR >= 0 ? "#10b981" : "#f43f5e", marginTop: "2px" }}>
-                      ₹{netProfitINR.toLocaleString()} ({roiPct}%)
+                  <div style={{ background: "var(--bg-inset)", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{t("netProfit", currentLang)}</div>
+                    <div style={{ fontSize: "1rem", fontWeight: 700, color: netProfitINR >= 0 ? "var(--color-success)" : "var(--color-danger)", marginTop: "2px" }}>
+                      ₹{netProfitINR.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Farmer Bag Conversion Banner */}
+              <div style={{
+                background: "var(--bg-inset)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                padding: "0.9rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.65rem"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--accent-primary)" }}>
+                    🌾 Bag Yield Breakdown (50kg Standard Units)
+                  </span>
+                  <span className="badge badge-emerald" style={{ fontSize: "0.7rem" }}>
+                    Field Scale
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.6rem" }}>
+                  <div style={{ background: "var(--bg-surface)", padding: "0.65rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Per Acre</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)" }}>
+                      ~{((adjustedYield / 2.471) / 50).toFixed(1)} Bags
+                    </div>
+                  </div>
+                  <div style={{ background: "var(--bg-surface)", padding: "0.65rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Per Hectare</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)" }}>
+                      ~{(adjustedYield / 50).toFixed(1)} Bags
+                    </div>
+                  </div>
+                  <div style={{ background: "var(--bg-surface)", padding: "0.65rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Total Field ({area} ha)</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-primary)" }}>
+                      ~{Math.round((adjustedYield * area) / 50).toLocaleString()} Bags
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Executive AI Advisory Report */}
-              <div className="glass-panel" style={{ padding: "1.85rem", border: "1px solid var(--border-glass)" }}>
-                
-                {/* Farmer Friendly Bags & Revenue Summary Banner */}
-                <div style={{
-                  background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%)",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
-                  borderRadius: "14px",
-                  padding: "1.1rem 1.25rem",
-                  marginBottom: "1.25rem",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.85rem"
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#10b981", fontWeight: 800, fontSize: "0.95rem" }}>
-                      🌾 <span>{t("farmerTips", currentLang)} & Quick Acre Conversion</span>
-                    </div>
-                    <span className="badge badge-emerald" style={{ fontSize: "0.75rem" }}>
-                      50kg Bags / Acre Units
-                    </span>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
-                    <div style={{ background: "var(--bg-card)", padding: "0.75rem 0.9rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>Yield per Acre (Approx)</div>
-                      <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#10b981", marginTop: "2px" }}>
-                        {(adjustedYield / 2.471).toFixed(1)} Kg/Acre
-                      </div>
-                    </div>
-
-                    <div style={{ background: "var(--bg-card)", padding: "0.75rem 0.9rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>Bags (50kg) per Acre</div>
-                      <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#3b82f6", marginTop: "2px" }}>
-                        ~ {((adjustedYield / 2.471) / 50).toFixed(1)} Bags/Acre
-                      </div>
-                    </div>
-
-                    <div style={{ background: "var(--bg-card)", padding: "0.75rem 0.9rem", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>Total Field Bags ({area} ha)</div>
-                      <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#8b5cf6", marginTop: "2px" }}>
-                        ~ {Math.round((adjustedYield * area) / 50).toLocaleString()} Bags
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+              <div className="fluent-panel">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div>
-                    <span className="badge badge-purple" style={{ marginBottom: "0.3rem" }}>
-                      <Sparkles size={12} /> {result.ai_provider_used}
+                    <span className="badge badge-purple" style={{ marginBottom: "0.25rem" }}>
+                      <Sparkles size={11} /> {result.ai_provider_used}
                     </span>
-                    <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-main)", margin: 0 }}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>
                       {t("executiveReport", currentLang)}
                     </h3>
                   </div>
 
-                  {/* Language Selector & Report Actions */}
-                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                      <select
-                        value={LANG_NAME_MAP[currentLang] || "English"}
-                        onChange={(e) => {
-                          handleTranslate(e.target.value);
-                        }}
-                        className="input-field select-field"
-                        style={{ padding: "0.35rem 1.8rem 0.35rem 0.6rem", fontSize: "0.78rem" }}
-                      >
-                        <option value="English">🇬🇧 English</option>
-                        <option value="Telugu">🇮🇳 తెలుగు (Telugu)</option>
-                        <option value="Hindi">🇮🇳 हिंदी (Hindi)</option>
-                        <option value="Tamil">🇮🇳 தமிழ் (Tamil)</option>
-                        <option value="Kannada">🇮🇳 ಕನ್ನಡ (Kannada)</option>
-                        <option value="Malayalam">🇮🇳 മലയാളം (Malayalam)</option>
-                        <option value="Marathi">🇮🇳 मराठी (Marathi)</option>
-                      </select>
-                    </div>
+                  {/* Language Selector & Report Action Buttons */}
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
+                    <select
+                      value={LANG_NAME_MAP[currentLang] || "English"}
+                      onChange={(e) => handleTranslate(e.target.value)}
+                      className="select-field"
+                      style={{ padding: "0.3rem 1.6rem 0.3rem 0.5rem", fontSize: "0.76rem", width: "auto" }}
+                    >
+                      <option value="English">🇬🇧 English</option>
+                      <option value="Telugu">🇮🇳 తెలుగు (Telugu)</option>
+                      <option value="Hindi">🇮🇳 हिंदी (Hindi)</option>
+                      <option value="Tamil">🇮🇳 தமிழ் (Tamil)</option>
+                      <option value="Kannada">🇮🇳 ಕನ್ನಡ (Kannada)</option>
+                      <option value="Malayalam">🇮🇳 മലയാളം (Malayalam)</option>
+                      <option value="Marathi">🇮🇳 मराठी (Marathi)</option>
+                    </select>
 
                     <button
                       onClick={() => handleTranslate()}
                       disabled={isTranslating}
                       className="btn btn-secondary"
-                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem", background: showTranslation ? "rgba(16, 185, 129, 0.15)" : undefined, border: showTranslation ? "1px solid rgba(16, 185, 129, 0.3)" : undefined }}
+                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
                     >
                       {isTranslating ? (
-                        <><span className="spinner" style={{ width: "12px", height: "12px", borderWidth: "2px" }} /> {t("translating", currentLang)}</>
+                        <><span className="spinner" style={{ width: "11px", height: "11px" }} /> {t("translating", currentLang)}</>
                       ) : showTranslation ? (
-                        <><Check size={13} color="#10b981" /> {t("showOriginal", currentLang)}</>
+                        <><Check size={12} color="var(--accent-primary)" /> {t("showOriginal", currentLang)}</>
                       ) : (
-                        <><Sparkles size={13} /> {t("translateButton", currentLang)}</>
+                        <><Sparkles size={12} /> {t("translateButton", currentLang)}</>
                       )}
                     </button>
+
                     <button
                       onClick={handleSpeakReport}
                       className="btn btn-secondary"
-                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
+                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
                     >
-                      {isSpeakingReport ? <><VolumeX size={13} color="#10b981" /> {t("stopAudio", currentLang)}</> : <><Volume2 size={13} /> {t("listenReport", currentLang)}</>}
+                      {isSpeakingReport ? <><VolumeX size={12} color="var(--accent-primary)" /> {t("stopAudio", currentLang)}</> : <><Volume2 size={12} /> {t("listenReport", currentLang)}</>}
                     </button>
+
                     <button
                       onClick={handleCopyReport}
                       className="btn btn-secondary"
-                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
+                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
                     >
-                      {copied ? <><Check size={13} color="#10b981" /> {t("copied", currentLang)}</> : <><Copy size={13} /> {t("copy", currentLang)}</>}
+                      {copied ? <><Check size={12} color="var(--accent-primary)" /> {t("copied", currentLang)}</> : <><Copy size={12} /> {t("copy", currentLang)}</>}
                     </button>
+
                     <button
                       onClick={handleDownloadReport}
                       className="btn btn-secondary"
-                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.25)" }}
+                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
                     >
-                      <Download size={13} /> {t("downloadReport", currentLang)}
+                      <Download size={12} /> {t("downloadReport", currentLang)}
                     </button>
+
                     <button
                       onClick={handleExportCSV}
                       className="btn btn-secondary"
-                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
+                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
                     >
-                      <Download size={13} /> {t("csv", currentLang)}
+                      <Download size={12} /> CSV
                     </button>
+
                     <button
                       onClick={handlePrintReport}
                       className="btn btn-secondary"
-                      style={{ padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
+                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
                     >
-                      <Printer size={13} /> {t("print", currentLang)}
+                      <Printer size={12} /> {t("print", currentLang)}
                     </button>
                   </div>
                 </div>
 
-                {/* Translation Status */}
+                {/* Translation Error alert */}
                 {translationError && (
-                  <div style={{ background: "rgba(244, 63, 94, 0.1)", border: "1px solid rgba(244, 63, 94, 0.2)", borderRadius: "8px", padding: "0.5rem 0.75rem", marginBottom: "0.75rem", color: "#f43f5e", fontSize: "0.8rem" }}>
+                  <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "var(--radius-sm)", padding: "0.5rem 0.75rem", marginBottom: "0.65rem", color: "var(--color-danger)", fontSize: "0.78rem" }}>
                     {translationError}
                   </div>
                 )}
 
-                {/* Farmer-Friendly Controls */}
-                <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
+                {/* Farmer-Friendly toggle controls */}
+                <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.65rem", flexWrap: "wrap" }}>
                   <button
                     onClick={toggleSimpleMode}
-                    className="btn btn-secondary"
-                    style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", background: simpleMode ? "rgba(139, 92, 246, 0.15)" : undefined, border: simpleMode ? "1px solid rgba(139, 92, 246, 0.3)" : undefined }}
+                    className="btn btn-ghost"
+                    style={{ padding: "0.25rem 0.6rem", fontSize: "0.72rem" }}
                   >
-                    {simpleMode ? <><Layers size={12} /> {t("detailedView", currentLang)}</> : <><Info size={12} /> {t("simplifiedView", currentLang)}</>}
+                    {simpleMode ? <><Layers size={11} /> {t("detailedView", currentLang)}</> : <><Info size={11} /> {t("simplifiedView", currentLang)}</>}
                   </button>
                   <button
                     onClick={toggleHelp}
-                    className="btn btn-secondary"
-                    style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", background: showHelp ? "rgba(245, 158, 11, 0.15)" : undefined, border: showHelp ? "1px solid rgba(245, 158, 11, 0.3)" : undefined }}
+                    className="btn btn-ghost"
+                    style={{ padding: "0.25rem 0.6rem", fontSize: "0.72rem" }}
                   >
-                    <Info size={12} /> {t("helpTitle", currentLang)}
+                    <Info size={11} /> {t("helpTitle", currentLang)}
                   </button>
                 </div>
 
-                {/* Help Section */}
                 {showHelp && (
-                  <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.2)", borderRadius: "10px", padding: "0.85rem", marginBottom: "0.75rem" }}>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f59e0b", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                      <Info size={14} /> {t("helpTitle", currentLang)}
+                  <div style={{ background: "var(--bg-inset)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", padding: "0.75rem", marginBottom: "0.75rem", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                    <div style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "0.25rem" }}>
+                      {t("helpTitle", currentLang)}
                     </div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
-                      {t("helpContent", currentLang)}
-                    </div>
-                    <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-                      {t("translationNote", currentLang)}
-                    </div>
+                    {t("helpContent", currentLang)}
                   </div>
                 )}
 
-                {/* Report Content */}
-                <div style={{ background: "var(--bg-glass)", padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--border-glass)", maxHeight: "400px", overflowY: "auto" }}>
+                {/* Report Content Body */}
+                <div style={{
+                  background: "var(--bg-inset)",
+                  padding: "1rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-subtle)",
+                  maxHeight: "380px",
+                  overflowY: "auto"
+                }}>
                   {showTranslation && translatedContent ? (
                     <div>
-                      <div style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 600, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                        <Check size={12} /> {t("translatedText", currentLang)} ({LANG_NAME_MAP[currentLang] || "Selected Language"})
+                      <div style={{ fontSize: "0.72rem", color: "var(--accent-primary)", fontWeight: 600, marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                        <Check size={11} /> {t("translatedText", currentLang)} ({LANG_NAME_MAP[currentLang] || "Selected Language"})
                       </div>
                       <MarkdownReport content={translatedContent} />
                     </div>
                   ) : (
                     <div>
                       {showTranslation && (
-                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "0.5rem" }}>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "0.4rem" }}>
                           {t("originalText", currentLang)}
                         </div>
                       )}
@@ -1201,26 +1133,9 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                   )}
                 </div>
 
-                {/* Farmer Tips Section */}
-                {simpleMode && (
-                  <div style={{ marginTop: "0.75rem", background: "rgba(16, 185, 129, 0.06)", border: "1px solid rgba(16, 185, 129, 0.15)", borderRadius: "10px", padding: "0.85rem" }}>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#10b981", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                      <Lightbulb size={14} /> {t("farmerTips", currentLang)}
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} style={{ fontSize: "0.78rem", color: "var(--text-muted)", display: "flex", alignItems: "flex-start", gap: "0.4rem" }}>
-                          <span style={{ color: "#10b981", fontWeight: 700 }}>💡</span>
-                          <span>{t(`tip${i}`, currentLang)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Quick Action Buttons */}
+                {/* Quick Action Navigation Bar */}
                 <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                     <button
                       onClick={() => {
                         const reportContent = showTranslation && translatedContent ? translatedContent : result.ai_analysis;
@@ -1233,88 +1148,47 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                         }
                       }}
                       className="btn btn-primary"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
+                      style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}
                     >
-                      <MessageSquare size={14} /> {t("shareWithAI", currentLang)}
-                    </button>
-                    <button
-                      onClick={handleDownloadReport}
-                      className="btn btn-secondary"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
-                    >
-                      <Download size={14} /> {t("downloadReport", currentLang)}
-                    </button>
-                    <button
-                      onClick={handleCopyReport}
-                      className="btn btn-secondary"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
-                    >
-                      <Copy size={14} /> {t("copy", currentLang)}
-                    </button>
-                    <button
-                      onClick={handlePrintReport}
-                      className="btn btn-secondary"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
-                    >
-                      <Printer size={14} /> {t("print", currentLang)}
+                      <MessageSquare size={13} /> {t("shareWithAI", currentLang)}
                     </button>
                     <button
                       onClick={handleShareWithExpert}
                       className="btn btn-secondary"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
+                      style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}
                     >
-                      <Share2 size={14} /> {t("shareWithExpert", currentLang)}
+                      <Share2 size={13} /> {t("shareWithExpert", currentLang)}
                     </button>
                     <button
                       onClick={handleSaveForLater}
                       className="btn btn-secondary"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
+                      style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}
                     >
-                      <Save size={14} /> {t("saveForLater", currentLang)}
+                      <Save size={13} /> {t("saveForLater", currentLang)}
                     </button>
                   </div>
                   <button
                     onClick={onSwitchToChat}
-                    className="btn btn-primary"
-                    style={{ padding: "0.6rem 1.2rem", fontSize: "0.85rem" }}
+                    className="btn btn-ghost"
+                    style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}
                   >
-                    <MessageSquare size={15} /> {t("askAI", currentLang)}
+                    <MessageSquare size={13} /> {t("askAI", currentLang)}
                   </button>
                 </div>
 
-                {/* Feedback Section */}
-                <div style={{ marginTop: "1rem", padding: "0.85rem", background: "var(--bg-glass)", borderRadius: "10px", border: "1px solid var(--border-glass)" }}>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
-                    {t("feedbackTitle", currentLang)}
-                  </div>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)" }}
-                    >
-                      👍 {t("feedbackYes", currentLang)}
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem" }}
-                    >
-                      👎 {t("feedbackNo", currentLang)}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Disclaimer */}
                 <div style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "var(--text-dim)", textAlign: "center", fontStyle: "italic" }}>
                   {t("disclaimer", currentLang)}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="glass-panel" style={{ padding: "2.5rem 2rem", textAlign: "center", color: "var(--text-muted)", border: "1px dashed var(--border-glass)" }}>
-              <Sprout size={40} color="#10b981" style={{ opacity: 0.5, marginBottom: "0.75rem" }} />
-              <h3 style={{ color: "var(--text-main)", fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>Ready for Harvest Prediction</h3>
-              <p style={{ maxWidth: "400px", margin: "0 auto", fontSize: "0.85rem", lineHeight: 1.5 }}>
-                Select your farm parameters on the left panel and click "Predict Crop Yield Now" to execute AI ML forecasting and generate AI advisory reports.
+            <div className="fluent-panel" style={{ padding: "3rem 2rem", textAlign: "center", color: "var(--text-muted)", borderStyle: "dashed" }}>
+              <Sprout size={36} color="var(--accent-primary)" style={{ opacity: 0.6, margin: "0 auto 0.75rem" }} />
+              <h3 style={{ color: "var(--text-main)", fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.35rem" }}>
+                Ready for Harvest Prediction
+              </h3>
+              <p style={{ maxWidth: "380px", margin: "0 auto", fontSize: "0.82rem", lineHeight: 1.5 }}>
+                Configure farm parameters on the left panel and click &ldquo;{t("predictNow", currentLang)}&rdquo; to execute quantitative ML forecasting and generate executive advisory reports.
               </p>
             </div>
           )}

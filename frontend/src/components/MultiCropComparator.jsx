@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Scale, Trophy, Sparkles } from "lucide-react";
+import { Scale, Trophy, Sparkles, Check, ArrowRight } from "lucide-react";
 import { t } from "../utils/i18n";
 
 const AVAILABLE_CROPS = [
@@ -92,47 +92,30 @@ export default function MultiCropComparator({ currentLang = "en" }) {
   };
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem" }}>
-      {/* Header Banner */}
-      <div style={{
-        background: "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, var(--bg-glass) 100%)",
-        border: "1px solid rgba(59,130,246,0.25)",
-        borderRadius: "20px",
-        padding: "2rem",
-        marginBottom: "2rem",
-        backdropFilter: "blur(12px)",
-        textAlign: "center"
-      }}>
-        <div style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "6px 16px",
-          borderRadius: "9999px",
-          background: "rgba(59,130,246,0.2)",
-          color: "#3b82f6",
-          fontSize: "0.85rem",
-          fontWeight: 600,
-          marginBottom: "1rem"
-        }}>
-          <Scale size={16} /> Multi-Crop ROI Optimizer
+    <div className="page-container" style={{ maxWidth: "1280px" }}>
+      {/* Header Block */}
+      <div className="page-header">
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem" }}>
+            <span className="badge badge-blue">
+              <Scale size={12} /> Multi-Crop ROI Optimizer
+            </span>
+          </div>
+          <h1 className="page-header-title">
+            {t("multiCropTitle", currentLang)}
+          </h1>
+          <p className="page-header-desc">
+            {t("multiCropSub", currentLang)}
+          </p>
         </div>
-        <h1 style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-          {t("multiCropTitle", currentLang)}
-        </h1>
-        <p style={{ color: "var(--text-muted)", maxWidth: "700px", margin: "0 auto", fontSize: "1rem" }}>
-          {t("multiCropSub", currentLang)}
-        </p>
       </div>
 
-      {/* Input Selection Form */}
-      <div className="glass-panel" style={{ padding: "2rem", marginBottom: "2rem" }}>
-        <form onSubmit={handleCompare} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Input Selection Form (Fluent Panel) */}
+      <div className="fluent-panel" style={{ marginBottom: "2rem" }}>
+        <form onSubmit={handleCompare} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-            <div>
-              <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600 }}>
-                {t("stateName", currentLang)}
-              </label>
+            <div className="form-group">
+              <label className="form-label">{t("stateName", currentLang)}</label>
               <select
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
@@ -142,10 +125,8 @@ export default function MultiCropComparator({ currentLang = "en" }) {
               </select>
             </div>
 
-            <div>
-              <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600 }}>
-                {t("districtName", currentLang)}
-              </label>
+            <div className="form-group">
+              <label className="form-label">{t("districtName", currentLang)}</label>
               <select
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
@@ -155,10 +136,8 @@ export default function MultiCropComparator({ currentLang = "en" }) {
               </select>
             </div>
 
-            <div>
-              <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600 }}>
-                {t("targetYear", currentLang)}
-              </label>
+            <div className="form-group">
+              <label className="form-label">{t("targetYear", currentLang)}</label>
               <input
                 type="number"
                 value={year}
@@ -167,10 +146,8 @@ export default function MultiCropComparator({ currentLang = "en" }) {
               />
             </div>
 
-            <div>
-              <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600 }}>
-                {t("landArea", currentLang)}
-              </label>
+            <div className="form-group">
+              <label className="form-label">{t("landArea", currentLang)}</label>
               <input
                 type="number"
                 step="0.5"
@@ -184,10 +161,10 @@ export default function MultiCropComparator({ currentLang = "en" }) {
 
           {/* Crop Selector Pills */}
           <div>
-            <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "8px", fontWeight: 600 }}>
-              {t("selectCropsToCompare", currentLang)}
+            <label className="form-label" style={{ marginBottom: "0.5rem", display: "block" }}>
+              {t("selectCropsToCompare", currentLang)} (2 - 5 crops)
             </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
               {AVAILABLE_CROPS.map(crop => {
                 const isSelected = selectedCrops.includes(crop);
                 return (
@@ -196,15 +173,16 @@ export default function MultiCropComparator({ currentLang = "en" }) {
                     type="button"
                     onClick={() => toggleCrop(crop)}
                     style={{
-                      padding: "8px 16px",
-                      borderRadius: "9999px",
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
+                      padding: "0.35rem 0.85rem",
+                      borderRadius: "var(--radius-sm)",
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
                       cursor: "pointer",
-                      background: isSelected ? "#3b82f6" : "var(--bg-glass)",
-                      color: isSelected ? "#ffffff" : "var(--text-main)",
-                      border: isSelected ? "1px solid #3b82f6" : "1px solid var(--border-glass)",
-                      transition: "all 0.2s ease"
+                      background: isSelected ? "var(--surface-base)" : "var(--surface-inset)",
+                      color: isSelected ? "var(--accent)" : "var(--fg-secondary)",
+                      border: isSelected ? "1px solid var(--accent)" : "1px solid var(--border-subtle)",
+                      boxShadow: isSelected ? "var(--shadow-sm)" : "none",
+                      transition: "all 0.15s ease"
                     }}
                   >
                     {isSelected ? "✓ " : "+ "}{crop}
@@ -218,15 +196,23 @@ export default function MultiCropComparator({ currentLang = "en" }) {
             type="submit"
             disabled={loading || selectedCrops.length < 2}
             className="btn btn-primary"
-            style={{ width: "100%", padding: "0.9rem", fontSize: "1rem" }}
+            style={{ width: "100%", height: "40px", fontSize: "0.88rem" }}
           >
-            {loading ? <span className="spinner"></span> : <><Scale size={18} /> {t("runComparison", currentLang)}</>}
+            {loading ? <span className="spinner"></span> : <><Scale size={15} /> {t("runComparison", currentLang)}</>}
           </button>
         </form>
       </div>
 
       {error && (
-        <div style={{ background: "rgba(244, 63, 94, 0.15)", border: "1px solid rgba(244, 63, 94, 0.3)", color: "#f43f5e", padding: "1rem", borderRadius: "12px", marginBottom: "1.5rem" }}>
+        <div style={{
+          background: "var(--danger-subtle)",
+          border: "1px solid rgba(239, 68, 68, 0.25)",
+          color: "var(--danger)",
+          padding: "0.75rem 1rem",
+          borderRadius: "var(--radius-md)",
+          fontSize: "0.84rem",
+          marginBottom: "1.5rem"
+        }}>
           ⚠️ {error}
         </div>
       )}
@@ -234,70 +220,89 @@ export default function MultiCropComparator({ currentLang = "en" }) {
       {/* Comparison Results Card */}
       {result && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          {/* Best Winner Banner */}
-          <div style={{
-            background: "linear-gradient(135deg, rgba(16,185,129,0.2) 0%, var(--bg-card) 100%)",
-            border: "1px solid #10b981",
-            borderRadius: "20px",
-            padding: "1.5rem 2rem",
+          {/* Best Winner Spotlight Banner */}
+          <div className="fluent-panel" style={{
+            background: "var(--surface-base)",
+            border: "1px solid var(--accent-border)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
             gap: "1rem"
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div style={{ width: "50px", height: "50px", borderRadius: "14px", background: "#10b981", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff" }}>
-                <Trophy size={28} />
+            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "var(--radius-md)",
+                background: "var(--accent-subtle)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent)"
+              }}>
+                <Trophy size={22} />
               </div>
               <div>
-                <span style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 700, textTransform: "uppercase" }}>{t("bestCropWinner", currentLang)}</span>
-                <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-main)", margin: 0 }}>{result.best_crop}</h2>
+                <span className="text-caption" style={{ color: "var(--accent)" }}>
+                  {t("bestCropWinner", currentLang)}
+                </span>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>
+                  {result.best_crop}
+                </h2>
               </div>
             </div>
 
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Projected Net Profit</div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#10b981" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>Projected Net Profit</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
                 ₹{result.comparisons[0]?.net_profit_inr.toLocaleString()}
               </div>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="glass-panel" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-main)" }}>
+          {/* Matrix Table */}
+          <div className="fluent-panel">
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, marginBottom: "1rem", color: "var(--fg-primary)" }}>
               {t("comparisonMatrix", currentLang)}
             </h3>
 
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", color: "var(--text-main)", fontSize: "0.9rem" }}>
+            <div className="fluent-table-wrapper">
+              <table className="fluent-table">
                 <thead>
-                  <tr style={{ background: "var(--table-head-bg)", borderBottom: "1px solid var(--border-glass)", textAlign: "left", color: "var(--text-muted)" }}>
-                    <th style={{ padding: "12px" }}>{t("cropLabel", currentLang)}</th>
-                    <th style={{ padding: "12px" }}>{t("predictedYieldLabel", currentLang)}</th>
-                    <th style={{ padding: "12px" }}>{t("grossRevenue", currentLang)}</th>
-                    <th style={{ padding: "12px" }}>{t("estimatedCost", currentLang)}</th>
-                    <th style={{ padding: "12px" }}>{t("netProfit", currentLang)}</th>
-                    <th style={{ padding: "12px" }}>{t("roiPercent", currentLang)}</th>
-                    <th style={{ padding: "12px" }}>{t("riskLevel", currentLang)}</th>
+                  <tr>
+                    <th>{t("cropLabel", currentLang)}</th>
+                    <th>{t("predictedYieldLabel", currentLang)}</th>
+                    <th>{t("grossRevenue", currentLang)}</th>
+                    <th>{t("estimatedCost", currentLang)}</th>
+                    <th>{t("netProfit", currentLang)}</th>
+                    <th>{t("roiPercent", currentLang)}</th>
+                    <th>{t("riskLevel", currentLang)}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {result.comparisons.map((item, idx) => (
-                    <tr key={item.crop} style={{ borderBottom: "1px solid var(--border-glass)", background: idx === 0 ? "rgba(16,185,129,0.06)" : "transparent" }}>
-                      <td style={{ padding: "12px", fontWeight: 700, color: idx === 0 ? "#10b981" : "var(--text-main)" }}>
+                    <tr key={item.crop}>
+                      <td style={{ fontWeight: 600, color: idx === 0 ? "var(--accent)" : "var(--fg-primary)" }}>
                         {idx === 0 ? "🏆 " : ""}{item.crop}
                       </td>
-                      <td style={{ padding: "12px" }}>{item.predicted_yield} kg/ha</td>
-                      <td style={{ padding: "12px", color: "#3b82f6", fontWeight: 600 }}>₹{item.gross_revenue_inr.toLocaleString()}</td>
-                      <td style={{ padding: "12px", color: "#f43f5e" }}>₹{item.estimated_cost_inr.toLocaleString()}</td>
-                      <td style={{ padding: "12px", color: item.net_profit_inr >= 0 ? "#10b981" : "#f43f5e", fontWeight: 700 }}>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{item.predicted_yield} kg/ha</td>
+                      <td style={{ color: "var(--secondary)", fontWeight: 500, fontFamily: "var(--font-mono)" }}>
+                        ₹{item.gross_revenue_inr.toLocaleString()}
+                      </td>
+                      <td style={{ color: "var(--danger)", fontFamily: "var(--font-mono)" }}>
+                        ₹{item.estimated_cost_inr.toLocaleString()}
+                      </td>
+                      <td style={{ 
+                        color: item.net_profit_inr >= 0 ? "var(--accent)" : "var(--danger)", 
+                        fontWeight: 600, 
+                        fontFamily: "var(--font-mono)" 
+                      }}>
                         ₹{item.net_profit_inr.toLocaleString()}
                       </td>
-                      <td style={{ padding: "12px", fontWeight: 700 }}>{item.roi_percentage}%</td>
-                      <td style={{ padding: "12px" }}>
-                        <span className={item.risk_level === "Low" ? "badge badge-emerald" : item.risk_level === "Moderate" ? "badge badge-amber" : "badge badge-purple"}>
+                      <td style={{ fontWeight: 600, fontFamily: "var(--font-mono)" }}>{item.roi_percentage}%</td>
+                      <td>
+                        <span className={item.risk_level === "Low" ? "badge badge-emerald" : item.risk_level === "Moderate" ? "badge badge-amber" : "badge badge-gray"}>
                           {item.risk_level}
                         </span>
                       </td>
@@ -308,12 +313,12 @@ export default function MultiCropComparator({ currentLang = "en" }) {
             </div>
           </div>
 
-          {/* AI Recommendation */}
-          <div className="glass-panel" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#8b5cf6", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Sparkles size={18} /> {t("aiRecommendation", currentLang)}
+          {/* AI Agronomy Recommendation */}
+          <div className="fluent-panel">
+            <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--fg-primary)", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "6px" }}>
+              <Sparkles size={16} color="var(--accent)" /> {t("aiRecommendation", currentLang)}
             </h3>
-            <p style={{ color: "var(--text-main)", lineHeight: 1.6, margin: 0 }}>
+            <p style={{ color: "var(--fg-secondary)", lineHeight: 1.6, margin: 0, fontSize: "0.88rem" }}>
               {result.ai_recommendation}
             </p>
           </div>

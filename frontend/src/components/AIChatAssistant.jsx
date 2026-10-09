@@ -50,7 +50,6 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
     }
 
     try {
-      // Build history context from previous messages for better responses
       const historyContext = newMessages.slice(-10).map(m => `${m.sender}: ${m.text}`).join("\n");
       const systemPrompt = `You are AgriYield AI farming assistant. Previous conversation history for context:\n${historyContext}\n\nPlease answer the farmer's question considering this history. Keep answers simple, practical, and in ${LANG_NAME_MAP[currentLang] || "English"}.`;
 
@@ -92,7 +91,6 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
     }
   }, [inputText, loading, messages, token, currentLang, provider]);
 
-  // Handle external prompt from other components
   useEffect(() => {
     if (externalPrompt) {
       handleSendMessage(externalPrompt);
@@ -100,7 +98,6 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
     }
   }, [externalPrompt, handleSendMessage, onExternalPromptHandled]);
 
-  // Listen for custom event from App (when sharing from Tools)
   useEffect(() => {
     const handler = (e) => {
       if (e.detail) {
@@ -120,7 +117,7 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
   const handleVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in your browser. Try Google Chrome or Edge.");
+      alert("Speech recognition is not supported in your browser. Try Google Chrome or Microsoft Edge.");
       return;
     }
     const recognition = new SpeechRecognition();
@@ -164,6 +161,7 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
     setSpeakingIndex(null);
     setMessages([getInitialGreeting(currentLang)]);
   };
+
   const quickPrompts = [
     t("prompt1", currentLang),
     t("prompt2", currentLang),
@@ -181,13 +179,13 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
   }, [messages, loading]);
 
   return (
-    <div style={{ maxWidth: "1150px", margin: "0 auto", padding: "1.5rem 1rem" }}>
-      {/* Title & Subtitle */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+    <div className="page-container" style={{ maxWidth: "1050px" }}>
+      {/* Header */}
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span className="badge badge-purple">
-              <Sparkles size={12} /> Google Gemini + Groq AI
+              <Sparkles size={11} /> Dual AI Engine (Gemini + Groq)
             </span>
             {user && (
               <span className="badge badge-emerald">
@@ -195,67 +193,67 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
               </span>
             )}
           </div>
-          <h1 style={{ fontSize: "2rem", fontWeight: 800, marginTop: "0.4rem", color: "var(--text-main)" }}>
+          <h1 className="page-title">
             {t("aiAssistantTitle", currentLang)}
           </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
+          <p className="page-subtitle">
             {t("aiAssistantSub", currentLang)}
           </p>
         </div>
 
-        {/* Model Selector & Clear Button */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {/* Engine Selector & Clear Button */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
-            className="input-field select-field"
-            style={{ width: "auto", fontSize: "0.85rem", padding: "0.5rem 2.2rem 0.5rem 0.8rem" }}
+            className="select-field"
+            style={{ width: "auto", fontSize: "0.82rem", padding: "0.45rem 2rem 0.45rem 0.75rem" }}
           >
-            <option value="auto">⚡ Auto (Gemini + Groq)</option>
-            <option value="gemini">✨ Google Gemini 3.8</option>
-            <option value="groq">🔥 Groq LLaMA 70B</option>
+            <option value="auto">Auto Engine (Gemini + Groq)</option>
+            <option value="gemini">Google Gemini 3.8 Flash</option>
+            <option value="groq">Groq LLaMA 3.3 70B</option>
           </select>
 
           <button
             onClick={handleClearChat}
             className="btn btn-secondary"
-            style={{ padding: "0.5rem 0.8rem", fontSize: "0.82rem" }}
+            style={{ padding: "0.45rem 0.75rem", fontSize: "0.8rem" }}
             title={t("clearChat", currentLang)}
           >
-            <RefreshCw size={14} /> {t("clearChat", currentLang)}
+            <RefreshCw size={13} /> {t("clearChat", currentLang)}
           </button>
         </div>
       </div>
 
-      {/* Main Chat Box */}
-      <div className="glass-panel" style={{
+      {/* Main Acrylic Chat Container */}
+      <div className="fluent-panel" style={{
         display: "flex",
         flexDirection: "column",
-        height: "650px",
+        height: "640px",
         overflow: "hidden",
-        border: "1px solid var(--border-glass)"
+        padding: 0
       }}>
-        {/* Quick Prompts Banner */}
+        {/* Quick Prompts Strip */}
         <div style={{
-          padding: "0.75rem 1.25rem",
-          background: "var(--bg-glass)",
-          borderBottom: "1px solid var(--border-glass)",
+          padding: "0.65rem 1rem",
+          background: "var(--bg-inset)",
+          borderBottom: "1px solid var(--border-subtle)",
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
           overflowX: "auto"
         }}>
-          <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", whiteSpace: "nowrap", fontWeight: 600 }}>
+          <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", whiteSpace: "nowrap", fontWeight: 600 }}>
             {t("quickPromptsLabel", currentLang)}
           </span>
           {quickPrompts.map((p, idx) => (
             <button
               key={idx}
               onClick={() => handleSendMessage(p)}
-              className="btn btn-secondary"
+              className="btn btn-ghost"
               style={{
-                fontSize: "0.76rem",
-                padding: "0.3rem 0.7rem",
+                fontSize: "0.74rem",
+                padding: "0.25rem 0.65rem",
                 borderRadius: "9999px",
                 whiteSpace: "nowrap"
               }}
@@ -268,11 +266,11 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
         {/* Message Thread */}
         <div style={{
           flex: 1,
-          padding: "1.5rem",
+          padding: "1.25rem",
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: "1.25rem"
+          gap: "1rem"
         }}>
           {messages.map((msg, idx) => {
             const isUser = msg.sender === "user";
@@ -281,41 +279,42 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
                 key={idx}
                 style={{
                   display: "flex",
-                  gap: "0.85rem",
+                  gap: "0.75rem",
                   flexDirection: isUser ? "row-reverse" : "row",
                   alignItems: "flex-start"
                 }}
               >
-                {/* Avatar Icon */}
+                {/* Avatar */}
                 <div style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "var(--radius-sm)",
                   background: isUser
-                    ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-                    : "linear-gradient(135deg, #10b981 0%, #8b5cf6 100%)",
+                    ? "var(--accent-primary)"
+                    : "var(--bg-inset)",
+                  border: isUser ? "none" : "1px solid var(--border-subtle)",
+                  color: isUser ? "#fff" : "var(--accent-primary)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  flexShrink: 0,
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
+                  flexShrink: 0
                 }}>
-                  {isUser ? <User size={18} color="#fff" /> : <Bot size={18} color="#fff" />}
+                  {isUser ? <User size={16} /> : <Bot size={16} />}
                 </div>
 
-                {/* Message Bubble */}
+                {/* Bubble */}
                 <div style={{
-                  maxWidth: "82%",
+                  maxWidth: "80%",
                   background: isUser
-                    ? "rgba(59, 130, 246, 0.18)"
-                    : "var(--bg-card)",
+                    ? "var(--accent-subtle)"
+                    : "var(--bg-surface)",
                   border: isUser
-                    ? "1px solid rgba(59, 130, 246, 0.35)"
-                    : "1px solid var(--border-glass)",
-                  borderRadius: isUser ? "16px 4px 16px 16px" : "4px 16px 16px 16px",
-                  padding: "1rem 1.25rem",
+                    ? "1px solid rgba(16, 185, 129, 0.25)"
+                    : "1px solid var(--border-subtle)",
+                  borderRadius: isUser ? "12px 2px 12px 12px" : "2px 12px 12px 12px",
+                  padding: "0.85rem 1.1rem",
                   color: "var(--text-main)",
-                  fontSize: "0.93rem",
+                  fontSize: "0.9rem",
                   lineHeight: 1.6,
                   position: "relative"
                 }}>
@@ -323,20 +322,20 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: "0.4rem",
-                    gap: "1rem"
+                    marginBottom: "0.35rem",
+                    gap: "0.85rem"
                   }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: isUser ? "#3b82f6" : "#10b981" }}>
-                      {isUser ? (user ? user.full_name : "Farmer") : t("brand", currentLang) + " Assistant"}
+                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: isUser ? "var(--accent-primary)" : "var(--text-muted)" }}>
+                      {isUser ? (user ? user.full_name : "Farmer") : t("brand", currentLang) + " Copilot"}
                     </span>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                       {msg.providerUsed && (
-                        <span className="badge badge-purple" style={{ fontSize: "0.65rem" }}>
+                        <span className="badge badge-purple" style={{ fontSize: "0.64rem" }}>
                           {msg.providerUsed}
                         </span>
                       )}
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>
                         {msg.time}
                       </span>
                     </div>
@@ -351,44 +350,34 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
                   </div>
 
                   {!isUser && (
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "0.6rem" }}>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "0.5rem" }}>
                       <button
                         onClick={() => handleSpeakText(msg.text, idx)}
+                        className="btn btn-ghost"
                         style={{
-                          background: "none",
-                          border: "none",
-                          color: speakingIndex === idx ? "#10b981" : "var(--text-muted)",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem"
+                          padding: "0.2rem 0.5rem",
+                          fontSize: "0.72rem"
                         }}
                       >
                         {speakingIndex === idx ? (
-                          <><VolumeX size={13} color="#10b981" /> {t("stopAudio", currentLang)}</>
+                          <><VolumeX size={12} color="var(--accent-primary)" /> Stop</>
                         ) : (
-                          <><Volume2 size={13} /> {t("listenReport", currentLang)}</>
+                          <><Volume2 size={12} /> Audio</>
                         )}
                       </button>
 
                       <button
                         onClick={() => handleCopyText(msg.text, idx)}
+                        className="btn btn-ghost"
                         style={{
-                          background: "none",
-                          border: "none",
-                          color: "var(--text-muted)",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem"
+                          padding: "0.2rem 0.5rem",
+                          fontSize: "0.72rem"
                         }}
                       >
                         {copiedIndex === idx ? (
-                          <><Check size={12} color="#10b981" /> {t("copied", currentLang)}</>
+                          <><Check size={11} color="var(--accent-primary)" /> Copied</>
                         ) : (
-                          <><Copy size={12} /> {t("copy", currentLang)}</>
+                          <><Copy size={11} /> Copy</>
                         )}
                       </button>
                     </div>
@@ -399,31 +388,33 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
           })}
 
           {loading && (
-            <div style={{ display: "flex", gap: "0.85rem", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
               <div style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #10b981 0%, #8b5cf6 100%)",
+                width: "32px",
+                height: "32px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--bg-inset)",
+                border: "1px solid var(--border-subtle)",
+                color: "var(--accent-primary)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center"
               }}>
-                <Bot size={18} color="#fff" />
+                <Bot size={16} />
               </div>
 
               <div style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border-glass)",
-                borderRadius: "4px 16px 16px 16px",
-                padding: "1rem 1.25rem",
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "2px 12px 12px 12px",
+                padding: "0.85rem 1.1rem",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.75rem"
+                gap: "0.65rem"
               }}>
-                <span className="spinner"></span>
-                <span style={{ fontSize: "0.88rem", color: "var(--text-muted)" }}>
-                  Generating response in {LANG_NAME_MAP[currentLang] || "English"}...
+                <span className="spinner" style={{ width: "12px", height: "12px" }}></span>
+                <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                  Analyzing agronomic context in {LANG_NAME_MAP[currentLang] || "English"}...
                 </span>
               </div>
             </div>
@@ -434,13 +425,13 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
 
         {/* Input Bar */}
         <div style={{
-          padding: "1rem 1.25rem",
-          background: "var(--bg-secondary)",
-          borderTop: "1px solid var(--border-glass)"
+          padding: "0.85rem 1.1rem",
+          background: "var(--bg-inset)",
+          borderTop: "1px solid var(--border-subtle)"
         }}>
           <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-            style={{ display: "flex", gap: "0.75rem" }}
+            style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
           >
             <input
               type="text"
@@ -450,8 +441,8 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
               className="input-field"
               style={{
                 flex: 1,
-                padding: "0.85rem 1.2rem",
-                border: isListening ? "1px solid #ef4444" : undefined
+                padding: "0.65rem 0.95rem",
+                borderColor: isListening ? "var(--color-danger)" : undefined
               }}
             />
 
@@ -459,28 +450,22 @@ export default function AIChatAssistant({ user, token, currentLang = "en", exter
               type="button"
               onClick={handleVoiceInput}
               title="Voice Input"
+              className="btn btn-secondary"
               style={{
-                padding: "0.85rem",
-                borderRadius: "12px",
-                background: isListening ? "rgba(239, 68, 68, 0.2)" : "var(--bg-glass)",
-                border: isListening ? "1px solid #ef4444" : "1px solid var(--border-glass)",
-                color: isListening ? "#ef4444" : "var(--text-muted)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
+                padding: "0.65rem 0.85rem",
+                color: isListening ? "var(--color-danger)" : undefined
               }}
             >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
             </button>
 
             <button
               type="submit"
               disabled={loading || !inputText.trim()}
               className="btn btn-primary"
-              style={{ padding: "0.85rem 1.4rem" }}
+              style={{ padding: "0.65rem 1.1rem" }}
             >
-              <Send size={16} /> {t("send", currentLang)}
+              <Send size={15} /> {t("send", currentLang)}
             </button>
           </form>
         </div>
