@@ -10,9 +10,11 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
-      - MONGODB_URL=${MONGODB_URL:-mongodb+srv://lohithakodani_db_user:rKTu7uTGMT5y03cH@cropcast.rxtbzxt.mongodb.net/}
+      - MONGODB_URL=${MONGODB_URL:-}
       - DATABASE_NAME=${DATABASE_NAME:-CropCast}
       - SECRET_KEY=${SECRET_KEY:-cropcast-secret-key-change-in-production}
+    env_file:
+      - ./backend/.env
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
