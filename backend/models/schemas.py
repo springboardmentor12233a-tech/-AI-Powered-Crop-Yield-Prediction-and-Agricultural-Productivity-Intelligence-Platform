@@ -121,3 +121,71 @@ class SoilStats(BaseModel):
     nutrient_yield_correlation: dict
     soil_ph_distribution: dict
     top_soil_type_by_yield: str
+
+
+# ─── Live Weather & Geocoding ──────────────────────────────────────────────────
+
+class LocationSearchResult(BaseModel):
+    name: str
+    latitude: float
+    longitude: float
+    country: Optional[str] = ""
+    admin1: Optional[str] = ""  # State/Province
+    display_name: str
+
+
+class CurrentWeatherResponse(BaseModel):
+    location: str
+    latitude: float
+    longitude: float
+    temperature_c: float
+    feels_like_c: float
+    humidity_percent: float
+    precipitation_mm: float
+    wind_speed_kmh: float
+    weather_condition: str
+    weather_code: int
+    is_day: int
+    update_time: str
+
+
+class WeatherForecastResponse(BaseModel):
+    location: str
+    latitude: float
+    longitude: float
+    current: dict
+    hourly: List[dict]
+    daily: List[dict]
+    farming_recommendations: List[dict]
+
+
+# ─── Crop Doctor (AI Diagnosis) ────────────────────────────────────────────────
+
+class CropDiagnosisResponse(BaseModel):
+    crop_identified: str
+    symptoms: List[str]
+    diagnosis: str
+    confidence_level: str  # "High" | "Medium" | "Low" | "Uncertain"
+    visual_evidence: List[str]
+    alternative_explanations: List[str]
+    immediate_actions: List[str]
+    prevention_and_monitoring: List[str]
+    expert_inspection_needed: bool
+    disclaimer: str
+    provider: str
+    model: str
+    history_id: Optional[int] = None
+
+
+class CropDiagnosisHistoryItem(BaseModel):
+    id: int
+    created_at: datetime
+    crop_type: Optional[str]
+    diagnosis: str
+    confidence_level: str
+    symptoms_summary: Optional[str]
+    recommended_actions: Optional[str]
+
+    class Config:
+        from_attributes = True
+

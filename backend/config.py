@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     MODEL_DIR: str = "./saved_models"
 
     class Config:
-        env_file = ".env"
+        env_file = [".env", "../.env"]
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 @lru_cache()

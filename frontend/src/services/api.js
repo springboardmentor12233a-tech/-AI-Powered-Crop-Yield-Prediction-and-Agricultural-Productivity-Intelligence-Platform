@@ -95,6 +95,26 @@ export const chatbotAPI = {
   ask: (data) => api.post('/chatbot/ask', data),
 };
 
+// ─── Live Weather & Forecast ─────────────────────────────────────────────────
+export const weatherAPI = {
+  searchLocation: (query) => api.get('/weather/search', { params: { query } }),
+  getCurrentWeather: (latitude, longitude, location) =>
+    api.get('/weather/current', { params: { latitude, longitude, location } }),
+  getForecast: (latitude, longitude, location, crop) =>
+    api.get('/weather/forecast', { params: { latitude, longitude, location, crop } }),
+};
+
+// ─── Crop Doctor (AI Diagnosis) ───────────────────────────────────────────────
+export const cropDoctorAPI = {
+  analyzeImage: (formData) =>
+    api.post('/crop-doctor/analyze', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getHistory: () => api.get('/crop-doctor/history'),
+  getHistoryItem: (id) => api.get(`/crop-doctor/history/${id}`),
+};
+
 export default api;
+
 
 

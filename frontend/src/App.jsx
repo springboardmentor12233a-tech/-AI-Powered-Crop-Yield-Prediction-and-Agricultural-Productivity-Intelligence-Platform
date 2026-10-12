@@ -5,6 +5,8 @@ import DashboardPage      from './pages/DashboardPage'
 import PredictPage        from './pages/PredictPage'
 import HistoryPage        from './pages/HistoryPage'
 import ChatbotPage        from './pages/ChatbotPage'
+import LiveWeatherPage    from './pages/LiveWeatherPage'
+import CropDoctorPage     from './pages/CropDoctorPage'
 import ProductivityPage   from './pages/ProductivityPage'
 import RecommendationPage from './pages/RecommendationPage'
 import ResourcesPage      from './pages/ResourcesPage'
@@ -33,6 +35,10 @@ export default function App() {
       {/* Core (M1 / M2) */}
       <Route path="/"        element={<Wrap Page={DashboardPage} />} />
       <Route path="/predict" element={<Wrap Page={PredictPage} />} />
+
+      {/* Weather & Crop Doctor */}
+      <Route path="/weather-live" element={<Wrap Page={LiveWeatherPage} />} />
+      <Route path="/crop-doctor"  element={<Wrap Page={CropDoctorPage} />} />
 
       {/* New Features */}
       <Route path="/history" element={<Wrap Page={HistoryPage} />} />

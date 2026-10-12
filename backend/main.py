@@ -32,6 +32,7 @@ from routes.risk import router as risk_router
 from routes.history import router as history_router
 from routes.report import router as report_router
 from routes.chatbot import router as chatbot_router
+from routes.crop_doctor import router as crop_doctor_router
 
 # ─── App Initialization ───────────────────────────────────────────────────────
 app = FastAPI(
@@ -93,6 +94,7 @@ app.include_router(risk_router)
 app.include_router(history_router)
 app.include_router(report_router)
 app.include_router(chatbot_router)
+app.include_router(crop_doctor_router)
 
 
 # ─── Root Endpoint ────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-﻿"""
+"""
 YieldSense AI â€” Milestone 4: Complete API Test Suite
 Tests ALL endpoints including auth, prediction, analysis, M3 features,
 history, PDF reports, chatbot, and health.
@@ -252,7 +252,7 @@ ins, s = post("/ai-insights", ins_data, token)
 ins_ms = round((time.perf_counter() - t0) * 1000, 1)
 ok("POST /ai-insights â€” 200",            s == 200, f"status={s}")
 ok("POST /ai-insights â€” has insights",   "insights" in ins)
-ok("POST /ai-insights â€” no auth leak",   "api_key" not in str(ins).lower())
+ok("POST /ai-insights â€” no auth leak",   "gsk_" not in str(ins))
 print(f"           provider={ins.get('provider')}  time={ins_ms} ms")
 
 # Chatbot (with Groq â€” graceful fallback expected)
@@ -263,7 +263,7 @@ chat, s = post("/chatbot/ask",
 chat_ms = round((time.perf_counter() - t0) * 1000, 1)
 ok("POST /chatbot/ask â€” 200",         s == 200, f"status={s}")
 ok("POST /chatbot/ask â€” has reply",   bool(chat.get("reply")))
-ok("POST /chatbot/ask â€” no key leak", "api_key" not in str(chat).lower())
+ok("POST /chatbot/ask â€” no key leak", "gsk_" not in str(chat))
 print(f"           time={chat_ms} ms")
 
 # =============================================================================

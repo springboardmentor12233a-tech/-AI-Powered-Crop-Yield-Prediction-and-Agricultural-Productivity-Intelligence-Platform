@@ -71,6 +71,22 @@ class PredictionHistory(Base):
     prediction_confidence       = Column(String, nullable=False)
 
 
+class CropDiagnosis(Base):
+    """Stores metadata for AI crop disease/pest diagnosis per authenticated user."""
+    __tablename__ = "crop_diagnoses"
+
+    id                          = Column(Integer, primary_key=True, index=True)
+    user_id                     = Column(Integer, nullable=False, index=True)
+    created_at                  = Column(DateTime, default=datetime.utcnow)
+
+    crop_type                   = Column(String, nullable=True)
+    diagnosis                   = Column(String, nullable=False)
+    confidence_level            = Column(String, nullable=False)
+    symptoms_summary            = Column(Text, nullable=True)
+    recommended_actions         = Column(Text, nullable=True)
+    image_filename              = Column(String, nullable=True)
+
+
 def create_tables():
     Base.metadata.create_all(bind=engine)
 

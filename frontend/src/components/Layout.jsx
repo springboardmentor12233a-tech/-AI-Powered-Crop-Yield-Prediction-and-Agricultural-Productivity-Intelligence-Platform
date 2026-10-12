@@ -4,14 +4,16 @@ const NAV_GROUPS = [
   {
     label: 'Main',
     links: [
-      { path: '/',         label: 'Dashboard' },
-      { path: '/predict',  label: 'Yield Prediction' },
-      { path: '/history',  label: 'Prediction History' },
-      { path: '/chatbot',  label: 'AI Assistant' },
+      { path: '/',             label: 'Dashboard' },
+      { path: '/predict',      label: 'Yield Prediction' },
+      { path: '/weather-live', label: 'Live Weather 🌤️' },
+      { path: '/crop-doctor',  label: 'Crop Doctor 🩺' },
+      { path: '/history',      label: 'Prediction History' },
+      { path: '/chatbot',      label: 'AI Assistant' },
     ],
   },
   {
-    label: 'Analytics (M3)',
+    label: 'Analytics & Planning',
     links: [
       { path: '/productivity',   label: 'Productivity Analysis' },
       { path: '/recommendation', label: 'Crop Recommendation' },
