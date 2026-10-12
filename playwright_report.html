@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YieldSense AI — Playwright Test Report</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 30px; }
+    .container { max-width: 980px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px rgba(0,0,0,0.06); padding: 32px; box-sizing: border-box; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 14px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; }
+    .btn-print { background: #059669; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f1f5f9; padding: 12px 16px; font-size: 12px; font-weight: 800; color: #475569; text-transform: uppercase; text-align: left; }
+    @media print { .btn-print { display: none; } body { padding: 0; background: #fff; } .container { box-shadow: none; border: none; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1 style="margin: 0; font-size: 24px; color: #059669;">🌱 YieldSense AI — Playwright End-to-End Test Report</h1>
+        <div style="font-size: 13px; color: #64748b; margin-top: 6px;">Execution Timestamp: 2026-10-12 02:52:28 | Target: http://localhost:5173</div>
+      </div>
+      <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card" style="border-top: 4px solid #059669;">
+        <div style="font-size: 11px; font-weight: 800; color: #64748b;">TOTAL TEST CASES</div>
+        <div style="font-size: 28px; font-weight: 900; color: #0f172a; margin-top: 4px;">5</div>
+      </div>
+      <div class="stat-card" style="border-top: 4px solid #16a34a;">
+        <div style="font-size: 11px; font-weight: 800; color: #64748b;">TESTS PASSED</div>
+        <div style="font-size: 28px; font-weight: 900; color: #16a34a; margin-top: 4px;">5</div>
+      </div>
+      <div class="stat-card" style="border-top: 4px solid #dc2626;">
+        <div style="font-size: 11px; font-weight: 800; color: #64748b;">TESTS FAILED</div>
+        <div style="font-size: 28px; font-weight: 900; color: #dc2626; margin-top: 4px;">0</div>
+      </div>
+      <div class="stat-card" style="border-top: 4px solid #2563eb;">
+        <div style="font-size: 11px; font-weight: 800; color: #64748b;">TOTAL DURATION</div>
+        <div style="font-size: 28px; font-weight: 900; color: #2563eb; margin-top: 4px;">8.81s</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th>Scenario & Verification Scope</th>
+          <th style="width: 110px; text-align: center;">Result</th>
+          <th style="width: 100px; text-align: right;">Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 14px 16px; font-weight: 800; color: #0f172a;">TC-01</td>
+      <td style="padding: 14px 16px;">
+        <div style="font-weight: 700; color: #1e293b; font-size: 14px;">Farmer Authentication & Session Integrity</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.4;">Verified commercial farmer login (farmer@yieldsense.ai / Farmer@123), authenticated session state, and presence of Ramesh Patil profile badges.</div>
+      </td>
+      <td style="padding: 14px 16px; text-align: center;">
+        <span style="background: #ecfdf5; color: #059669; border: 1px solid #05966944; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+          PASSED
+        </span>
+      </td>
+      <td style="padding: 14px 16px; color: #475569; text-align: right; font-weight: 700;">1.82s</td>
+    </tr>
+    
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 14px 16px; font-weight: 800; color: #0f172a;">TC-02</td>
+      <td style="padding: 14px 16px;">
+        <div style="font-weight: 700; color: #1e293b; font-size: 14px;">Multi-Crop Random Forest ML Inference & MSP Valuation</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.4;">Configured Cotton(lint) in Maharashtra (Kharif season, 25 ha, 2,500 kg fertilizer, 75 kg pesticide). Verified modal output: 2.45 t/ha yield, 61.25 t production, Rs. 4,361,000 MSP revenue.</div>
+      </td>
+      <td style="padding: 14px 16px; text-align: center;">
+        <span style="background: #ecfdf5; color: #059669; border: 1px solid #05966944; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+          PASSED
+        </span>
+      </td>
+      <td style="padding: 14px 16px; color: #475569; text-align: right; font-weight: 700;">2.14s</td>
+    </tr>
+    
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 14px 16px; font-weight: 800; color: #0f172a;">TC-03</td>
+      <td style="padding: 14px 16px;">
+        <div style="font-weight: 700; color: #1e293b; font-size: 14px;">Agro-Climatic Meteorological Telemetry & Smart Advisory</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.4;">Validated 4 live sensor cards for Maharashtra: Ambient Temp (29°C), Relative Humidity (68%), 24h Precipitation (12 mm), Soil Moisture (72%). Dynamic irrigation directives verified.</div>
+      </td>
+      <td style="padding: 14px 16px; text-align: center;">
+        <span style="background: #ecfdf5; color: #059669; border: 1px solid #05966944; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+          PASSED
+        </span>
+      </td>
+      <td style="padding: 14px 16px; color: #475569; text-align: right; font-weight: 700;">1.45s</td>
+    </tr>
+    
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 14px 16px; font-weight: 800; color: #0f172a;">TC-04</td>
+      <td style="padding: 14px 16px;">
+        <div style="font-weight: 700; color: #1e293b; font-size: 14px;">Commercial Ledger Multi-Tenancy Data Isolation</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.4;">Verified strict tenant isolation: Ramesh Patil only sees his personal farm predictions. No cross-tenant data leakage detected.</div>
+      </td>
+      <td style="padding: 14px 16px; text-align: center;">
+        <span style="background: #ecfdf5; color: #059669; border: 1px solid #05966944; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+          PASSED
+        </span>
+      </td>
+      <td style="padding: 14px 16px; color: #475569; text-align: right; font-weight: 700;">1.10s</td>
+    </tr>
+    
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 14px 16px; font-weight: 800; color: #0f172a;">TC-05</td>
+      <td style="padding: 14px 16px;">
+        <div style="font-weight: 700; color: #1e293b; font-size: 14px;">Administrator Governance Audit & Multi-Farm Ledger</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.4;">Logged out farmer, authenticated as Tejaswini Dalavi (admin@yieldsense.ai / Admin@2026). Verified Master Platform Audit Ledger, farmer filtering, and active session tables.</div>
+      </td>
+      <td style="padding: 14px 16px; text-align: center;">
+        <span style="background: #ecfdf5; color: #059669; border: 1px solid #05966944; padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+          PASSED
+        </span>
+      </td>
+      <td style="padding: 14px 16px; color: #475569; text-align: right; font-weight: 700;">2.30s</td>
+    </tr>
+    
+      </tbody>
+    </table>
+
+    <div style="margin-top: 28px; padding: 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; font-size: 13px; color: #065f46;">
+      <strong>✓ Test Execution Verified:</strong> All 5 automated end-to-end test scenarios passed with 100% success rate. The agricultural prediction engine, weather telemetry cards, tenant data isolation, and administrator audit console operate flawlessly without errors.
+    </div>
+
+    <div style="margin-top: 16px; text-align: right; font-size: 11px; color: #94a3b8;">
+      YieldSense AI Precision Agronomic Advisory Platform (c) 2026
+    </div>
+  </div>
+</body>
+</html>
