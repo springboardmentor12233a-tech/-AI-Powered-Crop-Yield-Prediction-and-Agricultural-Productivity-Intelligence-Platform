@@ -53,7 +53,9 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
   // Dynamic Translation & Farmer-Friendly State
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatedContent, setTranslatedContent] = useState("");
+  const [translationsCache, setTranslationsCache] = useState({});
   const [showTranslation, setShowTranslation] = useState(false);
+  const [reportLanguage, setReportLanguage] = useState(LANG_NAME_MAP[currentLang] || "English");
   const [showHelp, setShowHelp] = useState(false);
   const [simpleMode, setSimpleMode] = useState(false);
   const [translationError, setTranslationError] = useState("");
@@ -156,9 +158,20 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
       return;
     }
     window.speechSynthesis.cancel();
-    const textToSpeak = `Yield prediction summary for ${result.Crop} in ${result.Dist_Name}, ${result.State_Name}. Predicted yield is ${result.predicted_yield} kg per hectare. AI Advice: ${result.ai_analysis.replace(/[*#_`]/g, '')}`;
+    const activeText = (showTranslation && translatedContent) ? translatedContent : result.ai_analysis;
+    const textToSpeak = activeText.replace(/[*#_`|]/g, ' ').substring(0, 1500);
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = currentLang === "te" ? "te-IN" : currentLang === "hi" ? "hi-IN" : currentLang === "ta" ? "ta-IN" : currentLang === "kn" ? "kn-IN" : currentLang === "ml" ? "ml-IN" : currentLang === "mr" ? "mr-IN" : "en-US";
+    const activeLangName = showTranslation ? reportLanguage : (LANG_NAME_MAP[currentLang] || "English");
+    const langCodeMap = {
+      Telugu: "te-IN",
+      Hindi: "hi-IN",
+      Tamil: "ta-IN",
+      Kannada: "kn-IN",
+      Malayalam: "ml-IN",
+      Marathi: "mr-IN",
+      English: "en-US"
+    };
+    utterance.lang = langCodeMap[activeLangName] || "en-US";
     utterance.onend = () => setIsSpeakingReport(false);
     utterance.onerror = () => setIsSpeakingReport(false);
     setIsSpeakingReport(true);
@@ -166,34 +179,47 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
   };
 
   // Dynamic Translation: Translate AI analysis content to selected language
-  const handleTranslate = useCallback(async (targetLangOverride = null) => {
-    if (!result || !result.ai_analysis) return;
-    
-    const targetLangName = targetLangOverride || LANG_NAME_MAP[currentLang] || "English";
+  const performTranslation = async (targetLangName, baseAnalysis = null) => {
+    const textToTranslate = baseAnalysis || (result && result.ai_analysis);
+    if (!textToTranslate) return;
 
-    // If target is English and we already have original, show original
-    if (targetLangName.toLowerCase() === "english") {
+    if (!targetLangName || targetLangName.toLowerCase() === "english") {
+      setReportLanguage("English");
       setShowTranslation(false);
       return;
     }
 
-    setIsTranslating(true);
+    setReportLanguage(targetLangName);
     setTranslationError("");
-    
+
+    // Check cached translation
+    if (translationsCache[targetLangName]) {
+      setTranslatedContent(translationsCache[targetLangName]);
+      setShowTranslation(true);
+      return;
+    }
+
+    setIsTranslating(true);
+
     try {
       const response = await fetch("/api/ai/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: result.ai_analysis,
+          text: textToTranslate,
           target_language: targetLangName
         })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        setTranslatedContent(data.translated_text || result.ai_analysis);
-        setShowTranslation(true);
+        if (data.translated_text) {
+          setTranslationsCache(prev => ({ ...prev, [targetLangName]: data.translated_text }));
+          setTranslatedContent(data.translated_text);
+          setShowTranslation(true);
+        } else {
+          setTranslationError("Received empty translation. Showing report in current language.");
+        }
       } else {
         setTranslationError("Translation service unavailable. Showing report in current language.");
       }
@@ -203,7 +229,8 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     } finally {
       setIsTranslating(false);
     }
-  }, [result, currentLang]);
+  };
+
 
   // Share with Expert
   const handleShareWithExpert = () => {
@@ -268,7 +295,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
 
     try {
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 25000);
+      const timeoutId = window.setTimeout(() => controller.abort(), 60000);
       const response = await fetch("/api/predict", {
         method: "POST",
         headers,
@@ -285,6 +312,10 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
 
       data.language_used = LANG_NAME_MAP[currentLang] || "English";
       setResult(data);
+      setTranslationsCache({});
+      setTranslatedContent("");
+      setShowTranslation(false);
+      setReportLanguage(LANG_NAME_MAP[currentLang] || "English");
       if (onSaveSuccess) onSaveSuccess();
     } catch (err) {
       setError(err.name === "AbortError"
@@ -295,16 +326,18 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
     }
   };
 
-  // Dynamic Language Sync
+  // Dynamic Language Sync when top navbar changes
   useEffect(() => {
     if (!result || !result.ai_analysis) return;
     const targetLangName = LANG_NAME_MAP[currentLang] || "English";
     if (targetLangName === "English") {
-      queueMicrotask(() => setShowTranslation(false));
+      setReportLanguage("English");
+      setShowTranslation(false);
     } else {
-      queueMicrotask(() => handleTranslate(targetLangName));
+      performTranslation(targetLangName, result.ai_analysis);
     }
-  }, [currentLang, result, handleTranslate]);
+  }, [currentLang, result]);
+
 
   const handleCopyReport = () => {
     if (!result) return;
@@ -1000,8 +1033,11 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                   {/* Language Selector & Report Action Buttons */}
                   <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
                     <select
-                      value={LANG_NAME_MAP[currentLang] || "English"}
-                      onChange={(e) => handleTranslate(e.target.value)}
+                      value={reportLanguage}
+                      onChange={(e) => {
+                        const newLang = e.target.value;
+                        performTranslation(newLang, result.ai_analysis);
+                      }}
                       className="select-field"
                       style={{ padding: "0.3rem 1.6rem 0.3rem 0.5rem", fontSize: "0.76rem", width: "auto" }}
                     >
@@ -1015,7 +1051,16 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                     </select>
 
                     <button
-                      onClick={() => handleTranslate()}
+                      onClick={() => {
+                        if (showTranslation) {
+                          setShowTranslation(false);
+                        } else {
+                          const target = (reportLanguage && reportLanguage !== "English")
+                            ? reportLanguage
+                            : (LANG_NAME_MAP[currentLang] !== "English" ? LANG_NAME_MAP[currentLang] : "Telugu");
+                          performTranslation(target, result.ai_analysis);
+                        }
+                      }}
                       disabled={isTranslating}
                       className="btn btn-secondary"
                       style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
@@ -1112,12 +1157,33 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                   borderRadius: "var(--radius-md)",
                   border: "1px solid var(--border-subtle)",
                   maxHeight: "380px",
-                  overflowY: "auto"
+                  overflowY: "auto",
+                  position: "relative"
                 }}>
+                  {isTranslating && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.6rem",
+                      padding: "0.85rem",
+                      background: "rgba(34, 197, 94, 0.08)",
+                      border: "1px dashed var(--accent-primary)",
+                      borderRadius: "var(--radius-sm)",
+                      marginBottom: "0.75rem",
+                      color: "var(--accent-primary)",
+                      fontWeight: 600,
+                      fontSize: "0.82rem"
+                    }}>
+                      <span className="spinner" style={{ width: "14px", height: "14px", borderWidth: "2px" }} />
+                      <span>{t("translating", currentLang)} ({reportLanguage})...</span>
+                    </div>
+                  )}
+
                   {showTranslation && translatedContent ? (
                     <div>
                       <div style={{ fontSize: "0.72rem", color: "var(--accent-primary)", fontWeight: 600, marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                        <Check size={11} /> {t("translatedText", currentLang)} ({LANG_NAME_MAP[currentLang] || "Selected Language"})
+                        <Check size={11} /> {t("translatedText", currentLang)} ({reportLanguage})
                       </div>
                       <MarkdownReport content={translatedContent} />
                     </div>
@@ -1132,6 +1198,7 @@ export default function YieldPredictor({ user, token, onSaveSuccess, onSwitchToC
                     </div>
                   )}
                 </div>
+
 
                 {/* Quick Action Navigation Bar */}
                 <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>

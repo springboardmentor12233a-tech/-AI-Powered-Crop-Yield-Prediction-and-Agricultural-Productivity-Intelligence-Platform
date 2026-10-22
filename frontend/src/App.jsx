@@ -74,13 +74,24 @@ function App() {
   }, []);
 
   const handleLogin = async (email, password) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
+    let res;
+    try {
+      res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+    } catch {
+      throw new Error("Unable to connect to the backend server. Please verify backend is running on port 8000.");
+    }
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error(`Server returned status ${res.status}. Could not parse response.`);
+    }
+
     if (!res.ok) throw new Error(data.detail || "Login failed");
 
     localStorage.setItem("agriyield_jwt", data.access_token);
@@ -94,19 +105,34 @@ function App() {
   };
 
   const handleRegister = async (userData) => {
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData)
-    });
+    let res;
+    try {
+      res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData)
+      });
+    } catch {
+      throw new Error("Unable to connect to the backend server. Please verify backend is running on port 8000.");
+    }
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error(`Server returned status ${res.status}. Could not parse response.`);
+    }
+
     if (!res.ok) throw new Error(data.detail || "Registration failed");
 
     localStorage.setItem("agriyield_jwt", data.access_token);
     setToken(data.access_token);
     setUser(data.user);
-    setActiveTab("dashboard");
+    if (data.user.role === "admin") {
+      setActiveTab("admin");
+    } else {
+      setActiveTab("dashboard");
+    }
   };
 
   const handleLogout = () => {
