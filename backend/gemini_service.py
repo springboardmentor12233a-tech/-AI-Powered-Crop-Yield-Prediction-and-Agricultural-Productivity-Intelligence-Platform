@@ -57,6 +57,7 @@ CRITICAL MANDATORY RULES
 3. Language Instruction: Translate ALL section headers, text, tips, and explanations fully into {language}. Do NOT leave section titles in English unless {language} is English.
 4. Provide simple, easy-to-understand explanations for farmers alongside detailed technical insights.
 5. Previous-year data refers to Year - 1 ({year - 1}).
+6. COMPLETENESS REQUIREMENT: You MUST provide a complete, unbroken report. Finish all 5 sections thoroughly without truncating or cutting off mid-sentence.
 
 ========================
 RESPONSE FORMAT (Fully in {language})
@@ -141,8 +142,14 @@ TEXT TO TRANSLATE:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
                 resp = httpx.post(
                     url,
-                    json={"contents": [{"parts": [{"text": prompt}]}]},
-                    timeout=8.0
+                    json={
+                        "contents": [{"parts": [{"text": prompt}]}],
+                        "generationConfig": {
+                            "maxOutputTokens": 3500,
+                            "temperature": 0.2
+                        }
+                    },
+                    timeout=30.0
                 )
                 if resp.status_code == 200:
                     data = resp.json()

@@ -301,27 +301,9 @@ def predict(request: PredictionRequest, user: Optional[dict] = Depends(get_optio
         ai_analysis = ""
         provider_used = "XGBoost ML"
 
-        # Try requested AI provider with fallback
+        # Try requested AI provider with fallback (Groq is prioritized in 'auto' for ultra-fast 2-4s response)
         lang = request.language or "English"
-        if requested_provider in ["gemini", "auto"] and gemini_service and gemini_service.api_key:
-            try:
-                ai_analysis = gemini_service.analyze_prediction(
-                    year=request.Year,
-                    state_name=request.State_Name,
-                    district_name=request.Dist_Name,
-                    crop=request.Crop,
-                    area=request.Area,
-                    previous_yield=request.Previous_Year_Yield,
-                    previous_area=request.Previous_Year_Area,
-                    previous_production=request.Previous_Year_Production,
-                    predicted_yield=predicted_yield,
-                    language=lang
-                )
-                provider_used = "Google Gemini"
-            except Exception as gemini_err:
-                print(f"Gemini analysis attempt failed: {gemini_err}")
-
-        if not ai_analysis and (requested_provider in ["groq", "auto"]) and groq_service:
+        if requested_provider in ["groq", "auto"] and groq_service:
             try:
                 ai_analysis = groq_service.analyze_prediction(
                     year=request.Year,
@@ -338,6 +320,24 @@ def predict(request: PredictionRequest, user: Optional[dict] = Depends(get_optio
                 provider_used = "Groq LLaMA"
             except Exception as groq_err:
                 print(f"Groq analysis attempt failed: {groq_err}")
+
+        if not ai_analysis and (requested_provider in ["gemini", "auto"]) and gemini_service and gemini_service.api_key:
+            try:
+                ai_analysis = gemini_service.analyze_prediction(
+                    year=request.Year,
+                    state_name=request.State_Name,
+                    district_name=request.Dist_Name,
+                    crop=request.Crop,
+                    area=request.Area,
+                    previous_yield=request.Previous_Year_Yield,
+                    previous_area=request.Previous_Year_Area,
+                    previous_production=request.Previous_Year_Production,
+                    predicted_yield=predicted_yield,
+                    language=lang
+                )
+                provider_used = "Google Gemini"
+            except Exception as gemini_err:
+                print(f"Gemini analysis attempt failed: {gemini_err}")
 
         if not ai_analysis:
             ai_analysis = generate_localized_fallback_report(
@@ -679,25 +679,11 @@ def translate_report(req: TranslateRequest):
             provider_used="Original"
         )
 
-    # 1. Try Gemini
-    if gemini_service and gemini_service.api_key:
-        try:
-            translated = gemini_service.translate_text(req.text, target_lang)
-            if translated and len(translated.strip()) > 10:
-                return TranslateResponse(
-                    success=True,
-                    translated_text=translated,
-                    target_language=target_lang,
-                    provider_used="Google Gemini 3.8"
-                )
-        except Exception as e:
-            print(f"Gemini translation failed: {e}")
-
-    # 2. Try Groq
+    # 1. Try Groq (Fast, high-fidelity multilingual translation)
     if groq_service:
         try:
             translated = groq_service.translate_text(req.text, target_lang)
-            if translated and len(translated.strip()) > 10:
+            if translated and len(translated.strip()) > 50:
                 return TranslateResponse(
                     success=True,
                     translated_text=translated,
@@ -706,6 +692,21 @@ def translate_report(req: TranslateRequest):
                 )
         except Exception as e:
             print(f"Groq translation failed: {e}")
+
+    # 2. Try Gemini
+    if gemini_service and gemini_service.api_key:
+        try:
+            translated = gemini_service.translate_text(req.text, target_lang)
+            min_length = min(len(req.text) * 0.35, 300)
+            if translated and len(translated.strip()) >= min_length:
+                return TranslateResponse(
+                    success=True,
+                    translated_text=translated,
+                    target_language=target_lang,
+                    provider_used="Google Gemini 3.8"
+                )
+        except Exception as e:
+            print(f"Gemini translation failed: {e}")
 
     # 3. Smart Fallback Header Translator if AI is offline
     header_replacements = {
@@ -852,46 +853,7 @@ def analyze_pest_risk(req: PestRiskRequest):
 def translate_text(req: TranslateRequest):
     """
     Translate text to the target language using AI services.
-    Used for dynamic translation of AI-generated agronomy reports.
+    Delegates to the unified, ultra-fast Groq translation pipeline.
     """
-    from .schemas import TranslateRequest, TranslateResponse
-    
-    text = req.text
-    target_lang = req.target_language or "English"
-    provider = (req.provider or "auto").lower()
-    
-    # Try Gemini first
-    if provider in ["gemini", "auto"] and gemini_service and gemini_service.api_key:
-        try:
-            translated = gemini_service.translate_text(text, target_lang)
-            if translated:
-                return TranslateResponse(
-                    success=True,
-                    translated_text=translated,
-                    target_language=target_lang,
-                    provider_used="Google Gemini"
-                )
-        except Exception as e:
-            print(f"Gemini translation failed: {e}")
-    
-    # Fallback to Groq
-    if provider in ["groq", "auto"] and groq_service:
-        try:
-            translated = groq_service.translate_text(text, target_lang)
-            if translated:
-                return TranslateResponse(
-                    success=True,
-                    translated_text=translated,
-                    target_language=target_lang,
-                    provider_used="Groq LLaMA"
-                )
-        except Exception as e:
-            print(f"Groq translation failed: {e}")
-    
-    # If all AI services fail, return original text with warning
-    return TranslateResponse(
-        success=False,
-        translated_text=text,
-        target_language=target_lang,
-        provider_used="None (fallback)"
-    )
+    return translate_report(req)
+

@@ -64,5 +64,95 @@
     "account_status": "active",
     "farm_location": "chennai,tamilnadu",
     "created_at": 1791554506.0832381
+  },
+  {
+    "id": "usr_d9c2261d0c",
+    "email": "user@gmail.com",
+    "password_hash": "$2b$12$dHEyCWptwR4vMiETrS1F2u96zi6rhtd2NPer4dbDWUSUKyCEIdrCi",
+    "full_name": "USer",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "a,v",
+    "created_at": 1791812923.2014863
+  },
+  {
+    "id": "usr_19b5917cd0",
+    "email": "user1@gmail.com",
+    "password_hash": "$2b$12$wkzMToO0VafxAOCq8TwVO.jEL1TjLZVqO4.ytc46DxgEwJdWH/6zC",
+    "full_name": "USer",
+    "role": "admin",
+    "account_status": "active",
+    "farm_location": "a,v",
+    "created_at": 1791813395.8409312
+  },
+  {
+    "id": "usr_b7f38b0598",
+    "email": "farmer@example.com",
+    "password_hash": "$2b$12$fdo04n/1/LkhygpQr5Yfpen1Cub99QzMAArkC026wPsja8zpIATLu",
+    "full_name": "Ravi Kumar",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "LB Nagar, Hyderabad, Telangana, India",
+    "created_at": 1791813776.6332028
+  },
+  {
+    "id": "usr_farmer_001",
+    "email": "farmer@agriyield.ai",
+    "password_hash": "$2b$12$470lFC6FTBdo74.lQp4dv.5OOs3xwDzjUCwlCB4F9QM.Qf1qXoxw2",
+    "full_name": "Ramesh Kumar",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "Ludhiana, Punjab",
+    "created_at": 1792649641.698871
+  },
+  {
+    "id": "usr_admin_001",
+    "email": "admin@agriyield.ai",
+    "password_hash": "$2b$12$GkBV5cVEbPeYd8rTTPjsk.7BUm6Whol2f5IUstGgEC1Ls.th5Vice",
+    "full_name": "Dr. Ananya Sharma",
+    "role": "admin",
+    "account_status": "active",
+    "farm_location": "ICAR Headquarters, New Delhi",
+    "created_at": 1792649642.4254582
+  },
+  {
+    "id": "usr_3a1e73edb7",
+    "email": "presentation_farmer@gmail.com",
+    "password_hash": "$2b$12$QgPcQRumQX5L.mHdNvX4QOcYCwwBfIdW3BXaT6EN79JOIM/D.fJHW",
+    "full_name": "Rajesh Patel",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "Surat, Gujarat",
+    "created_at": 1792650722.1737597
+  },
+  {
+    "id": "usr_6f44aabe75",
+    "email": "presentation_admin@gmail.com",
+    "password_hash": "$2b$12$tfyrvu/MHKsXTe8pIEPTtudO/GFtgq70hISmDpuzTIRmrxnvx7Aou",
+    "full_name": "Dr. Meera Iyer",
+    "role": "admin",
+    "account_status": "active",
+    "farm_location": "New Delhi",
+    "created_at": 1792650728.5575132
+  },
+  {
+    "id": "usr_9c808930d1",
+    "email": "valli1234@gmail.com",
+    "password_hash": "$2b$12$ntVOgStfG/Y.rsH7oMZ4uekEp98ojeUNNey0AfeHLfGizqQ8A1YM6",
+    "full_name": "valli",
+    "role": "farmer",
+    "account_status": "active",
+    "farm_location": "Hyderabad, Telangana",
+    "created_at": 1792650989.5798604
+  },
+  {
+    "id": "usr_df61f1b1f4",
+    "email": "varun@gmail.com",
+    "password_hash": "$2b$12$L8E8oZMdHuhly33iysynhOhXdtUE.JQhSc9pVv1BoO8n/0Rol9V7.",
+    "full_name": "varun",
+    "role": "admin",
+    "account_status": "active",
+    "farm_location": "hyderabad, telangana",
+    "created_at": 1792653262.4056993
   }
 ]

@@ -12,7 +12,7 @@ class GroqService:
         if not GROQ_API_KEY:
             raise RuntimeError("GROQ_API_KEY is not configured.")
 
-        self.client = Groq(api_key=GROQ_API_KEY, timeout=8.0, max_retries=0)
+        self.client = Groq(api_key=GROQ_API_KEY, timeout=25.0, max_retries=1)
         self.model = GROQ_MODEL or "llama-3.3-70b-versatile"
 
     def analyze_prediction(
@@ -54,6 +54,7 @@ CRITICAL MANDATORY RULES
 3. Language Instruction: Translate ALL section headers, text, tips, and explanations fully into {language}. Do NOT leave section titles in English unless {language} is English.
 4. Provide simple, easy-to-understand explanations for farmers alongside detailed technical insights.
 5. Previous-year data refers to Year - 1 ({year - 1}).
+6. COMPLETENESS REQUIREMENT: You MUST provide a full, complete, and unabridged report. Ensure every section (from 1 to 5) finishes properly without abruptly cutting off mid-sentence.
 
 ========================
 RESPONSE FORMAT (Fully in {language})
@@ -79,7 +80,7 @@ Compare predicted yield with historical yield ({previous_yield} vs {predicted_yi
 Give practical, easy step-by-step advice for {crop} in {state_name} regarding irrigation schedule, fertilizer timing, and soil health.
 
 5. ⚠️ Risks & Simple Prevention Tips (fully in {language})
-Explain weather/pest risks and simple preventive measures for farmers.
+Explain weather/pest risks and simple preventive measures for farmers, ending with a warm concluding recommendation.
 """
 
         response = self.client.chat.completions.create(
@@ -87,7 +88,7 @@ Explain weather/pest risks and simple preventive measures for farmers.
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are a helpful agricultural expert. ALWAYS generate your entire response fully translated into {language}, including all headings, bullet points, and farmer tips. Never alter the numerical predicted yield value."
+                    "content": f"You are a helpful agricultural expert. ALWAYS generate your entire response fully translated into {language}, including all headings, bullet points, and farmer tips. Complete all sections thoroughly without cutting off. Never alter the numerical predicted yield value."
                 },
                 {
                     "role": "user",
@@ -95,28 +96,23 @@ Explain weather/pest risks and simple preventive measures for farmers.
                 }
             ],
             temperature=0.2,
-            max_tokens=700
+            max_tokens=3000
         )
 
         return response.choices[0].message.content
 
     def translate_text(self, text: str, target_language: str) -> str:
         prompt = f"""
-You are a professional agricultural translator.
-Translate the following executive agricultural report completely into {target_language}.
+You are an expert multilingual agricultural translator specializing in Indian regional languages.
+Translate the following complete crop advisory report into {target_language}.
 
-========================
-CRITICAL TRANSLATION RULES
-========================
-1. Retain ALL section titles, bullet points, icons (📊, 🌾, 📈, 🌱, ⚠️), and markdown formatting (bold **, headers ###, lists -).
-2. Keep ALL numerical figures (especially yield {target_language} values, Kg/ha, ha, ₹, %), crop names, and location names intact.
-3. Do NOT shorten, abbreviate, summarize, or omit any details. Provide a complete, faithful translation.
-4. Write in clear, natural, farmer-friendly {target_language}.
-5. Output ONLY the translated report text.
+TRANSLATION REQUIREMENTS:
+1. Translate ALL text, section titles, table contents, bullet points, and advice into natural, fluent, farmer-friendly {target_language}.
+2. Keep ALL numerical numbers, metrics (Kg/ha, ha, acres, ₹, %), crop names, and location names accurate and intact.
+3. Keep markdown formatting (bold **, headers ###, lists -, tables |).
+4. COMPLETENESS: Translate the ENTIRE document from start to end without skipping, shortening, or cutting off any section.
 
-========================
 TEXT TO TRANSLATE:
-========================
 {text}
 """
         response = self.client.chat.completions.create(
@@ -124,7 +120,7 @@ TEXT TO TRANSLATE:
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are a precise agricultural translator. Output the complete translated markdown report in {target_language} without losing any information."
+                    "content": f"You are an expert agricultural translator. Translate the full advisory report thoroughly and completely into {target_language}."
                 },
                 {
                     "role": "user",
@@ -132,7 +128,7 @@ TEXT TO TRANSLATE:
                 }
             ],
             temperature=0.2,
-            max_tokens=1600
+            max_tokens=3500
         )
 
         return response.choices[0].message.content
@@ -143,7 +139,7 @@ TEXT TO TRANSLATE:
                 "role": "system",
                 "content": (
                     f"You are AgriYield AI Assistant powered by Groq, a helpful and knowledgeable agricultural expert. "
-                    f"You are assisting a {role}. Provide clear, accurate, and actionable agricultural advice in {language}."
+                    f"You are assisting a {role}. Provide clear, accurate, complete and actionable agricultural advice in {language}."
                 )
             }
         ]
@@ -157,7 +153,7 @@ TEXT TO TRANSLATE:
             model=self.model,
             messages=formatted_messages,
             temperature=0.4,
-            max_tokens=1000
+            max_tokens=2000
         )
 
         return response.choices[0].message.content

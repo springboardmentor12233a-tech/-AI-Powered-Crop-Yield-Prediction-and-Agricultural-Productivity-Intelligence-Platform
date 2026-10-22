@@ -1,5 +1,115 @@
 [
   {
+    "id": "log_57b80d03",
+    "email": "varun@gmail.com",
+    "user_id": "usr_df61f1b1f4",
+    "full_name": "varun",
+    "role": "admin",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792653270.326877,
+    "formatted_time": "2026-10-22 12:44:30"
+  },
+  {
+    "id": "log_186f87f3",
+    "email": "valli1234@gmail.com",
+    "user_id": "N/A",
+    "full_name": "Guest/Failed",
+    "role": "N/A",
+    "status": "FAILED",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792650963.3030913,
+    "formatted_time": "2026-10-22 12:06:03"
+  },
+  {
+    "id": "log_ef4c7ca0",
+    "email": "presentation_admin@gmail.com",
+    "user_id": "usr_6f44aabe75",
+    "full_name": "Dr. Meera Iyer",
+    "role": "admin",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792650736.761965,
+    "formatted_time": "2026-10-22 12:02:16"
+  },
+  {
+    "id": "log_5a102530",
+    "email": "presentation_farmer@gmail.com",
+    "user_id": "usr_3a1e73edb7",
+    "full_name": "Rajesh Patel",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792650735.9217904,
+    "formatted_time": "2026-10-22 12:02:15"
+  },
+  {
+    "id": "log_28e1679d",
+    "email": "admin@agriyield.ai",
+    "user_id": "usr_admin_001",
+    "full_name": "Dr. Ananya Sharma",
+    "role": "admin",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792649655.2763622,
+    "formatted_time": "2026-10-22 11:44:15"
+  },
+  {
+    "id": "log_7dcfbf94",
+    "email": "farmer@agriyield.ai",
+    "user_id": "usr_farmer_001",
+    "full_name": "Ramesh Kumar",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792649649.443015,
+    "formatted_time": "2026-10-22 11:44:09"
+  },
+  {
+    "id": "log_0771b702",
+    "email": "testfarmer@agriyield.ai",
+    "user_id": "usr_8f565656f7",
+    "full_name": "Test Farmer",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792649575.7619362,
+    "formatted_time": "2026-10-22 11:42:55"
+  },
+  {
+    "id": "log_2a4950a9",
+    "email": "nonexistent@example.com",
+    "user_id": "N/A",
+    "full_name": "Guest/Failed",
+    "role": "N/A",
+    "status": "FAILED",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792649564.3849397,
+    "formatted_time": "2026-10-22 11:42:44"
+  },
+  {
+    "id": "log_cc75068c",
+    "email": "farmer@example.com",
+    "user_id": "usr_b7f38b0598",
+    "full_name": "Ravi Kumar",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1791813841.8349037,
+    "formatted_time": "2026-10-12 19:34:01"
+  },
+  {
+    "id": "log_19c50dcd",
+    "email": "Varun123@gmail.com",
+    "user_id": "N/A",
+    "full_name": "Guest/Failed",
+    "role": "N/A",
+    "status": "FAILED",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1791812878.095107,
+    "formatted_time": "2026-10-12 19:17:58"
+  },
+  {
     "id": "log_9079f3aa",
     "email": "Varun123@gmail.com",
     "user_id": "usr_97eaa8c98a",
