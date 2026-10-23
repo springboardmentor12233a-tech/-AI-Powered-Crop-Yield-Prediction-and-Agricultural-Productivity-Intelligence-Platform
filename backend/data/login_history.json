@@ -1,5 +1,82 @@
 [
   {
+    "id": "log_016e8483",
+    "email": "varun@gmail.com",
+    "user_id": "usr_df61f1b1f4",
+    "full_name": "varun",
+    "role": "admin",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792749354.382664,
+    "formatted_time": "2026-10-23 15:25:54"
+  },
+  {
+    "id": "log_fcae458c",
+    "email": "valli1234@gmail.com",
+    "user_id": "usr_9c808930d1",
+    "full_name": "valli",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792748882.9465456,
+    "formatted_time": "2026-10-23 15:18:02"
+  },
+  {
+    "id": "log_dc44e842",
+    "email": "valli123@gmail.com",
+    "user_id": "N/A",
+    "full_name": "Guest/Failed",
+    "role": "N/A",
+    "status": "FAILED",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792748877.8677797,
+    "formatted_time": "2026-10-23 15:17:57"
+  },
+  {
+    "id": "log_4bb303bc",
+    "email": "valli1234@gmail.com",
+    "user_id": "usr_9c808930d1",
+    "full_name": "valli",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792743710.1689618,
+    "formatted_time": "2026-10-23 13:51:50"
+  },
+  {
+    "id": "log_5d5d3817",
+    "email": "varun@gmail.com",
+    "user_id": "usr_df61f1b1f4",
+    "full_name": "varun",
+    "role": "admin",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792669309.1266265,
+    "formatted_time": "2026-10-22 17:11:49"
+  },
+  {
+    "id": "log_e274083c",
+    "email": "valli1234@gmail.com",
+    "user_id": "usr_9c808930d1",
+    "full_name": "valli",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792668869.1574361,
+    "formatted_time": "2026-10-22 17:04:29"
+  },
+  {
+    "id": "log_1ba318c6",
+    "email": "valli1234@gmail.com",
+    "user_id": "usr_9c808930d1",
+    "full_name": "valli",
+    "role": "farmer",
+    "status": "SUCCESS",
+    "ip_address": "127.0.0.1",
+    "timestamp": 1792668396.4909267,
+    "formatted_time": "2026-10-22 16:56:36"
+  },
+  {
     "id": "log_57b80d03",
     "email": "varun@gmail.com",
     "user_id": "usr_df61f1b1f4",
